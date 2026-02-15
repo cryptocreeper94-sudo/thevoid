@@ -14,7 +14,7 @@ Voice-first venting application where users record frustrations and receive AI-g
 - **Frontend**: React + Vite, Tailwind CSS, Framer Motion, shadcn/ui
 - **Backend**: Express.js, Drizzle ORM, PostgreSQL
 - **AI**: OpenAI (GPT-4o for responses, Whisper for transcription)
-- **Auth**: Replit Auth (OIDC)
+- **Auth**: PIN-based whitelist system (master key: 0424) + Replit Auth (OIDC)
 - **Design**: Glassmorphism, Bento grid, Space Grotesk + Outfit fonts
 
 ## Pages
@@ -50,7 +50,16 @@ Voice-first venting application where users record frustrations and receive AI-g
 - Images must be imported as JS variables (Vite requirement)
 - Premium glassmorphism aesthetic on all pages
 
+## PIN Access System
+- Main app (/, /settings) protected by PIN gate — users must enter 4-digit PIN to access
+- Privacy, Terms, Developer pages are publicly accessible (no PIN required)
+- Master key: 0424 (always works, grants Developer access)
+- Whitelist management in Developer portal: add name + 4-digit PIN combos
+- `whitelisted_users` table stores name + pin
+- API: POST /api/auth/pin (validate), GET/POST /api/whitelist, DELETE /api/whitelist/:id
+
 ## Recent Changes
+- Feb 15, 2026: Added PIN-based access control with whitelist management in Developer portal
 - Feb 15, 2026: Added Master Roadmap carousel to Developer portal with database persistence and seeded initial items
 - Feb 15, 2026: Added header, footer, Settings, Privacy, Terms, Developer pages with premium glassmorphism design
 - Feb 15, 2026: Initial build with voice recording, AI personalities, Bento grid layout
