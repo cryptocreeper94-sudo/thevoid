@@ -14,7 +14,7 @@ const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   // Set up Auth first
   await setupAuth(app);
   registerAuthRoutes(app);

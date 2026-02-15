@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, boolean, varchar, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, boolean, varchar, jsonb, integer, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { sql } from "drizzle-orm";
@@ -57,9 +57,6 @@ export const messages = pgTable("messages", {
   content: text("content").notNull(),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
-
-// Import helpers for Chat Schema
-import { integer, index } from "drizzle-orm/pg-core";
 
 // === API REQUEST/RESPONSE TYPES ===
 export const createVentRequestSchema = z.object({
