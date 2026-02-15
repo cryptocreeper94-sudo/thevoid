@@ -34,6 +34,23 @@ Voice-first venting application where users record frustrations and receive AI-g
 ## Crisis Resources (Required on Privacy & Terms pages)
 988 Suicide & Crisis Lifeline, Crisis Text Line (741741), SAMHSA (1-800-662-4357), IMAlive, Veterans Crisis Line, Trevor Project, Childhelp, NAMI Helpline
 
+## Roadmap System
+- Database-backed roadmap in Developer portal (`roadmap_items` table)
+- Carousel-based UI (no vertical stacking, no horizontal box rows)
+- CRUD: Add, cycle status (planned/in-progress/completed), delete items
+- Categories: feature, integration, design, infrastructure, monetization, security, performance
+- Priorities: low, medium, high, critical
+- Filter tabs by status with item counts
+- API: GET/POST /api/roadmap, PATCH/DELETE /api/roadmap/:id
+
+## User Preferences
+- NO vertical stacking layouts
+- NO horizontal box layouts — use carousel-based UI
+- NO images with text/words (copyright/clarity concerns)
+- Images must be imported as JS variables (Vite requirement)
+- Premium glassmorphism aesthetic on all pages
+
 ## Recent Changes
+- Feb 15, 2026: Added Master Roadmap carousel to Developer portal with database persistence and seeded initial items
 - Feb 15, 2026: Added header, footer, Settings, Privacy, Terms, Developer pages with premium glassmorphism design
 - Feb 15, 2026: Initial build with voice recording, AI personalities, Bento grid layout

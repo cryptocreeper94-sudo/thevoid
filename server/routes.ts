@@ -93,8 +93,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.patch("/api/roadmap/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const updates = req.body;
-      const item = await storage.updateRoadmapItem(id, updates);
+      const allowedFields = insertRoadmapItemSchema.partial().parse(req.body);
+      const item = await storage.updateRoadmapItem(id, allowedFields);
       if (!item) return res.status(404).json({ message: "Item not found" });
       res.json(item);
     } catch (error) {
