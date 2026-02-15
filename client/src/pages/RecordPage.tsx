@@ -181,14 +181,35 @@ export default function RecordPage() {
             </div>
 
             <div className="absolute bottom-4 right-4 z-20">
-              <AnimatePresence>
-                {showCrisisInfo && (
+              <button
+                onClick={() => setShowCrisisInfo(!showCrisisInfo)}
+                className={`p-2.5 rounded-full backdrop-blur-sm border transition-all ${
+                  showCrisisInfo
+                    ? 'bg-white/15 border-white/20 text-white'
+                    : 'bg-white/5 border-white/10 text-white/40 hover:text-white/60 hover:bg-white/10'
+                }`}
+                data-testid="button-crisis-info"
+              >
+                <Info className="w-4 h-4" />
+              </button>
+            </div>
+
+            <AnimatePresence>
+              {showCrisisInfo && (
+                <>
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
+                    onClick={() => setShowCrisisInfo(false)}
+                  />
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
                     transition={{ type: "spring", damping: 20, stiffness: 300 }}
-                    className="absolute bottom-12 right-0 w-72 p-4 rounded-2xl bg-black/80 backdrop-blur-xl border border-white/10 shadow-2xl"
+                    className="fixed z-[61] left-4 right-4 top-1/2 -translate-y-1/2 max-w-sm mx-auto max-h-[80vh] overflow-y-auto p-5 rounded-2xl bg-black/90 backdrop-blur-xl border border-white/10 shadow-2xl"
                     data-testid="panel-crisis-info"
                   >
                     <div className="flex items-start justify-between gap-2 mb-3">
@@ -251,21 +272,9 @@ export default function RecordPage() {
                       </div>
                     </div>
                   </motion.div>
-                )}
-              </AnimatePresence>
-
-              <button
-                onClick={() => setShowCrisisInfo(!showCrisisInfo)}
-                className={`p-2.5 rounded-full backdrop-blur-sm border transition-all ${
-                  showCrisisInfo
-                    ? 'bg-white/15 border-white/20 text-white'
-                    : 'bg-white/5 border-white/10 text-white/40 hover:text-white/60 hover:bg-white/10'
-                }`}
-                data-testid="button-crisis-info"
-              >
-                <Info className="w-4 h-4" />
-              </button>
-            </div>
+                </>
+              )}
+            </AnimatePresence>
           </GlassCard>
         </div>
 
