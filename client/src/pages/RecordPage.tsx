@@ -7,13 +7,14 @@ import { VentHistory } from "@/components/venting/VentHistory";
 import { useCreateVent } from "@/hooks/use-vents";
 import { useVoiceRecorder } from "../../replit_integrations/audio/useVoiceRecorder";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, Phone, Play, RefreshCw, MessageCircle } from "lucide-react";
+import { AlertCircle, Phone, Play, RefreshCw, MessageCircle, Info, X, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import screamImg from "@/assets/images/scream-hero.png";
 
 export default function RecordPage() {
   const [personality, setPersonality] = useState('smart-ass');
   const [lastResponse, setLastResponse] = useState<{ transcript: string; response: string } | null>(null);
+  const [showCrisisInfo, setShowCrisisInfo] = useState(false);
   const recorder = useVoiceRecorder();
   const createVent = useCreateVent();
   const { toast } = useToast();
@@ -177,6 +178,93 @@ export default function RecordPage() {
                   </motion.div>
                 )}
               </AnimatePresence>
+            </div>
+
+            <div className="absolute bottom-4 right-4 z-20">
+              <AnimatePresence>
+                {showCrisisInfo && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                    transition={{ type: "spring", damping: 20, stiffness: 300 }}
+                    className="absolute bottom-12 right-0 w-72 p-4 rounded-2xl bg-black/80 backdrop-blur-xl border border-white/10 shadow-2xl"
+                    data-testid="panel-crisis-info"
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <h3 className="text-sm font-bold text-white font-display">Safe Space</h3>
+                      </div>
+                      <button
+                        onClick={() => setShowCrisisInfo(false)}
+                        className="p-1 rounded-lg hover:bg-white/10 transition-colors"
+                        data-testid="button-close-crisis-info"
+                      >
+                        <X className="w-3.5 h-3.5 text-white/40" />
+                      </button>
+                    </div>
+
+                    <p className="text-xs text-white/50 leading-relaxed mb-3">
+                      THE VOID is a safe place to blow off steam without hurting or offending anyone or anything.
+                      Our AI will never encourage harm to yourself, others, or any living being. Vent it out, feel better, move on.
+                    </p>
+
+                    <div className="border-t border-white/10 pt-3 space-y-2">
+                      <p className="text-[10px] text-white/30 uppercase tracking-widest font-display">Emergency Contacts</p>
+                      <a
+                        href="tel:988"
+                        className="flex items-center gap-2.5 p-2 rounded-xl bg-red-500/10 border border-red-500/15 hover:bg-red-500/20 transition-colors"
+                        data-testid="link-info-988"
+                      >
+                        <Phone className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                        <div>
+                          <p className="text-xs font-medium text-red-200">988 Suicide & Crisis Lifeline</p>
+                          <p className="text-[10px] text-red-300/50">Call or text 988 — 24/7</p>
+                        </div>
+                      </a>
+                      <a
+                        href="sms:741741&body=HELLO"
+                        className="flex items-center gap-2.5 p-2 rounded-xl bg-red-500/10 border border-red-500/15 hover:bg-red-500/20 transition-colors"
+                        data-testid="link-info-741741"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                        <div>
+                          <p className="text-xs font-medium text-red-200">Crisis Text Line</p>
+                          <p className="text-[10px] text-red-300/50">Text HELLO to 741741</p>
+                        </div>
+                      </a>
+                      <a
+                        href="tel:18006624357"
+                        className="flex items-center gap-2.5 p-2 rounded-xl bg-red-500/10 border border-red-500/15 hover:bg-red-500/20 transition-colors"
+                        data-testid="link-info-samhsa"
+                      >
+                        <Phone className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                        <div>
+                          <p className="text-xs font-medium text-red-200">SAMHSA Helpline</p>
+                          <p className="text-[10px] text-red-300/50">1-800-662-4357 — Free, 24/7</p>
+                        </div>
+                      </a>
+                      <div className="flex items-center gap-2.5 p-2 rounded-xl bg-red-500/10 border border-red-500/15">
+                        <AlertCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                        <p className="text-xs font-medium text-red-200">Emergency: Call 911</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <button
+                onClick={() => setShowCrisisInfo(!showCrisisInfo)}
+                className={`p-2.5 rounded-full backdrop-blur-sm border transition-all ${
+                  showCrisisInfo
+                    ? 'bg-white/15 border-white/20 text-white'
+                    : 'bg-white/5 border-white/10 text-white/40 hover:text-white/60 hover:bg-white/10'
+                }`}
+                data-testid="button-crisis-info"
+              >
+                <Info className="w-4 h-4" />
+              </button>
             </div>
           </GlassCard>
         </div>

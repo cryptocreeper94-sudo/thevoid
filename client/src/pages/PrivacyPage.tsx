@@ -156,10 +156,12 @@ export default function PrivacyPage() {
 
               <div className="mb-6 space-y-3 text-sm text-red-200/80">
                 <p>
-                  THE VOID is an <strong className="text-red-200">entertainment product only</strong>. It is
-                  NOT a substitute for professional mental health care, therapy, counseling, or crisis
-                  intervention. The AI-generated responses are for entertainment purposes and should not
-                  be considered medical, psychological, or professional advice of any kind.
+                  THE VOID is a <strong className="text-red-200">safe, cathartic entertainment product</strong> designed
+                  to let you blow off steam without hurting, offending, or negatively impacting anyone or anything —
+                  people, animals, or otherwise. Our AI is built with strict safety guardrails and will never
+                  encourage harm of any kind. It is NOT a substitute for professional mental health care, therapy,
+                  counseling, or crisis intervention. AI-generated responses are for entertainment purposes and
+                  should not be considered medical, psychological, or professional advice of any kind.
                 </p>
                 <p className="font-medium text-red-200">
                   If you or someone you know is struggling or in crisis, please reach out immediately:

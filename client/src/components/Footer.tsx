@@ -71,8 +71,8 @@ export function Footer() {
 
         <div className="mt-4 pt-4 border-t border-white/5 text-center">
           <p className="text-[10px] text-muted-foreground/60">
-            THE VOID is an entertainment product. It is not a substitute for professional mental health care.
-            If you are in crisis, please call 988 (Suicide &amp; Crisis Lifeline).
+            THE VOID is a safe space to blow off steam without hurting anyone or anything. It is not a substitute for professional mental health care.
+            Our AI will never encourage harm to yourself, others, or any living being. If you are in crisis, please call 988 (Suicide &amp; Crisis Lifeline).
           </p>
         </div>
       </div>
