@@ -83,26 +83,38 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.get("/api/whitelist", async (_req, res) => {
+  const requireMasterKey = (req: any, res: any, next: any) => {
+    const masterKey = req.headers["x-master-key"];
+    if (masterKey !== "0424") {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+    next();
+  };
+
+  app.get("/api/whitelist", requireMasterKey, async (_req, res) => {
     try {
       const users = await storage.getWhitelistedUsers();
-      res.json(users);
+      const sanitized = users.map(({ id, name, createdAt }) => ({ id, name, createdAt }));
+      res.json(sanitized);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch whitelist" });
     }
   });
 
-  app.post("/api/whitelist", async (req, res) => {
+  app.post("/api/whitelist", requireMasterKey, async (req, res) => {
     try {
-      const data = insertWhitelistedUserSchema.parse(req.body);
+      const pinSchema = insertWhitelistedUserSchema.extend({
+        pin: z.string().length(4).regex(/^\d{4}$/, "PIN must be 4 digits"),
+      });
+      const data = pinSchema.parse(req.body);
       const user = await storage.createWhitelistedUser(data);
-      res.status(201).json(user);
+      res.status(201).json({ id: user.id, name: user.name, createdAt: user.createdAt });
     } catch (error) {
       res.status(500).json({ message: "Failed to add user" });
     }
   });
 
-  app.delete("/api/whitelist/:id", async (req, res) => {
+  app.delete("/api/whitelist/:id", requireMasterKey, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const deleted = await storage.deleteWhitelistedUser(id);

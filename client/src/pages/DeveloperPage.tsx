@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Code, Lock, Activity, Settings, Trash2, Map, Plus, ChevronLeft, ChevronRight, Check, X, Zap, Star, ArrowRight, Clock, CheckCircle2, Circle, Flame } from "lucide-react";
+import { Code, Lock, Activity, Settings, Trash2, Map, Plus, ChevronLeft, ChevronRight, Check, X, Zap, Star, ArrowRight, Clock, CheckCircle2, Circle, Flame, Users, UserPlus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,11 +12,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import type { RoadmapItem } from "@shared/schema";
+import type { RoadmapItem, WhitelistedUser } from "@shared/schema";
 import statusImg from "@/assets/images/dev-status.png";
 import dangerImg from "@/assets/images/dev-danger.png";
 import settingsImg from "@/assets/images/dev-settings.png";
 import roadmapImg from "@/assets/images/dev-roadmap.png";
+import whitelistImg from "@/assets/images/dev-whitelist.png";
 
 const stagger = {
   hidden: { opacity: 0 },
@@ -344,6 +345,202 @@ function RoadmapCarousel() {
   );
 }
 
+function WhitelistManager() {
+  const { toast } = useToast();
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newPin, setNewPin] = useState("");
+
+  const { data: users = [], isLoading } = useQuery<{ id: number; name: string; createdAt: string }[]>({
+    queryKey: ["/api/whitelist"],
+    queryFn: async () => {
+      const res = await fetch("/api/whitelist", { headers: { "x-master-key": "0424" } });
+      if (!res.ok) throw new Error("Failed to fetch");
+      return res.json();
+    },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: { name: string; pin: string }) => {
+      const res = await fetch("/api/whitelist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-master-key": "0424" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/whitelist"] });
+      setNewName("");
+      setNewPin("");
+      setShowAddForm(false);
+      toast({ title: "User Added", description: "Whitelist entry created." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to add user.", variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/whitelist/${id}`, {
+        method: "DELETE",
+        headers: { "x-master-key": "0424" },
+      });
+      if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/whitelist"] });
+      toast({ title: "Removed", description: "User removed from whitelist." });
+    },
+  });
+
+  return (
+    <GlassCard className="overflow-hidden" hoverEffect>
+      <div className="relative h-28 overflow-hidden">
+        <img src={whitelistImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
+        <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-cyan-500/20 backdrop-blur-sm">
+              <Users className="w-5 h-5 text-cyan-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-white font-display">Access Whitelist</h2>
+              <p className="text-xs text-white/50">{users.length} user{users.length !== 1 ? "s" : ""} + master key</p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-white/20 text-white bg-white/10 backdrop-blur-sm"
+            onClick={() => setShowAddForm(!showAddForm)}
+            data-testid="button-add-whitelist"
+          >
+            <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+            Add
+          </Button>
+        </div>
+      </div>
+
+      <div className="p-4">
+        <AnimatePresence mode="wait">
+          {showAddForm && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-4 overflow-hidden"
+            >
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                <div className="flex items-end gap-3 flex-wrap">
+                  <div className="flex-1 min-w-[120px]">
+                    <Label className="text-xs text-muted-foreground mb-1 block">Name</Label>
+                    <Input
+                      placeholder="e.g. John"
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      className="bg-white/5 border-white/10"
+                      data-testid="input-whitelist-name"
+                    />
+                  </div>
+                  <div className="w-28">
+                    <Label className="text-xs text-muted-foreground mb-1 block">4-Digit PIN</Label>
+                    <Input
+                      type="password"
+                      inputMode="numeric"
+                      maxLength={4}
+                      placeholder="****"
+                      value={newPin}
+                      onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ""))}
+                      className="bg-white/5 border-white/10 text-center tracking-widest font-mono"
+                      data-testid="input-whitelist-pin"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => { setShowAddForm(false); setNewName(""); setNewPin(""); }}
+                      data-testid="button-cancel-whitelist"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => createMutation.mutate({ name: newName, pin: newPin })}
+                      disabled={!newName.trim() || newPin.length !== 4 || createMutation.isPending}
+                      data-testid="button-save-whitelist"
+                    >
+                      <Check className="w-3.5 h-3.5 mr-1" />
+                      Save
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-4 py-2.5 px-3 rounded-xl bg-primary/5 border border-primary/10">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                <Lock className="w-3.5 h-3.5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">Developer</p>
+                <p className="text-[10px] text-muted-foreground">Master Key</p>
+              </div>
+            </div>
+            <Badge variant="outline" className="text-[10px] border-primary/20 text-primary">
+              Master
+            </Badge>
+          </div>
+
+          {isLoading ? (
+            Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="h-14 rounded-xl bg-white/5 animate-pulse" />
+            ))
+          ) : (
+            users.map((user) => (
+              <motion.div
+                key={user.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center justify-between gap-4 py-2.5 px-3 rounded-xl bg-white/5 border border-white/5 group/user"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                    <span className="text-xs font-semibold text-foreground">{user.name.charAt(0).toUpperCase()}</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{user.name}</p>
+                    <p className="text-[10px] text-muted-foreground">PIN: ****</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => deleteMutation.mutate(user.id)}
+                  className="p-1.5 rounded-md text-muted-foreground/30 opacity-0 group-hover/user:opacity-100 transition-opacity"
+                  data-testid={`button-delete-whitelist-${user.id}`}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </motion.div>
+            ))
+          )}
+
+          {!isLoading && users.length === 0 && (
+            <p className="text-xs text-muted-foreground/40 text-center py-4">
+              No additional users. Click Add to create one.
+            </p>
+          )}
+        </div>
+      </div>
+    </GlassCard>
+  );
+}
+
 function PinLogin({ onSuccess }: { onSuccess: () => void }) {
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
@@ -523,6 +720,10 @@ function AdminDashboard() {
         </div>
 
         <div className="lg:col-span-8 space-y-6">
+          <motion.div variants={fadeUp}>
+            <WhitelistManager />
+          </motion.div>
+
           <motion.div variants={fadeUp}>
             <GlassCard className="overflow-hidden" hoverEffect>
               <div className="relative h-28 overflow-hidden">
