@@ -36,7 +36,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       // 2. Generate Response (based on personality)
       const systemPrompt = getPersonalityPrompt(personality);
       const completion = await openai.chat.completions.create({
-        model: "gpt-5.1",
+        model: "gpt-4o",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: transcript },
@@ -112,7 +112,7 @@ async function transcribeAudio(base64Audio: string): Promise<string | null> {
 
     const response = await openai.audio.transcriptions.create({
       file,
-      model: "gpt-4o-mini-transcribe",
+      model: "whisper-1",
     });
     
     return response.text;
