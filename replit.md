@@ -1,0 +1,39 @@
+# THE VOID by DarkWave Studios
+
+## Overview
+Voice-first venting application where users record frustrations and receive AI-generated responses based on different personality modes (Smart-ass, Calming, Therapist, Hype Man). Dark glassmorphism design with Bento grid layout.
+
+## Branding
+- **App Name**: THE VOID
+- **Studio**: DarkWave Studios (DarkwaveStudios.io)
+- **Security**: Protected by TrustShield.tech
+- **Infrastructure**: Powered by Trust Layer (dwtl.io)
+- **Copyright**: DarkwaveStudios.io Copyright 2026
+
+## Tech Stack
+- **Frontend**: React + Vite, Tailwind CSS, Framer Motion, shadcn/ui
+- **Backend**: Express.js, Drizzle ORM, PostgreSQL
+- **AI**: OpenAI (GPT-4o for responses, Whisper for transcription)
+- **Auth**: Replit Auth (OIDC)
+- **Design**: Glassmorphism, Bento grid, Space Grotesk + Outfit fonts
+
+## Pages
+- `/` - Main recording page (3-column Bento grid: Vent Log, Record Stage, Personality Selector)
+- `/settings` - User preferences (default personality, audio, display settings)
+- `/privacy` - Privacy Policy with full crisis resources
+- `/terms` - Terms of Service with disclaimers and crisis resources
+- `/developer` - Admin dashboard (PIN: 0424)
+
+## Key Architecture
+- Layout component wraps all pages with header, footer, animated background orbs
+- Header: Slim sticky bar, "THE VOID" left, hamburger menu right (Sheet component)
+- Footer: Full branding, legal links, crisis disclaimer
+- Voice recording via MediaRecorder API (client/replit_integrations/audio/)
+- Audio sent as base64 to /api/vents, transcribed, AI responds based on personality
+
+## Crisis Resources (Required on Privacy & Terms pages)
+988 Suicide & Crisis Lifeline, Crisis Text Line (741741), SAMHSA (1-800-662-4357), IMAlive, Veterans Crisis Line, Trevor Project, Childhelp, NAMI Helpline
+
+## Recent Changes
+- Feb 15, 2026: Added header, footer, Settings, Privacy, Terms, Developer pages with premium glassmorphism design
+- Feb 15, 2026: Initial build with voice recording, AI personalities, Bento grid layout
