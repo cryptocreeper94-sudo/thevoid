@@ -22,7 +22,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-xl">
-      <div className="flex items-center justify-between px-4 h-10">
+      <div className="flex items-center justify-between px-4 py-1">
         <Link href="/" data-testid="link-home">
           <span className="text-sm font-bold tracking-tight font-display text-foreground">
             THE VOID
@@ -34,7 +34,6 @@ export function Header() {
             <Button
               size="icon"
               variant="ghost"
-              className="h-8 w-8"
               data-testid="button-menu"
             >
               <Menu className="w-4 h-4" />

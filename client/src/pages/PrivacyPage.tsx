@@ -1,164 +1,192 @@
 import { Layout } from "@/components/ui/Layout";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Shield, Phone, MessageCircle, ExternalLink } from "lucide-react";
+import { Shield, Phone, MessageCircle, ExternalLink, Lock, Eye, Trash2, UserX, FileText } from "lucide-react";
+import { motion } from "framer-motion";
+
+const stagger = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
+};
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+};
+
+const sections = [
+  {
+    icon: Eye,
+    title: "Information We Collect",
+    items: [
+      { label: "Audio Recordings", text: "Temporarily processed for transcription. Not permanently stored unless you opt in to saving vent history." },
+      { label: "Transcripts & Responses", text: "Text transcripts and AI-generated responses may be stored to provide session history." },
+      { label: "Usage Data", text: "Anonymous analytics such as feature usage and session duration to improve the app." },
+      { label: "Account Information", text: "Basic profile information provided through authentication, if you create an account." },
+    ],
+  },
+  {
+    icon: Lock,
+    title: "How We Use Your Information",
+    items: [
+      { label: "Voice Processing", text: "To process recordings and generate AI personality responses." },
+      { label: "History", text: "To maintain your vent history if you opt in." },
+      { label: "Improvements", text: "To improve AI quality and application performance." },
+    ],
+  },
+  {
+    icon: Shield,
+    title: "Third-Party Services & Security",
+    items: [
+      { label: "OpenAI", text: "Audio and text data is transmitted to OpenAI for speech-to-text and AI response generation." },
+      { label: "TrustShield.tech", text: "Industry-standard encryption and security measures protect your data." },
+      { label: "Trust Layer", text: "Infrastructure powered by Trust Layer (dwtl.io) for secure data handling." },
+    ],
+  },
+  {
+    icon: Trash2,
+    title: "Data Retention & Deletion",
+    items: [
+      { label: "Audio", text: "Processed in real-time and not permanently stored unless you opt in." },
+      { label: "Your Rights", text: "Request deletion of your data at any time. Transcripts can be deleted through the app." },
+    ],
+  },
+  {
+    icon: UserX,
+    title: "Children's Privacy",
+    items: [
+      { label: "Age Restriction", text: "THE VOID is not intended for individuals under 18. We do not knowingly collect data from minors." },
+    ],
+  },
+];
+
+const crisisResources = [
+  { icon: Phone, name: "988 Suicide & Crisis Lifeline", detail: "Call or text 988 (US) \u2014 Available 24/7", highlight: "988" },
+  { icon: MessageCircle, name: "Crisis Text Line", detail: "Text HELLO to 741741 (US, UK, Canada)", highlight: "741741" },
+  { icon: Phone, name: "SAMHSA National Helpline", detail: "1-800-662-4357 \u2014 Free, confidential, 24/7 treatment referral", highlight: "1-800-662-4357" },
+  { icon: MessageCircle, name: "IMAlive Online Crisis Chat", detail: "imalive.org \u2014 Online chat support", highlight: "imalive.org", link: "https://www.imalive.org" },
+  { icon: Phone, name: "Veterans Crisis Line", detail: "Call 988 then press 1, or text 838255", highlight: "838255" },
+  { icon: Phone, name: "Trevor Project (LGBTQ+)", detail: "Call 1-866-488-7386 or text START to 678-678", highlight: "1-866-488-7386" },
+  { icon: Phone, name: "Childhelp National Child Abuse Hotline", detail: "1-800-422-4453 \u2014 24/7 crisis support", highlight: "1-800-422-4453" },
+  { icon: MessageCircle, name: "NAMI Helpline", detail: "Call 1-800-950-6264 or text HelpLine to 62640", highlight: "1-800-950-6264" },
+];
 
 export default function PrivacyPage() {
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <GlassCard className="p-6 md:p-10">
-          <div className="flex items-center gap-3 mb-8">
-            <Shield className="w-6 h-6 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground font-display">Privacy Policy</h1>
-          </div>
-          <p className="text-xs text-muted-foreground mb-8">Last updated: February 15, 2026</p>
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
+        <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-6">
 
-          <div className="space-y-8 text-sm text-muted-foreground leading-relaxed">
-            <section>
-              <h2 className="text-lg font-semibold text-foreground mb-3">1. Overview</h2>
-              <p>
-                THE VOID ("we," "us," or "our"), operated by DarkWave Studios (DarkwaveStudios.io), 
-                is committed to protecting your privacy. This Privacy Policy explains how we collect, 
-                use, and safeguard your information when you use our application.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-lg font-semibold text-foreground mb-3">2. Information We Collect</h2>
-              <ul className="list-disc list-inside space-y-2 ml-2">
-                <li><strong className="text-foreground">Audio Recordings:</strong> When you use the voice recording feature, your audio is temporarily processed to generate a text transcript. Audio data is not permanently stored on our servers unless you explicitly opt in to saving your vent history.</li>
-                <li><strong className="text-foreground">Transcripts & Responses:</strong> Text transcripts of your recordings and the AI-generated responses may be stored to provide you with a history of your sessions.</li>
-                <li><strong className="text-foreground">Usage Data:</strong> We may collect anonymous usage analytics such as feature usage frequency and session duration to improve the application.</li>
-                <li><strong className="text-foreground">Account Information:</strong> If you create an account, we collect basic profile information provided through the authentication service.</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-lg font-semibold text-foreground mb-3">3. How We Use Your Information</h2>
-              <ul className="list-disc list-inside space-y-2 ml-2">
-                <li>To process your voice recordings and generate AI responses</li>
-                <li>To maintain your vent history (if you opt in)</li>
-                <li>To improve the quality and accuracy of our AI personalities</li>
-                <li>To maintain and improve the application</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-lg font-semibold text-foreground mb-3">4. Third-Party Services</h2>
-              <p>
-                We use OpenAI's API for speech-to-text transcription and AI response generation. 
-                Your audio and text data is transmitted to OpenAI for processing. Please review 
-                <a href="https://openai.com/policies/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 inline-flex items-center gap-0.5">
-                  OpenAI's Privacy Policy <ExternalLink className="w-2.5 h-2.5" />
-                </a> for information on how they handle data.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-lg font-semibold text-foreground mb-3">5. Data Security</h2>
-              <p>
-                Your data is protected by TrustShield.tech security infrastructure. We implement 
-                industry-standard encryption and security measures to protect your information. 
-                However, no method of electronic transmission or storage is 100% secure.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-lg font-semibold text-foreground mb-3">6. Data Retention & Deletion</h2>
-              <p>
-                Audio recordings are processed in real-time and are not permanently stored unless 
-                you opt in. You may request deletion of your data at any time by contacting us. 
-                Transcripts and AI responses in your vent history can be deleted through the application.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-lg font-semibold text-foreground mb-3">7. Children's Privacy</h2>
-              <p>
-                THE VOID is not intended for use by individuals under the age of 18. We do not 
-                knowingly collect personal information from children. If we learn that we have 
-                collected data from a minor, we will take steps to delete it promptly.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-lg font-semibold text-foreground mb-3">8. Changes to This Policy</h2>
-              <p>
-                We may update this Privacy Policy from time to time. We will notify users of any 
-                material changes by updating the "Last updated" date at the top of this page.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-lg font-semibold text-foreground mb-3">9. Contact Us</h2>
-              <p>
-                For questions about this Privacy Policy or your data, please contact us at 
-                DarkwaveStudios.io.
-              </p>
-              <p className="mt-2">
-                Powered by Trust Layer &ndash; dwtl.io
-              </p>
-            </section>
-
-            <div className="mt-10 p-5 rounded-xl bg-red-500/10 border border-red-500/20">
-              <h2 className="text-lg font-semibold text-red-200 mb-3 flex items-center gap-2">
-                <Phone className="w-5 h-5" />
-                Important Disclaimer &ndash; Crisis Resources
-              </h2>
-              <p className="text-red-200/80 mb-4">
-                THE VOID is an <strong>entertainment product only</strong>. It is NOT a substitute for 
-                professional mental health care, therapy, counseling, or crisis intervention. 
-                The AI-generated responses are for entertainment purposes and should not be 
-                considered medical, psychological, or professional advice of any kind.
-              </p>
-              <p className="text-red-200/80 font-medium mb-3">
-                If you or someone you know is struggling or in crisis, please reach out to these free, 
-                confidential resources available 24/7:
-              </p>
-              <ul className="space-y-3 text-red-200/80">
-                <li className="flex items-start gap-2">
-                  <Phone className="w-4 h-4 mt-0.5 shrink-0" />
-                  <div>
-                    <strong className="text-red-200">988 Suicide & Crisis Lifeline:</strong> Call or text <strong>988</strong> (US) &ndash; Available 24/7
-                  </div>
-                </li>
-                <li className="flex items-start gap-2">
-                  <MessageCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                  <div>
-                    <strong className="text-red-200">Crisis Text Line:</strong> Text <strong>HELLO</strong> to <strong>741741</strong> (US, UK, Canada)
-                  </div>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Phone className="w-4 h-4 mt-0.5 shrink-0" />
-                  <div>
-                    <strong className="text-red-200">SAMHSA National Helpline:</strong> <strong>1-800-662-4357</strong> &ndash; Free, confidential, 24/7 treatment referral
-                  </div>
-                </li>
-                <li className="flex items-start gap-2">
-                  <MessageCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                  <div>
-                    <strong className="text-red-200">IMAlive Online Crisis Chat:</strong>{" "}
-                    <a href="https://www.imalive.org" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 inline-flex items-center gap-0.5">
-                      imalive.org <ExternalLink className="w-2.5 h-2.5" />
-                    </a>
-                  </div>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Phone className="w-4 h-4 mt-0.5 shrink-0" />
-                  <div>
-                    <strong className="text-red-200">Veterans Crisis Line:</strong> Call <strong>988</strong> then press <strong>1</strong>, or text <strong>838255</strong>
-                  </div>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Phone className="w-4 h-4 mt-0.5 shrink-0" />
-                  <div>
-                    <strong className="text-red-200">Trevor Project (LGBTQ+):</strong> Call <strong>1-866-488-7386</strong> or text <strong>START</strong> to <strong>678-678</strong>
-                  </div>
-                </li>
-              </ul>
+          <motion.div variants={fadeUp} className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium mb-4">
+              <Shield className="w-3 h-3" />
+              Privacy & Safety
             </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground font-display mb-2">Privacy Policy</h1>
+            <p className="text-sm text-muted-foreground">Last updated: February 15, 2026 &middot; DarkWave Studios</p>
+          </motion.div>
+
+          <motion.div variants={fadeUp}>
+            <GlassCard className="p-6" hoverEffect>
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <FileText className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground mb-2">Overview</h2>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    THE VOID ("we," "us," or "our"), operated by DarkWave Studios (DarkwaveStudios.io),
+                    is committed to protecting your privacy. This Privacy Policy explains how we collect,
+                    use, and safeguard your information when you use our application. Our security
+                    infrastructure is powered by Trust Layer (dwtl.io) and protected by TrustShield.tech.
+                  </p>
+                </div>
+              </div>
+            </GlassCard>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {sections.map((section, i) => (
+              <motion.div key={section.title} variants={fadeUp}>
+                <GlassCard className="p-6 h-full" hoverEffect>
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="p-2 rounded-lg bg-white/5">
+                      <section.icon className="w-5 h-5 text-white/70" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-foreground">{section.title}</h2>
+                  </div>
+                  <ul className="space-y-3">
+                    {section.items.map((item) => (
+                      <li key={item.label} className="text-sm">
+                        <span className="text-foreground font-medium">{item.label}:</span>{" "}
+                        <span className="text-muted-foreground">{item.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </GlassCard>
+              </motion.div>
+            ))}
           </div>
-        </GlassCard>
+
+          <motion.div variants={fadeUp}>
+            <GlassCard className="p-6 md:p-8 border-red-500/20 bg-red-950/20">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2.5 rounded-lg bg-red-500/20">
+                  <Phone className="w-5 h-5 text-red-400" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-red-200 font-display">Important Disclaimer</h2>
+                  <p className="text-xs text-red-300/60">Crisis Resources &ndash; Available 24/7</p>
+                </div>
+              </div>
+
+              <div className="mb-6 space-y-3 text-sm text-red-200/80">
+                <p>
+                  THE VOID is an <strong className="text-red-200">entertainment product only</strong>. It is
+                  NOT a substitute for professional mental health care, therapy, counseling, or crisis
+                  intervention. The AI-generated responses are for entertainment purposes and should not
+                  be considered medical, psychological, or professional advice of any kind.
+                </p>
+                <p className="font-medium text-red-200">
+                  If you or someone you know is struggling or in crisis, please reach out immediately:
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {crisisResources.map((r) => (
+                  <div
+                    key={r.name}
+                    className="flex items-start gap-3 p-3 rounded-xl bg-red-500/10 border border-red-500/10"
+                  >
+                    <r.icon className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-red-200">{r.name}</p>
+                      <p className="text-xs text-red-300/60 mt-0.5">
+                        {r.link ? (
+                          <a
+                            href={r.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline underline-offset-2 inline-flex items-center gap-0.5"
+                            data-testid={`link-crisis-${r.name.toLowerCase().replace(/\s+/g, '-')}`}
+                          >
+                            {r.detail} <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        ) : (
+                          r.detail
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </GlassCard>
+          </motion.div>
+
+          <motion.div variants={fadeUp} className="text-center py-4">
+            <p className="text-xs text-muted-foreground">
+              Powered by Trust Layer &ndash; dwtl.io &middot; Protected by TrustShield.tech &middot; DarkwaveStudios.io &copy; 2026
+            </p>
+          </motion.div>
+        </motion.div>
       </div>
     </Layout>
   );

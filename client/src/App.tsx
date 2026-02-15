@@ -5,12 +5,19 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import RecordPage from "@/pages/RecordPage";
+import SettingsPage from "@/pages/SettingsPage";
+import PrivacyPage from "@/pages/PrivacyPage";
+import TermsPage from "@/pages/TermsPage";
+import DeveloperPage from "@/pages/DeveloperPage";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={RecordPage} />
-      {/* 404 Route */}
+      <Route path="/settings" component={SettingsPage} />
+      <Route path="/privacy" component={PrivacyPage} />
+      <Route path="/terms" component={TermsPage} />
+      <Route path="/developer" component={DeveloperPage} />
       <Route component={NotFound} />
     </Switch>
   );

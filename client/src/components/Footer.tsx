@@ -8,7 +8,7 @@ export function Footer() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex flex-col items-center md:items-start gap-1">
             <p className="text-xs text-muted-foreground">
-              DarkwaveStudios.io &copy; 2026. All rights reserved.
+              DarkwaveStudios.io Copyright 2026
             </p>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Shield className="w-3 h-3" />
