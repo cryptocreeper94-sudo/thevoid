@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import OpenAI from "openai";
-import { createVentRequestSchema } from "@shared/schema";
+import { createVentRequestSchema, insertRoadmapItemSchema } from "@shared/schema";
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
 
@@ -66,6 +66,52 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     } catch (error) {
       console.error("Vent error:", error);
       res.status(500).json({ message: "Failed to process vent" });
+    }
+  });
+
+  app.get("/api/roadmap", async (_req, res) => {
+    try {
+      const items = await storage.getRoadmapItems();
+      res.json(items);
+    } catch (error) {
+      console.error("Roadmap fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch roadmap items" });
+    }
+  });
+
+  app.post("/api/roadmap", async (req, res) => {
+    try {
+      const data = insertRoadmapItemSchema.parse(req.body);
+      const item = await storage.createRoadmapItem(data);
+      res.status(201).json(item);
+    } catch (error) {
+      console.error("Roadmap create error:", error);
+      res.status(500).json({ message: "Failed to create roadmap item" });
+    }
+  });
+
+  app.patch("/api/roadmap/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const item = await storage.updateRoadmapItem(id, updates);
+      if (!item) return res.status(404).json({ message: "Item not found" });
+      res.json(item);
+    } catch (error) {
+      console.error("Roadmap update error:", error);
+      res.status(500).json({ message: "Failed to update roadmap item" });
+    }
+  });
+
+  app.delete("/api/roadmap/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteRoadmapItem(id);
+      if (!deleted) return res.status(404).json({ message: "Item not found" });
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Roadmap delete error:", error);
+      res.status(500).json({ message: "Failed to delete roadmap item" });
     }
   });
 
