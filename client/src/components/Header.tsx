@@ -1,44 +1,81 @@
-import { Mic, History } from "lucide-react";
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { cn } from "@/lib/utils";
+import { Menu, Home, Settings, Code, X } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+
+const navItems = [
+  { href: "/", icon: Home, label: "Home" },
+  { href: "/settings", icon: Settings, label: "Settings" },
+  { href: "/developer", icon: Code, label: "Developer" },
+];
 
 export function Header() {
   const [location] = useLocation();
-
-  const NavItem = ({ href, icon: Icon, label }: { href: string; icon: any; label: string }) => {
-    const isActive = location === href;
-    return (
-      <Link href={href} className={cn(
-        "flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200",
-        isActive 
-          ? "bg-primary/10 text-primary font-medium shadow-glow-sm" 
-          : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-      )}>
-        <Icon className="w-4 h-4" />
-        <span>{label}</span>
-      </Link>
-    );
-  };
+  const [open, setOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 px-6 py-4">
-      <div className="max-w-5xl mx-auto flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group cursor-pointer">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-orange-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-200">
-            <Mic className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold font-display tracking-tight leading-none group-hover:text-primary transition-colors">
-              VENT<span className="text-primary">.ai</span>
-            </h1>
-            <span className="text-xs text-muted-foreground font-mono">SCREAM INTO THE VOID</span>
-          </div>
+    <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-xl">
+      <div className="flex items-center justify-between px-4 h-10">
+        <Link href="/" data-testid="link-home">
+          <span className="text-sm font-bold tracking-tight font-display text-foreground">
+            THE VOID
+          </span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-2 bg-secondary/30 backdrop-blur-md p-1.5 rounded-full border border-white/5">
-          <NavItem href="/" icon={Mic} label="Record" />
-          <NavItem href="/history" icon={History} label="History" />
-        </nav>
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8"
+              data-testid="button-menu"
+            >
+              <Menu className="w-4 h-4" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-72 bg-background/95 backdrop-blur-xl border-white/5">
+            <SheetHeader>
+              <SheetTitle className="text-left text-foreground">
+                THE VOID
+              </SheetTitle>
+              <p className="text-xs text-muted-foreground text-left">
+                by DarkWave Studios
+              </p>
+            </SheetHeader>
+            <nav className="flex flex-col gap-1 mt-6">
+              {navItems.map((item) => {
+                const isActive = location === item.href;
+                return (
+                  <Link key={item.href} href={item.href} onClick={() => setOpen(false)}>
+                    <div
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors ${
+                        isActive
+                          ? "bg-primary/10 text-primary font-medium"
+                          : "text-muted-foreground hover-elevate"
+                      }`}
+                      data-testid={`link-nav-${item.label.toLowerCase()}`}
+                    >
+                      <item.icon className="w-4 h-4" />
+                      <span>{item.label}</span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </nav>
+            <div className="mt-auto pt-6 border-t border-white/5 absolute bottom-6 left-6 right-6">
+              <p className="text-xs text-muted-foreground">
+                DarkwaveStudios.io &copy; 2026
+              </p>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </header>
   );
