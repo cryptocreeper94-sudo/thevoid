@@ -58,6 +58,25 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
+// === ROADMAP SCHEMA ===
+export const roadmapItems = pgTable("roadmap_items", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  status: text("status").notNull().default("planned"),
+  priority: text("priority").notNull().default("medium"),
+  category: text("category").notNull().default("feature"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertRoadmapItemSchema = createInsertSchema(roadmapItems).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type RoadmapItem = typeof roadmapItems.$inferSelect;
+export type InsertRoadmapItem = z.infer<typeof insertRoadmapItemSchema>;
+
 // === API REQUEST/RESPONSE TYPES ===
 export const createVentRequestSchema = z.object({
   audio: z.string(), // Base64 audio
