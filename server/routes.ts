@@ -6,6 +6,7 @@ import { z } from "zod";
 import OpenAI from "openai";
 import { createVentRequestSchema } from "@shared/schema";
 import { registerChatRoutes } from "./replit_integrations/chat";
+import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -14,7 +15,12 @@ const openai = new OpenAI({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up Auth first
+  await setupAuth(app);
+  registerAuthRoutes(app);
+
   // Use the chat routes from the integration for general chat
+  // Note: registerChatRoutes takes app: Express
   registerChatRoutes(app);
 
   app.post("/api/vents", async (req, res) => {
