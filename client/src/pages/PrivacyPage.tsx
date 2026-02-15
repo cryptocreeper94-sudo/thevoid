@@ -2,6 +2,11 @@ import { Layout } from "@/components/ui/Layout";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Shield, Phone, MessageCircle, ExternalLink, Lock, Eye, Trash2, UserX, FileText } from "lucide-react";
 import { motion } from "framer-motion";
+import collectionImg from "@/assets/images/privacy-collection.png";
+import usageImg from "@/assets/images/privacy-usage.png";
+import securityImg from "@/assets/images/privacy-security.png";
+import retentionImg from "@/assets/images/privacy-retention.png";
+import childrenImg from "@/assets/images/privacy-children.png";
 
 const stagger = {
   hidden: { opacity: 0 },
@@ -16,6 +21,7 @@ const sections = [
   {
     icon: Eye,
     title: "Information We Collect",
+    img: collectionImg,
     items: [
       { label: "Audio Recordings", text: "Temporarily processed for transcription. Not permanently stored unless you opt in to saving vent history." },
       { label: "Transcripts & Responses", text: "Text transcripts and AI-generated responses may be stored to provide session history." },
@@ -26,6 +32,7 @@ const sections = [
   {
     icon: Lock,
     title: "How We Use Your Information",
+    img: usageImg,
     items: [
       { label: "Voice Processing", text: "To process recordings and generate AI personality responses." },
       { label: "History", text: "To maintain your vent history if you opt in." },
@@ -35,6 +42,7 @@ const sections = [
   {
     icon: Shield,
     title: "Third-Party Services & Security",
+    img: securityImg,
     items: [
       { label: "OpenAI", text: "Audio and text data is transmitted to OpenAI for speech-to-text and AI response generation." },
       { label: "TrustShield.tech", text: "Industry-standard encryption and security measures protect your data." },
@@ -44,6 +52,7 @@ const sections = [
   {
     icon: Trash2,
     title: "Data Retention & Deletion",
+    img: retentionImg,
     items: [
       { label: "Audio", text: "Processed in real-time and not permanently stored unless you opt in." },
       { label: "Your Rights", text: "Request deletion of your data at any time. Transcripts can be deleted through the app." },
@@ -52,6 +61,7 @@ const sections = [
   {
     icon: UserX,
     title: "Children's Privacy",
+    img: childrenImg,
     items: [
       { label: "Age Restriction", text: "THE VOID is not intended for individuals under 18. We do not knowingly collect data from minors." },
     ],
@@ -104,23 +114,29 @@ export default function PrivacyPage() {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {sections.map((section, i) => (
+            {sections.map((section) => (
               <motion.div key={section.title} variants={fadeUp}>
-                <GlassCard className="p-6 h-full" hoverEffect>
-                  <div className="flex items-start gap-3 mb-4">
-                    <div className="p-2 rounded-lg bg-white/5">
-                      <section.icon className="w-5 h-5 text-white/70" />
+                <GlassCard className="h-full overflow-hidden" hoverEffect>
+                  <div className="relative h-32 overflow-hidden">
+                    <img src={section.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/90" />
+                    <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-white/10 backdrop-blur-sm">
+                        <section.icon className="w-5 h-5 text-white" />
+                      </div>
+                      <h2 className="text-lg font-semibold text-white font-display">{section.title}</h2>
                     </div>
-                    <h2 className="text-lg font-semibold text-foreground">{section.title}</h2>
                   </div>
-                  <ul className="space-y-3">
-                    {section.items.map((item) => (
-                      <li key={item.label} className="text-sm">
-                        <span className="text-foreground font-medium">{item.label}:</span>{" "}
-                        <span className="text-muted-foreground">{item.text}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="p-5">
+                    <ul className="space-y-3">
+                      {section.items.map((item) => (
+                        <li key={item.label} className="text-sm">
+                          <span className="text-foreground font-medium">{item.label}:</span>{" "}
+                          <span className="text-muted-foreground">{item.text}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </GlassCard>
               </motion.div>
             ))}

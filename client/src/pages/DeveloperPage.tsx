@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import statusImg from "@/assets/images/dev-status.png";
+import dangerImg from "@/assets/images/dev-danger.png";
+import settingsImg from "@/assets/images/dev-settings.png";
 
 const stagger = {
   hidden: { opacity: 0 },
@@ -133,41 +136,51 @@ function AdminDashboard() {
 
         <div className="lg:col-span-4 space-y-6">
           <motion.div variants={fadeUp}>
-            <GlassCard className="p-6" hoverEffect>
-              <div className="flex items-center gap-3 mb-5">
-                <div className="p-2 rounded-lg bg-emerald-500/10">
-                  <Activity className="w-5 h-5 text-emerald-400" />
-                </div>
-                <h2 className="text-lg font-semibold text-foreground">Status</h2>
-              </div>
-              <div className="space-y-3">
-                {[
-                  { label: "API", status: "Online", color: "bg-emerald-400" },
-                  { label: "Database", status: "Connected", color: "bg-emerald-400" },
-                  { label: "OpenAI", status: "Active", color: "bg-emerald-400" },
-                  { label: "TrustShield", status: "Protected", color: "bg-blue-400" },
-                ].map((s) => (
-                  <div key={s.label} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
-                    <span className="text-sm text-muted-foreground">{s.label}</span>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${s.color} animate-pulse`} />
-                      <span className="text-xs text-foreground">{s.status}</span>
-                    </div>
+            <GlassCard className="overflow-hidden" hoverEffect>
+              <div className="relative h-28 overflow-hidden">
+                <img src={statusImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
+                <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-emerald-500/20 backdrop-blur-sm">
+                    <Activity className="w-5 h-5 text-emerald-400" />
                   </div>
-                ))}
+                  <h2 className="text-lg font-semibold text-white font-display">Status</h2>
+                </div>
+              </div>
+              <div className="p-5">
+                <div className="space-y-3">
+                  {[
+                    { label: "API", status: "Online", color: "bg-emerald-400" },
+                    { label: "Database", status: "Connected", color: "bg-emerald-400" },
+                    { label: "OpenAI", status: "Active", color: "bg-emerald-400" },
+                    { label: "TrustShield", status: "Protected", color: "bg-blue-400" },
+                  ].map((s) => (
+                    <div key={s.label} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                      <span className="text-sm text-muted-foreground">{s.label}</span>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${s.color} animate-pulse`} />
+                        <span className="text-xs text-foreground">{s.status}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </GlassCard>
           </motion.div>
 
           <motion.div variants={fadeUp}>
-            <GlassCard className="p-6" hoverEffect>
-              <div className="flex items-center gap-3 mb-5">
-                <div className="p-2 rounded-lg bg-red-500/10">
-                  <Trash2 className="w-5 h-5 text-red-400" />
+            <GlassCard className="overflow-hidden" hoverEffect>
+              <div className="relative h-28 overflow-hidden">
+                <img src={dangerImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
+                <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-red-500/20 backdrop-blur-sm">
+                    <Trash2 className="w-5 h-5 text-red-400" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-white font-display">Danger Zone</h2>
                 </div>
-                <h2 className="text-lg font-semibold text-foreground">Danger Zone</h2>
               </div>
-              <div className="space-y-3">
+              <div className="p-5 space-y-3">
                 <Button
                   variant="destructive"
                   className="w-full"
@@ -184,14 +197,18 @@ function AdminDashboard() {
 
         <div className="lg:col-span-8 space-y-6">
           <motion.div variants={fadeUp}>
-            <GlassCard className="p-6" hoverEffect>
-              <div className="flex items-center gap-3 mb-5">
-                <div className="p-2 rounded-lg bg-white/5">
-                  <Settings className="w-5 h-5 text-white/70" />
+            <GlassCard className="overflow-hidden" hoverEffect>
+              <div className="relative h-28 overflow-hidden">
+                <img src={settingsImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
+                <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-white/10 backdrop-blur-sm">
+                    <Settings className="w-5 h-5 text-white/80" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-white font-display">Application Settings</h2>
                 </div>
-                <h2 className="text-lg font-semibold text-foreground">Application Settings</h2>
               </div>
-              <div className="space-y-5">
+              <div className="p-5 space-y-5">
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <Label className="text-sm text-foreground">Maintenance Mode</Label>
