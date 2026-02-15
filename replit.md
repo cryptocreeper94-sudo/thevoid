@@ -33,8 +33,9 @@ Voice-first venting application where users record frustrations and receive AI-g
 
 ## AI Safety Guardrails
 - All AI personalities include a mandatory safety preamble that overrides personality behavior
-- Rules: NEVER encourage self-harm, harming others, violence, illegal activity, or anything endangering life/freedom
-- Auto-detect: If user expresses self-harm/suicide/harm intent, AI immediately provides crisis resources
+- Rules: NEVER encourage self-harm, harming others (people OR animals), violence, illegal activity, or anything endangering life/freedom
+- NEVER escalate negativity — AI must help users feel LIGHTER, not darker. Cathartic, fun, safe.
+- Auto-detect: If user expresses self-harm/suicide/harm intent (toward people or animals), AI immediately provides crisis resources
 - Crisis resources provided: 988 Lifeline, Crisis Text Line (741741), SAMHSA (1-800-662-4357), 911
 - Each personality has additional safety-specific language (e.g., Hype Man channels energy toward growth not revenge)
 - Safety preamble defined in `server/routes.ts` as `SAFETY_PREAMBLE` constant
