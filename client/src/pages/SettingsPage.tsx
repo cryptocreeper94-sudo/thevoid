@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Settings, Sparkles, Brain, Zap, Heart, Volume2, Type, Palette } from "lucide-react";
+import { Settings, Sparkles, Brain, Zap, Heart, Volume2, Type } from "lucide-react";
 import { motion } from "framer-motion";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,10 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import smartassImg from "@/assets/images/personality-smartass.png";
+import calmingImg from "@/assets/images/personality-calming.png";
+import therapistImg from "@/assets/images/personality-therapist.png";
+import hypemanImg from "@/assets/images/personality-hypeman.png";
 
 const stagger = {
   hidden: { opacity: 0 },
@@ -20,10 +24,10 @@ const fadeUp = {
 };
 
 const personalities = [
-  { id: "smart-ass", label: "Smart-ass", icon: Sparkles, color: "from-orange-500 to-red-500", desc: "Sarcastic & Witty" },
-  { id: "calming", label: "Calming", icon: Heart, color: "from-cyan-400 to-blue-500", desc: "Soothing & Gentle" },
-  { id: "therapist", label: "Therapist", icon: Brain, color: "from-emerald-400 to-green-600", desc: "Analytical & Deep" },
-  { id: "hype-man", label: "Hype Man", icon: Zap, color: "from-yellow-400 to-orange-500", desc: "High Energy!" },
+  { id: "smart-ass", label: "Smart-ass", icon: Sparkles, color: "from-orange-500 to-red-500", desc: "Sarcastic & Witty", img: smartassImg },
+  { id: "calming", label: "Calming", icon: Heart, color: "from-cyan-400 to-blue-500", desc: "Soothing & Gentle", img: calmingImg },
+  { id: "therapist", label: "Therapist", icon: Brain, color: "from-emerald-400 to-green-600", desc: "Analytical & Deep", img: therapistImg },
+  { id: "hype-man", label: "Hype Man", icon: Zap, color: "from-yellow-400 to-orange-500", desc: "High Energy!", img: hypemanImg },
 ];
 
 function loadSettings() {
@@ -89,29 +93,29 @@ export default function SettingsPage() {
                           onClick={() => update("defaultPersonality", p.id)}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className={`relative p-4 rounded-2xl border text-left transition-all duration-300 overflow-hidden ${
+                          className={`relative rounded-2xl border text-left transition-all duration-300 overflow-hidden aspect-[3/4] ${
                             isSelected
-                              ? "border-transparent bg-white/10 shadow-lg"
-                              : "border-white/5 bg-black/20 hover:bg-black/40 hover:border-white/10"
+                              ? "border-transparent shadow-lg ring-2 ring-primary/40"
+                              : "border-white/5 hover:border-white/10"
                           }`}
                           data-testid={`button-personality-${p.id}`}
                         >
+                          <img src={p.img} alt={p.label} className="absolute inset-0 w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
                           {isSelected && (
-                            <div className={`absolute inset-0 opacity-20 bg-gradient-to-br ${p.color}`} />
+                            <div className={`absolute inset-0 opacity-30 bg-gradient-to-br ${p.color}`} />
                           )}
-                          <div className="relative z-10 flex flex-col gap-2">
-                            <div className={`p-2 rounded-lg w-fit transition-colors ${isSelected ? "bg-white/20 text-white" : "bg-white/5 text-white/60"}`}>
+                          <div className="absolute bottom-0 left-0 right-0 p-3 z-10">
+                            <div className={`p-1.5 rounded-lg w-fit mb-2 transition-colors ${isSelected ? "bg-white/20 text-white" : "bg-white/10 text-white/70"}`}>
                               <Icon className="w-4 h-4" />
                             </div>
-                            <div>
-                              <h3 className={`text-sm font-medium ${isSelected ? "text-white" : "text-white/80"}`}>{p.label}</h3>
-                              <p className="text-xs text-white/40 mt-0.5">{p.desc}</p>
-                            </div>
+                            <h3 className={`text-sm font-semibold ${isSelected ? "text-white" : "text-white/90"}`}>{p.label}</h3>
+                            <p className="text-[10px] text-white/50 mt-0.5">{p.desc}</p>
                           </div>
                           {isSelected && (
                             <motion.div
                               layoutId="settings-personality-indicator"
-                              className="absolute top-3 right-3 w-2 h-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+                              className="absolute top-2.5 right-2.5 w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.9)]"
                             />
                           )}
                         </motion.button>
