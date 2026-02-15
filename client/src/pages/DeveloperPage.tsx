@@ -1,16 +1,22 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Code, Lock, Database, Activity, Settings, Users, Trash2, Shield } from "lucide-react";
+import { Code, Lock, Activity, Settings, Trash2, Map, Plus, ChevronLeft, ChevronRight, Check, X, Zap, Star, ArrowRight, Clock, CheckCircle2, Circle, Flame } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
+import type { RoadmapItem } from "@shared/schema";
 import statusImg from "@/assets/images/dev-status.png";
 import dangerImg from "@/assets/images/dev-danger.png";
 import settingsImg from "@/assets/images/dev-settings.png";
+import roadmapImg from "@/assets/images/dev-roadmap.png";
 
 const stagger = {
   hidden: { opacity: 0 },
@@ -20,6 +26,323 @@ const fadeUp = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
+
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof Circle }> = {
+  planned: { label: "Planned", color: "bg-blue-500/20 text-blue-400 border-blue-500/30", icon: Circle },
+  "in-progress": { label: "In Progress", color: "bg-amber-500/20 text-amber-400 border-amber-500/30", icon: Clock },
+  completed: { label: "Completed", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30", icon: CheckCircle2 },
+};
+
+const PRIORITY_CONFIG: Record<string, { label: string; color: string; icon: typeof Star }> = {
+  low: { label: "Low", color: "text-muted-foreground", icon: ArrowRight },
+  medium: { label: "Medium", color: "text-amber-400", icon: Star },
+  high: { label: "High", color: "text-orange-400", icon: Zap },
+  critical: { label: "Critical", color: "text-red-400", icon: Flame },
+};
+
+const CATEGORY_OPTIONS = ["feature", "integration", "design", "infrastructure", "monetization", "security", "performance"];
+
+function RoadmapCarousel() {
+  const { toast } = useToast();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [newItem, setNewItem] = useState({
+    title: "",
+    description: "",
+    status: "planned",
+    priority: "medium",
+    category: "feature",
+  });
+
+  const { data: items = [], isLoading } = useQuery<RoadmapItem[]>({
+    queryKey: ["/api/roadmap"],
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: typeof newItem) => {
+      await apiRequest("POST", "/api/roadmap", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/roadmap"] });
+      setNewItem({ title: "", description: "", status: "planned", priority: "medium", category: "feature" });
+      setShowAddForm(false);
+      toast({ title: "Added", description: "Roadmap item created." });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: number; updates: Partial<RoadmapItem> }) => {
+      await apiRequest("PATCH", `/api/roadmap/${id}`, updates);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/roadmap"] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/roadmap/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/roadmap"] });
+      toast({ title: "Removed", description: "Roadmap item deleted." });
+    },
+  });
+
+  const scroll = useCallback((direction: "left" | "right") => {
+    if (!scrollRef.current) return;
+    const scrollAmount = 320;
+    scrollRef.current.scrollBy({
+      left: direction === "left" ? -scrollAmount : scrollAmount,
+      behavior: "smooth",
+    });
+  }, []);
+
+  const cycleStatus = (item: RoadmapItem) => {
+    const order = ["planned", "in-progress", "completed"];
+    const next = order[(order.indexOf(item.status) + 1) % order.length];
+    updateMutation.mutate({ id: item.id, updates: { status: next } });
+  };
+
+  const filtered = filterStatus === "all" ? items : items.filter((i) => i.status === filterStatus);
+
+  const counts = {
+    all: items.length,
+    planned: items.filter((i) => i.status === "planned").length,
+    "in-progress": items.filter((i) => i.status === "in-progress").length,
+    completed: items.filter((i) => i.status === "completed").length,
+  };
+
+  return (
+    <GlassCard className="overflow-hidden" hoverEffect>
+      <div className="relative h-32 overflow-hidden">
+        <img src={roadmapImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
+        <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-purple-500/20 backdrop-blur-sm">
+              <Map className="w-5 h-5 text-purple-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-white font-display">Master Roadmap</h2>
+              <p className="text-xs text-white/50">{items.length} items tracked</p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-white/20 text-white bg-white/10 backdrop-blur-sm"
+            onClick={() => setShowAddForm(!showAddForm)}
+            data-testid="button-add-roadmap"
+          >
+            <Plus className="w-3.5 h-3.5 mr-1.5" />
+            Add
+          </Button>
+        </div>
+      </div>
+
+      <div className="p-4">
+        <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
+          {(["all", "planned", "in-progress", "completed"] as const).map((s) => {
+            const isActive = filterStatus === s;
+            const cfg = s === "all" ? null : STATUS_CONFIG[s];
+            return (
+              <button
+                key={s}
+                onClick={() => setFilterStatus(s)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                  isActive
+                    ? "bg-primary/20 text-primary border border-primary/30"
+                    : "bg-white/5 text-muted-foreground border border-white/10"
+                }`}
+                data-testid={`filter-roadmap-${s}`}
+              >
+                {cfg && <cfg.icon className="w-3 h-3" />}
+                {s === "all" ? "All" : cfg?.label}
+                <span className={`ml-1 text-[10px] ${isActive ? "text-primary/70" : "text-muted-foreground/50"}`}>
+                  {counts[s]}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <AnimatePresence mode="wait">
+          {showAddForm && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-4 overflow-hidden"
+            >
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                <Input
+                  placeholder="Feature title..."
+                  value={newItem.title}
+                  onChange={(e) => setNewItem((p) => ({ ...p, title: e.target.value }))}
+                  className="bg-white/5 border-white/10"
+                  data-testid="input-roadmap-title"
+                />
+                <Input
+                  placeholder="Short description..."
+                  value={newItem.description}
+                  onChange={(e) => setNewItem((p) => ({ ...p, description: e.target.value }))}
+                  className="bg-white/5 border-white/10"
+                  data-testid="input-roadmap-desc"
+                />
+                <div className="flex items-center gap-2 flex-wrap">
+                  <select
+                    value={newItem.priority}
+                    onChange={(e) => setNewItem((p) => ({ ...p, priority: e.target.value }))}
+                    className="bg-white/5 border border-white/10 rounded-md px-3 py-2 text-xs text-foreground"
+                    data-testid="select-roadmap-priority"
+                  >
+                    {Object.entries(PRIORITY_CONFIG).map(([k, v]) => (
+                      <option key={k} value={k}>{v.label}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={newItem.category}
+                    onChange={(e) => setNewItem((p) => ({ ...p, category: e.target.value }))}
+                    className="bg-white/5 border border-white/10 rounded-md px-3 py-2 text-xs text-foreground"
+                    data-testid="select-roadmap-category"
+                  >
+                    {CATEGORY_OPTIONS.map((c) => (
+                      <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
+                    ))}
+                  </select>
+                  <div className="flex-1" />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowAddForm(false)}
+                    data-testid="button-cancel-roadmap"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => createMutation.mutate(newItem)}
+                    disabled={!newItem.title.trim() || createMutation.isPending}
+                    data-testid="button-save-roadmap"
+                  >
+                    <Check className="w-3.5 h-3.5 mr-1" />
+                    Save
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="relative group/carousel">
+          <button
+            onClick={() => scroll("left")}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-1.5 rounded-full bg-black/60 border border-white/10 backdrop-blur-sm text-white/70 opacity-0 group-hover/carousel:opacity-100 transition-opacity"
+            data-testid="button-carousel-left"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => scroll("right")}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-1.5 rounded-full bg-black/60 border border-white/10 backdrop-blur-sm text-white/70 opacity-0 group-hover/carousel:opacity-100 transition-opacity"
+            data-testid="button-carousel-right"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+
+          <div
+            ref={scrollRef}
+            className="flex gap-3 overflow-x-auto pb-2 scroll-smooth snap-x snap-mandatory"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            {isLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex-shrink-0 w-[280px] h-[180px] rounded-2xl bg-white/5 animate-pulse snap-start" />
+              ))
+            ) : filtered.length === 0 ? (
+              <div className="flex-shrink-0 w-full py-12 text-center">
+                <Map className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground/50">No items in this view</p>
+              </div>
+            ) : (
+              filtered.map((item) => {
+                const statusCfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.planned;
+                const priorityCfg = PRIORITY_CONFIG[item.priority] || PRIORITY_CONFIG.medium;
+                const StatusIcon = statusCfg.icon;
+                const PriorityIcon = priorityCfg.icon;
+
+                return (
+                  <motion.div
+                    key={item.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className="flex-shrink-0 w-[280px] snap-start"
+                  >
+                    <div className="h-full p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-3 group/card relative">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <button
+                            onClick={() => cycleStatus(item)}
+                            className={`flex-shrink-0 p-1 rounded-md ${statusCfg.color} transition-colors`}
+                            title={`Status: ${statusCfg.label} (click to cycle)`}
+                            data-testid={`button-cycle-status-${item.id}`}
+                          >
+                            <StatusIcon className="w-3.5 h-3.5" />
+                          </button>
+                          <h3 className={`text-sm font-semibold truncate ${item.status === "completed" ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                            {item.title}
+                          </h3>
+                        </div>
+                        <button
+                          onClick={() => deleteMutation.mutate(item.id)}
+                          className="flex-shrink-0 p-1 rounded-md text-muted-foreground/30 opacity-0 group-hover/card:opacity-100 transition-opacity"
+                          data-testid={`button-delete-roadmap-${item.id}`}
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      {item.description && (
+                        <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+                          {item.description}
+                        </p>
+                      )}
+
+                      <div className="mt-auto flex items-center gap-2 flex-wrap">
+                        <Badge variant="outline" className="text-[10px] border-white/10">
+                          {item.category}
+                        </Badge>
+                        <div className={`flex items-center gap-1 text-[10px] ${priorityCfg.color}`}>
+                          <PriorityIcon className="w-3 h-3" />
+                          {priorityCfg.label}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full ${statusCfg.color}`}>
+                          {statusCfg.label}
+                        </span>
+                        {item.createdAt && (
+                          <span className="text-[10px] text-muted-foreground/40">
+                            {new Date(item.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      </div>
+    </GlassCard>
+  );
+}
 
 function PinLogin({ onSuccess }: { onSuccess: () => void }) {
   const [pin, setPin] = useState("");
@@ -130,6 +453,10 @@ function AdminDashboard() {
         </div>
         <h1 className="text-3xl md:text-4xl font-bold text-foreground font-display mb-2">Admin Dashboard</h1>
         <p className="text-sm text-muted-foreground">THE VOID &middot; DarkWave Studios</p>
+      </motion.div>
+
+      <motion.div variants={fadeUp}>
+        <RoadmapCarousel />
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
