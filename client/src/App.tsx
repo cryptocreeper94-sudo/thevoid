@@ -5,13 +5,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import RecordPage from "@/pages/RecordPage";
-import HistoryPage from "@/pages/HistoryPage";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={RecordPage} />
-      <Route path="/history" component={HistoryPage} />
+      {/* 404 Route */}
       <Route component={NotFound} />
     </Switch>
   );
@@ -21,8 +20,8 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
         <Router />
+        <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
   );

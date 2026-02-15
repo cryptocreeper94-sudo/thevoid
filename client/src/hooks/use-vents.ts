@@ -1,62 +1,60 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@shared/routes";
-import { z } from "zod";
+import { type InsertVent, type CreateVentRequest } from "@shared/schema";
 
-// --- Types derived from schema ---
-// Manually defining here since I cannot import from schema directly in this environment
-// In a real app, import { CreateVentRequest } from "@shared/schema";
-
-const createVentRequestSchema = z.object({
-  audio: z.string(), // Base64 audio
-  personality: z.enum(['smart-ass', 'calming', 'therapist', 'hype-man']),
-});
-
-export type CreateVentRequest = z.infer<typeof createVentRequestSchema>;
-
-export type VentResponse = {
-  transcript: string;
-  response: string;
-  audioResponse?: string;
-};
-
-// --- Hooks ---
-
-export function useCreateVent() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data: CreateVentRequest) => {
-      // Validate input before sending
-      const validated = createVentRequestSchema.parse(data);
-
-      const res = await fetch(api.vents.create.path, {
-        method: api.vents.create.method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(validated),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || "Failed to process vent");
-      }
-
-      // Validate response
-      return api.vents.create.responses[200].parse(await res.json());
-    },
-    onSuccess: () => {
-      // Invalidate list query to show new history
-      queryClient.invalidateQueries({ queryKey: [api.vents.list.path] });
-    },
+// Helper to convert Blob to Base64
+const blobToBase64 = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      // Remove the data URL prefix (e.g., "data:audio/webm;base64,")
+      const base64Data = base64String.split(",")[1];
+      resolve(base64Data);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
   });
-}
+};
 
 export function useVents() {
   return useQuery({
     queryKey: [api.vents.list.path],
     queryFn: async () => {
       const res = await fetch(api.vents.list.path);
-      if (!res.ok) throw new Error("Failed to fetch history");
-      return api.vents.list.responses[200].parse(await res.json());
+      if (!res.ok) throw new Error("Failed to fetch vents");
+      return await res.json();
+    },
+  });
+}
+
+export function useCreateVent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ audioBlob, personality }: { audioBlob: Blob; personality: string }) => {
+      const base64Audio = await blobToBase64(audioBlob);
+      
+      const payload: CreateVentRequest = {
+        audio: base64Audio,
+        personality: personality as any, // Cast to enum type
+      };
+
+      const res = await fetch(api.vents.create.path, {
+        method: api.vents.create.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to process vent");
+      }
+
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.vents.list.path] });
     },
   });
 }
