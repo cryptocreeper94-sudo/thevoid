@@ -8,11 +8,32 @@ export function Footer() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex flex-col items-center md:items-start gap-1">
             <p className="text-xs text-muted-foreground">
-              DarkwaveStudios.io Copyright 2026
+              <a
+                href="https://DarkwaveStudios.io"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-2 hover:text-foreground transition-colors inline-flex items-center gap-0.5"
+                data-testid="link-darkwave"
+              >
+                DarkwaveStudios.io
+                <ExternalLink className="w-2.5 h-2.5" />
+              </a>{" "}
+              Copyright 2026
             </p>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Shield className="w-3 h-3" />
-              <span>Protected by TrustShield.tech</span>
+              <span>Protected by{" "}
+                <a
+                  href="https://TrustShield.tech"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2 hover:text-foreground transition-colors inline-flex items-center gap-0.5"
+                  data-testid="link-trustshield"
+                >
+                  TrustShield.tech
+                  <ExternalLink className="w-2.5 h-2.5" />
+                </a>
+              </span>
             </div>
             <p className="text-xs text-muted-foreground">
               Powered by Trust Layer &ndash;{" "}
