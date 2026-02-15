@@ -58,6 +58,22 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
+// === WHITELISTED USERS SCHEMA ===
+export const whitelistedUsers = pgTable("whitelisted_users", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  pin: varchar("pin", { length: 4 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertWhitelistedUserSchema = createInsertSchema(whitelistedUsers).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type WhitelistedUser = typeof whitelistedUsers.$inferSelect;
+export type InsertWhitelistedUser = z.infer<typeof insertWhitelistedUserSchema>;
+
 // === ROADMAP SCHEMA ===
 export const roadmapItems = pgTable("roadmap_items", {
   id: serial("id").primaryKey(),
