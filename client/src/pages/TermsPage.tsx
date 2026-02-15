@@ -2,6 +2,12 @@ import { Layout } from "@/components/ui/Layout";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { FileText, AlertTriangle, Scale, Ban, Phone, MessageCircle, ExternalLink, ShieldCheck, Globe } from "lucide-react";
 import { motion } from "framer-motion";
+import disclaimerImg from "@/assets/images/terms-disclaimer.png";
+import liabilityImg from "@/assets/images/terms-liability.png";
+import prohibitedImg from "@/assets/images/terms-prohibited.png";
+import dataImg from "@/assets/images/terms-data.png";
+import ipImg from "@/assets/images/terms-ip.png";
+import lawImg from "@/assets/images/terms-law.png";
 
 const stagger = {
   hidden: { opacity: 0 },
@@ -17,7 +23,7 @@ const termsSections = [
     icon: AlertTriangle,
     title: "Entertainment Disclaimer",
     color: "text-yellow-400",
-    bg: "bg-yellow-500/10",
+    img: disclaimerImg,
     content: [
       "THE VOID is designed purely for entertainment purposes. All AI-generated responses are fictional and created by artificial intelligence algorithms.",
       "The AI personalities (Smart-ass, Calming, Therapist, Hype Man) are characters and do NOT provide real therapy, counseling, medical advice, or professional guidance of any kind.",
@@ -28,7 +34,7 @@ const termsSections = [
     icon: Scale,
     title: "Limitation of Liability",
     color: "text-blue-400",
-    bg: "bg-blue-500/10",
+    img: liabilityImg,
     content: [
       "DarkWave Studios, its affiliates, Trust Layer (dwtl.io), and TrustShield.tech shall not be held liable for any damages, losses, or consequences arising from the use of THE VOID.",
       "We are not responsible for any decisions, actions, or inactions taken based on AI-generated content.",
@@ -39,7 +45,7 @@ const termsSections = [
     icon: Ban,
     title: "Prohibited Use",
     color: "text-red-400",
-    bg: "bg-red-500/10",
+    img: prohibitedImg,
     content: [
       "Users must not use THE VOID as a replacement for professional mental health services, emergency services, or crisis intervention.",
       "Users must not use the application for any illegal, harmful, or abusive purpose.",
@@ -51,7 +57,7 @@ const termsSections = [
     icon: ShieldCheck,
     title: "Data & Privacy",
     color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
+    img: dataImg,
     content: [
       "By using THE VOID, you consent to the collection and processing of audio data as described in our Privacy Policy.",
       "Audio recordings are processed via third-party AI services (OpenAI) and are subject to their data handling policies.",
@@ -62,7 +68,7 @@ const termsSections = [
     icon: Globe,
     title: "Intellectual Property",
     color: "text-purple-400",
-    bg: "bg-purple-500/10",
+    img: ipImg,
     content: [
       "THE VOID, its design, branding, and all associated content are the intellectual property of DarkWave Studios (DarkwaveStudios.io).",
       "Trust Layer and TrustShield.tech are proprietary technologies. Unauthorized use is prohibited.",
@@ -73,7 +79,7 @@ const termsSections = [
     icon: FileText,
     title: "Changes & Governing Law",
     color: "text-cyan-400",
-    bg: "bg-cyan-500/10",
+    img: lawImg,
     content: [
       "We reserve the right to modify these Terms at any time. Continued use constitutes acceptance of updated terms.",
       "These Terms shall be governed by and construed in accordance with applicable laws.",
@@ -119,21 +125,27 @@ export default function TermsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {termsSections.map((section) => (
               <motion.div key={section.title} variants={fadeUp}>
-                <GlassCard className="p-6 h-full" hoverEffect>
-                  <div className="flex items-start gap-3 mb-4">
-                    <div className={`p-2 rounded-lg ${section.bg}`}>
-                      <section.icon className={`w-5 h-5 ${section.color}`} />
+                <GlassCard className="h-full overflow-hidden" hoverEffect>
+                  <div className="relative h-32 overflow-hidden">
+                    <img src={section.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/90" />
+                    <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-white/10 backdrop-blur-sm">
+                        <section.icon className={`w-5 h-5 ${section.color}`} />
+                      </div>
+                      <h2 className="text-lg font-semibold text-white font-display">{section.title}</h2>
                     </div>
-                    <h2 className="text-lg font-semibold text-foreground">{section.title}</h2>
                   </div>
-                  <ul className="space-y-3">
-                    {section.content.map((item, i) => (
-                      <li key={i} className="text-sm text-muted-foreground leading-relaxed flex items-start gap-2">
-                        <span className="w-1 h-1 rounded-full bg-muted-foreground/40 shrink-0 mt-2" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="p-5">
+                    <ul className="space-y-3">
+                      {section.content.map((item, i) => (
+                        <li key={i} className="text-sm text-muted-foreground leading-relaxed flex items-start gap-2">
+                          <span className="w-1 h-1 rounded-full bg-muted-foreground/40 shrink-0 mt-2" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </GlassCard>
               </motion.div>
             ))}

@@ -13,6 +13,8 @@ import smartassImg from "@/assets/images/personality-smartass.png";
 import calmingImg from "@/assets/images/personality-calming.png";
 import therapistImg from "@/assets/images/personality-therapist.png";
 import hypemanImg from "@/assets/images/personality-hypeman.png";
+import audioImg from "@/assets/images/settings-audio.png";
+import displayImg from "@/assets/images/settings-display.png";
 
 const stagger = {
   hidden: { opacity: 0 },
@@ -76,14 +78,16 @@ export default function SettingsPage() {
 
             <div className="lg:col-span-5 space-y-6">
               <motion.div variants={fadeUp}>
-                <GlassCard className="p-6" hoverEffect>
-                  <div className="flex items-center gap-3 mb-5">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <Sparkles className="w-5 h-5 text-primary" />
+                <GlassCard className="overflow-hidden" hoverEffect>
+                  <div className="p-5 pb-3">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2 rounded-lg bg-primary/10">
+                        <Sparkles className="w-5 h-5 text-primary" />
+                      </div>
+                      <h2 className="text-lg font-semibold text-foreground">Default Personality</h2>
                     </div>
-                    <h2 className="text-lg font-semibold text-foreground">Default Personality</h2>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="px-5 pb-5 grid grid-cols-2 gap-3">
                     {personalities.map((p) => {
                       const isSelected = settings.defaultPersonality === p.id;
                       const Icon = p.icon;
@@ -128,14 +132,18 @@ export default function SettingsPage() {
 
             <div className="lg:col-span-7 space-y-6">
               <motion.div variants={fadeUp}>
-                <GlassCard className="p-6" hoverEffect>
-                  <div className="flex items-center gap-3 mb-5">
-                    <div className="p-2 rounded-lg bg-white/5">
-                      <Volume2 className="w-5 h-5 text-white/70" />
+                <GlassCard className="overflow-hidden" hoverEffect>
+                  <div className="relative h-24 overflow-hidden">
+                    <img src={audioImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
+                    <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-white/10 backdrop-blur-sm">
+                        <Volume2 className="w-5 h-5 text-white" />
+                      </div>
+                      <h2 className="text-lg font-semibold text-white font-display">Audio & Response</h2>
                     </div>
-                    <h2 className="text-lg font-semibold text-foreground">Audio & Response</h2>
                   </div>
-                  <div className="space-y-6">
+                  <div className="p-5 space-y-6">
                     <div className="flex items-center justify-between gap-4">
                       <div>
                         <Label className="text-sm text-foreground">Auto-play AI Response</Label>
@@ -187,14 +195,18 @@ export default function SettingsPage() {
               </motion.div>
 
               <motion.div variants={fadeUp}>
-                <GlassCard className="p-6" hoverEffect>
-                  <div className="flex items-center gap-3 mb-5">
-                    <div className="p-2 rounded-lg bg-white/5">
-                      <Type className="w-5 h-5 text-white/70" />
+                <GlassCard className="overflow-hidden" hoverEffect>
+                  <div className="relative h-24 overflow-hidden">
+                    <img src={displayImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
+                    <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-white/10 backdrop-blur-sm">
+                        <Type className="w-5 h-5 text-white" />
+                      </div>
+                      <h2 className="text-lg font-semibold text-white font-display">Display</h2>
                     </div>
-                    <h2 className="text-lg font-semibold text-foreground">Display</h2>
                   </div>
-                  <div className="space-y-4">
+                  <div className="p-5 space-y-4">
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <Label className="text-sm text-foreground">Response Font Size</Label>
