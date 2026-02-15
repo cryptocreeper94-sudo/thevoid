@@ -5,7 +5,7 @@ import { RecordButton } from "@/components/venting/RecordButton";
 import { PersonalitySelector } from "@/components/venting/PersonalitySelector";
 import { VentHistory } from "@/components/venting/VentHistory";
 import { useCreateVent } from "@/hooks/use-vents";
-import { useVoiceRecorder } from "@/replit_integrations/audio/useVoiceRecorder";
+import { useVoiceRecorder } from "../../replit_integrations/audio/useVoiceRecorder";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, Phone, ArrowRight, Play, RefreshCw, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
