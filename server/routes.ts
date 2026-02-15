@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import OpenAI from "openai";
-import { createVentRequestSchema, insertRoadmapItemSchema } from "@shared/schema";
+import { createVentRequestSchema, insertRoadmapItemSchema, insertWhitelistedUserSchema } from "@shared/schema";
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
 
@@ -66,6 +66,50 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     } catch (error) {
       console.error("Vent error:", error);
       res.status(500).json({ message: "Failed to process vent" });
+    }
+  });
+
+  app.post("/api/auth/pin", async (req, res) => {
+    try {
+      const { pin } = z.object({ pin: z.string().length(4) }).parse(req.body);
+      const result = await storage.validatePin(pin);
+      if (result.valid) {
+        res.json({ success: true, name: result.name });
+      } else {
+        res.status(401).json({ success: false, message: "Invalid PIN" });
+      }
+    } catch (error) {
+      res.status(400).json({ message: "Invalid request" });
+    }
+  });
+
+  app.get("/api/whitelist", async (_req, res) => {
+    try {
+      const users = await storage.getWhitelistedUsers();
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch whitelist" });
+    }
+  });
+
+  app.post("/api/whitelist", async (req, res) => {
+    try {
+      const data = insertWhitelistedUserSchema.parse(req.body);
+      const user = await storage.createWhitelistedUser(data);
+      res.status(201).json(user);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to add user" });
+    }
+  });
+
+  app.delete("/api/whitelist/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteWhitelistedUser(id);
+      if (!deleted) return res.status(404).json({ message: "User not found" });
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to remove user" });
     }
   });
 

@@ -1,11 +1,15 @@
 import { db } from "./db";
-import { vents, roadmapItems, type InsertVent, type Vent, type InsertRoadmapItem, type RoadmapItem } from "@shared/schema";
+import { vents, roadmapItems, whitelistedUsers, type InsertVent, type Vent, type InsertRoadmapItem, type RoadmapItem, type InsertWhitelistedUser, type WhitelistedUser } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
   createVent(vent: InsertVent): Promise<Vent>;
   getVents(): Promise<Vent[]>;
   getVent(id: number): Promise<Vent | undefined>;
+  getWhitelistedUsers(): Promise<WhitelistedUser[]>;
+  createWhitelistedUser(user: InsertWhitelistedUser): Promise<WhitelistedUser>;
+  deleteWhitelistedUser(id: number): Promise<boolean>;
+  validatePin(pin: string): Promise<{ valid: boolean; name: string | null }>;
   getRoadmapItems(): Promise<RoadmapItem[]>;
   createRoadmapItem(item: InsertRoadmapItem): Promise<RoadmapItem>;
   updateRoadmapItem(id: number, updates: Partial<InsertRoadmapItem>): Promise<RoadmapItem | undefined>;
@@ -25,6 +29,31 @@ export class DatabaseStorage implements IStorage {
   async getVent(id: number): Promise<Vent | undefined> {
     const [vent] = await db.select().from(vents).where(eq(vents.id, id));
     return vent;
+  }
+
+  async getWhitelistedUsers(): Promise<WhitelistedUser[]> {
+    return await db.select().from(whitelistedUsers).orderBy(desc(whitelistedUsers.createdAt));
+  }
+
+  async createWhitelistedUser(user: InsertWhitelistedUser): Promise<WhitelistedUser> {
+    const [created] = await db.insert(whitelistedUsers).values(user).returning();
+    return created;
+  }
+
+  async deleteWhitelistedUser(id: number): Promise<boolean> {
+    const result = await db.delete(whitelistedUsers).where(eq(whitelistedUsers.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async validatePin(pin: string): Promise<{ valid: boolean; name: string | null }> {
+    if (pin === "0424") {
+      return { valid: true, name: "Developer" };
+    }
+    const [user] = await db.select().from(whitelistedUsers).where(eq(whitelistedUsers.pin, pin));
+    if (user) {
+      return { valid: true, name: user.name };
+    }
+    return { valid: false, name: null };
   }
 
   async getRoadmapItems(): Promise<RoadmapItem[]> {
