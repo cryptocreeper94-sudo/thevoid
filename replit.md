@@ -31,6 +31,14 @@ Voice-first venting application where users record frustrations and receive AI-g
 - Voice recording via MediaRecorder API (client/replit_integrations/audio/)
 - Audio sent as base64 to /api/vents, transcribed, AI responds based on personality
 
+## AI Safety Guardrails
+- All AI personalities include a mandatory safety preamble that overrides personality behavior
+- Rules: NEVER encourage self-harm, harming others, violence, illegal activity, or anything endangering life/freedom
+- Auto-detect: If user expresses self-harm/suicide/harm intent, AI immediately provides crisis resources
+- Crisis resources provided: 988 Lifeline, Crisis Text Line (741741), SAMHSA (1-800-662-4357), 911
+- Each personality has additional safety-specific language (e.g., Hype Man channels energy toward growth not revenge)
+- Safety preamble defined in `server/routes.ts` as `SAFETY_PREAMBLE` constant
+
 ## Crisis Resources (Required on Privacy & Terms pages)
 988 Suicide & Crisis Lifeline, Crisis Text Line (741741), SAMHSA (1-800-662-4357), IMAlive, Veterans Crisis Line, Trevor Project, Childhelp, NAMI Helpline
 
