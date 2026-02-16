@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Code, Lock, Activity, Settings, Trash2, Map, Plus, ChevronLeft, ChevronRight, Check, X, Zap, Star, ArrowRight, Clock, CheckCircle2, Circle, Flame, Users, UserPlus } from "lucide-react";
+import { Code, Lock, Activity, Settings, Trash2, Map, Plus, ChevronLeft, ChevronRight, Check, X, Zap, Star, ArrowRight, Clock, CheckCircle2, Circle, Flame, Users, UserPlus, KeyRound } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -350,6 +350,8 @@ function WhitelistManager() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState("");
   const [newPin, setNewPin] = useState("");
+  const [editingPinId, setEditingPinId] = useState<number | null>(null);
+  const [editPin, setEditPin] = useState("");
 
   const { data: users = [], isLoading } = useQuery<{ id: number; name: string; createdAt: string }[]>({
     queryKey: ["/api/whitelist"],
@@ -392,6 +394,26 @@ function WhitelistManager() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/whitelist"] });
       toast({ title: "Removed", description: "User removed from whitelist." });
+    },
+  });
+
+  const updatePinMutation = useMutation({
+    mutationFn: async ({ id, pin }: { id: number; pin: string }) => {
+      const res = await fetch(`/api/whitelist/${id}/pin`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "x-master-key": "0424" },
+        body: JSON.stringify({ pin }),
+      });
+      if (!res.ok) throw new Error("Failed");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/whitelist"] });
+      setEditingPinId(null);
+      setEditPin("");
+      toast({ title: "PIN Updated", description: "User's PIN has been changed." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update PIN.", variant: "destructive" });
     },
   });
 
@@ -508,24 +530,86 @@ function WhitelistManager() {
                 key={user.id}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="flex items-center justify-between gap-4 py-2.5 px-3 rounded-xl bg-white/5 border border-white/5 group/user"
+                className="rounded-xl bg-white/5 border border-white/5"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                    <span className="text-xs font-semibold text-foreground">{user.name.charAt(0).toUpperCase()}</span>
+                <div className="flex items-center justify-between gap-3 py-2.5 px-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                      <span className="text-xs font-semibold text-foreground">{user.name.charAt(0).toUpperCase()}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
+                      <p className="text-[10px] text-muted-foreground">PIN: ****</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{user.name}</p>
-                    <p className="text-[10px] text-muted-foreground">PIN: ****</p>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => {
+                        if (editingPinId === user.id) {
+                          setEditingPinId(null);
+                          setEditPin("");
+                        } else {
+                          setEditingPinId(user.id);
+                          setEditPin("");
+                        }
+                      }}
+                      data-testid={`button-change-pin-${user.id}`}
+                    >
+                      <KeyRound className="w-3.5 h-3.5 text-muted-foreground" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => deleteMutation.mutate(user.id)}
+                      data-testid={`button-delete-whitelist-${user.id}`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-red-400/60" />
+                    </Button>
                   </div>
                 </div>
-                <button
-                  onClick={() => deleteMutation.mutate(user.id)}
-                  className="p-1.5 rounded-md text-muted-foreground/30 opacity-0 group-hover/user:opacity-100 transition-opacity"
-                  data-testid={`button-delete-whitelist-${user.id}`}
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+
+                <AnimatePresence>
+                  {editingPinId === user.id && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-3 pb-3 pt-1 flex items-center gap-2 border-t border-white/5">
+                        <Input
+                          type="password"
+                          inputMode="numeric"
+                          maxLength={4}
+                          placeholder="New PIN"
+                          value={editPin}
+                          onChange={(e) => setEditPin(e.target.value.replace(/\D/g, ""))}
+                          className="bg-white/5 border-white/10 text-center tracking-widest font-mono flex-1"
+                          autoFocus
+                          data-testid={`input-change-pin-${user.id}`}
+                        />
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => { setEditingPinId(null); setEditPin(""); }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => updatePinMutation.mutate({ id: user.id, pin: editPin })}
+                          disabled={editPin.length !== 4 || updatePinMutation.isPending}
+                          data-testid={`button-save-pin-${user.id}`}
+                        >
+                          <Check className="w-3.5 h-3.5 mr-1" />
+                          Save
+                        </Button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             ))
           )}

@@ -125,6 +125,18 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  app.patch("/api/whitelist/:id/pin", requireMasterKey, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { pin } = z.object({ pin: z.string().length(4).regex(/^\d{4}$/, "PIN must be 4 digits") }).parse(req.body);
+      const updated = await storage.updateWhitelistedUserPin(id, pin);
+      if (!updated) return res.status(404).json({ message: "User not found" });
+      res.json({ id: updated.id, name: updated.name, createdAt: updated.createdAt });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update PIN" });
+    }
+  });
+
   app.get("/api/roadmap", async (_req, res) => {
     try {
       const items = await storage.getRoadmapItems();
