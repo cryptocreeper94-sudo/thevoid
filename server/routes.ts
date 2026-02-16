@@ -74,10 +74,24 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const { pin } = z.object({ pin: z.string().length(4) }).parse(req.body);
       const result = await storage.validatePin(pin);
       if (result.valid) {
-        res.json({ success: true, name: result.name });
+        res.json({ success: true, name: result.name, userId: result.userId, pinChanged: result.pinChanged });
       } else {
         res.status(401).json({ success: false, message: "Invalid PIN" });
       }
+    } catch (error) {
+      res.status(400).json({ message: "Invalid request" });
+    }
+  });
+
+  app.post("/api/auth/change-pin", async (req, res) => {
+    try {
+      const { userId, newPin } = z.object({
+        userId: z.number(),
+        newPin: z.string().length(4).regex(/^\d{4}$/, "PIN must be 4 digits"),
+      }).parse(req.body);
+      const updated = await storage.changePinSelf(userId, newPin);
+      if (!updated) return res.status(404).json({ message: "User not found" });
+      res.json({ success: true, name: updated.name });
     } catch (error) {
       res.status(400).json({ message: "Invalid request" });
     }
