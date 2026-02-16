@@ -14,7 +14,7 @@ Voice-first venting application where users record frustrations and receive AI-g
 - **Frontend**: React + Vite, Tailwind CSS, Framer Motion, shadcn/ui
 - **Backend**: Express.js, Drizzle ORM, PostgreSQL
 - **AI**: OpenAI (GPT-4o for responses, Whisper for transcription)
-- **Auth**: PIN-based whitelist system (master key: 0424) + Replit Auth (OIDC)
+- **Auth**: PIN-based whitelist system (master key: 0424, first-login PIN change) + Replit Auth (OIDC)
 - **Design**: Glassmorphism, Bento grid, Space Grotesk + Outfit fonts
 
 ## Pages
@@ -62,12 +62,16 @@ Voice-first venting application where users record frustrations and receive AI-g
 ## PIN Access System
 - Main app (/, /settings) protected by PIN gate — users must enter 4-digit PIN to access
 - Privacy, Terms, Developer pages are publicly accessible (no PIN required)
-- Master key: 0424 (always works, grants Developer access)
-- Whitelist management in Developer portal: add name + 4-digit PIN combos
-- `whitelisted_users` table stores name + pin
-- API: POST /api/auth/pin (validate), GET/POST /api/whitelist, DELETE /api/whitelist/:id
+- Master key: 0424 (always works, grants Developer access, skips first-login PIN change)
+- First-login PIN change: new users must set their own PIN on first login (pinChanged field tracks this)
+- Admin PIN resets (Developer portal) re-trigger first-login PIN change
+- Whitelist management in Developer portal: add name + 4-digit PIN combos, change PIN, delete
+- `whitelisted_users` table stores name + pin + pinChanged
+- API: POST /api/auth/pin (validate), POST /api/auth/change-pin (self-service, requires currentPin), GET/POST /api/whitelist, DELETE /api/whitelist/:id, PATCH /api/whitelist/:id/pin
 
 ## Recent Changes
+- Feb 16, 2026: Added first-login PIN change flow — users set their own PIN on first login
+- Feb 16, 2026: Enhanced whitelist management: always-visible delete buttons, change PIN with inline editor
 - Feb 15, 2026: Added PIN-based access control with whitelist management in Developer portal
 - Feb 15, 2026: Added Master Roadmap carousel to Developer portal with database persistence and seeded initial items
 - Feb 15, 2026: Added header, footer, Settings, Privacy, Terms, Developer pages with premium glassmorphism design
