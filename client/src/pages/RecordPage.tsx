@@ -53,10 +53,10 @@ export default function RecordPage() {
                 description: "The AI has analyzed your rage.",
               });
             },
-            onError: () => {
+            onError: (err: any) => {
               toast({
-                title: "Error",
-                description: "Failed to process your vent. Please try again.",
+                title: "Couldn't Process",
+                description: err?.message || "Failed to process your vent. Please try again.",
                 variant: "destructive",
               });
             }
