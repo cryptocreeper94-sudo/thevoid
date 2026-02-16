@@ -63,6 +63,7 @@ export const whitelistedUsers = pgTable("whitelisted_users", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   pin: varchar("pin", { length: 4 }).notNull(),
+  pinChanged: boolean("pin_changed").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
