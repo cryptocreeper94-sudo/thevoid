@@ -3,16 +3,10 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import OpenAI from "openai";
 import { createVentRequestSchema, insertRoadmapItemSchema, insertWhitelistedUserSchema } from "@shared/schema";
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
-
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-});
+import { openai, speechToText, ensureCompatibleFormat } from "./replit_integrations/audio/client";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   // Set up Auth first
@@ -23,20 +17,33 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Note: registerChatRoutes takes app: Express
   registerChatRoutes(app);
 
+  app.get("/api/vents", async (_req, res) => {
+    try {
+      const ventList = await storage.getVents();
+      res.json(ventList);
+    } catch (error) {
+      console.error("Get vents error:", error);
+      res.status(500).json({ message: "Failed to fetch vents" });
+    }
+  });
+
   app.post("/api/vents", async (req, res) => {
     try {
       const { audio, personality, mimeType, extension } = createVentRequestSchema.parse(req.body);
 
       // 1. Transcribe Audio (STT)
       const transcript = await transcribeAudio(audio, mimeType || "audio/webm", extension || "webm");
-      if (!transcript) {
-        return res.status(400).json({ message: "Could not transcribe audio" });
+      if (transcript === null) {
+        return res.status(400).json({ message: "Could not transcribe audio. Please check your microphone and try again." });
+      }
+      if (!transcript.trim()) {
+        return res.status(400).json({ message: "No speech detected. Please speak louder or closer to your microphone." });
       }
 
       // 2. Generate Response (based on personality)
       const systemPrompt = getPersonalityPrompt(personality);
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o",
+        model: "gpt-5.2",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: transcript },
@@ -246,7 +253,6 @@ function getPersonalityPrompt(personality: string): string {
   return SAFETY_PREAMBLE + personalityPrompt;
 }
 
-// Helper: Audio Transcription
 async function transcribeAudio(base64Audio: string, mimeType: string, extension: string): Promise<string | null> {
   try {
     const audioBuffer = Buffer.from(base64Audio, "base64");
@@ -258,16 +264,12 @@ async function transcribeAudio(base64Audio: string, mimeType: string, extension:
 
     console.log(`Transcribing audio: ${audioBuffer.length} bytes, mime: ${mimeType}, ext: ${extension}`);
 
-    const fileName = `audio.${extension}`;
-    const file = await OpenAI.toFile(audioBuffer, fileName, { type: mimeType });
+    const { buffer: compatibleBuffer, format } = await ensureCompatibleFormat(audioBuffer);
+    console.log(`Converted to ${format}, ${compatibleBuffer.length} bytes`);
 
-    const response = await openai.audio.transcriptions.create({
-      file,
-      model: "whisper-1",
-    });
-
-    console.log("Transcription result:", response.text?.substring(0, 100));
-    return response.text || null;
+    const transcript = await speechToText(compatibleBuffer, format);
+    console.log("Transcription result:", transcript?.substring(0, 100));
+    return transcript ?? null;
   } catch (e: any) {
     console.error("Transcription error:", e?.message || e);
     if (e?.error) {
