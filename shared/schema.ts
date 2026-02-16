@@ -69,6 +69,7 @@ export const whitelistedUsers = pgTable("whitelisted_users", {
 
 export const insertWhitelistedUserSchema = createInsertSchema(whitelistedUsers).omit({
   id: true,
+  pinChanged: true,
   createdAt: true,
 });
 

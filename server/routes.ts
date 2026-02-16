@@ -85,10 +85,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.post("/api/auth/change-pin", async (req, res) => {
     try {
-      const { userId, newPin } = z.object({
+      const { userId, currentPin, newPin } = z.object({
         userId: z.number(),
+        currentPin: z.string().length(4),
         newPin: z.string().length(4).regex(/^\d{4}$/, "PIN must be 4 digits"),
       }).parse(req.body);
+      const validation = await storage.validatePin(currentPin);
+      if (!validation.valid || validation.userId !== userId) {
+        return res.status(401).json({ message: "Invalid current PIN" });
+      }
       const updated = await storage.changePinSelf(userId, newPin);
       if (!updated) return res.status(404).json({ message: "User not found" });
       res.json({ success: true, name: updated.name });

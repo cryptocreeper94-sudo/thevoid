@@ -11,6 +11,7 @@ export interface IStorage {
   deleteWhitelistedUser(id: number): Promise<boolean>;
   updateWhitelistedUserPin(id: number, pin: string): Promise<WhitelistedUser | undefined>;
   validatePin(pin: string): Promise<{ valid: boolean; name: string | null; userId: number | null; pinChanged: boolean }>;
+  changePinSelf(userId: number, newPin: string): Promise<WhitelistedUser | undefined>;
   getRoadmapItems(): Promise<RoadmapItem[]>;
   createRoadmapItem(item: InsertRoadmapItem): Promise<RoadmapItem>;
   updateRoadmapItem(id: number, updates: Partial<InsertRoadmapItem>): Promise<RoadmapItem | undefined>;
@@ -47,7 +48,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateWhitelistedUserPin(id: number, pin: string): Promise<WhitelistedUser | undefined> {
-    const [updated] = await db.update(whitelistedUsers).set({ pin }).where(eq(whitelistedUsers.id, id)).returning();
+    const [updated] = await db.update(whitelistedUsers).set({ pin, pinChanged: false }).where(eq(whitelistedUsers.id, id)).returning();
     return updated;
   }
 
