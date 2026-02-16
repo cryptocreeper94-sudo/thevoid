@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { RecordButton } from "@/components/venting/RecordButton";
@@ -19,12 +19,31 @@ export default function RecordPage() {
   const createVent = useCreateVent();
   const { toast } = useToast();
 
+  useEffect(() => {
+    if (recorder.error) {
+      toast({
+        title: "Microphone Error",
+        description: recorder.error,
+        variant: "destructive",
+      });
+      recorder.clearError();
+    }
+  }, [recorder.error]);
+
   const handleToggleRecording = async () => {
     if (recorder.state === "recording") {
       try {
-        const blob = await recorder.stopRecording();
+        const { blob, mimeType, extension } = await recorder.stopRecording();
+        if (blob.size === 0) {
+          toast({
+            title: "No Audio Captured",
+            description: "The recording was empty. Please try speaking louder or check your microphone.",
+            variant: "destructive",
+          });
+          return;
+        }
         createVent.mutate(
-          { audioBlob: blob, personality },
+          { audioBlob: blob, personality, mimeType, extension },
           {
             onSuccess: (data) => {
               setLastResponse(data);
