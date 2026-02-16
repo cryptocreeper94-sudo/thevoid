@@ -25,10 +25,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.post("/api/vents", async (req, res) => {
     try {
-      const { audio, personality } = createVentRequestSchema.parse(req.body);
+      const { audio, personality, mimeType, extension } = createVentRequestSchema.parse(req.body);
 
       // 1. Transcribe Audio (STT)
-      const transcript = await transcribeAudio(audio);
+      const transcript = await transcribeAudio(audio, mimeType || "audio/webm", extension || "webm");
       if (!transcript) {
         return res.status(400).json({ message: "Could not transcribe audio" });
       }
@@ -216,35 +216,32 @@ function getPersonalityPrompt(personality: string): string {
 }
 
 // Helper: Audio Transcription
-async function transcribeAudio(base64Audio: string): Promise<string | null> {
+async function transcribeAudio(base64Audio: string, mimeType: string, extension: string): Promise<string | null> {
   try {
-    // Basic transcription using OpenAI's whisper model via the integration
-    // Note: The integration handles file conversion, but here we might need a temporary file approach
-    // For MVP, let's assume the integration's `speechToText` helper works with buffers.
-    
-    // We need to import the helper from the integration file we created earlier
-    // But since I cannot import dynamically easily here without relative paths being perfect,
-    // I will use the OpenAI client directly for transcription if possible, or mock it for the MVP
-    // if the audio format is tricky. 
-    
-    // Actually, let's try to use the `server/replit_integrations/audio/client.ts` helper if it exists.
-    // If not, we'll fall back to a direct API call.
-    
-    // Convert base64 to buffer
     const audioBuffer = Buffer.from(base64Audio, "base64");
-    
-    // Create a File object-like structure for OpenAI API
-    // Since `toFile` is available in 'openai' package
-    const file = await OpenAI.toFile(audioBuffer, "audio.webm", { type: "audio/webm" });
+
+    if (audioBuffer.length < 100) {
+      console.error("Audio buffer too small:", audioBuffer.length, "bytes");
+      return null;
+    }
+
+    console.log(`Transcribing audio: ${audioBuffer.length} bytes, mime: ${mimeType}, ext: ${extension}`);
+
+    const fileName = `audio.${extension}`;
+    const file = await OpenAI.toFile(audioBuffer, fileName, { type: mimeType });
 
     const response = await openai.audio.transcriptions.create({
       file,
       model: "whisper-1",
     });
-    
-    return response.text;
-  } catch (e) {
-    console.error("Transcription error:", e);
+
+    console.log("Transcription result:", response.text?.substring(0, 100));
+    return response.text || null;
+  } catch (e: any) {
+    console.error("Transcription error:", e?.message || e);
+    if (e?.error) {
+      console.error("Transcription error details:", JSON.stringify(e.error));
+    }
     return null;
   }
 }

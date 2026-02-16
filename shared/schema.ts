@@ -95,8 +95,10 @@ export type InsertRoadmapItem = z.infer<typeof insertRoadmapItemSchema>;
 
 // === API REQUEST/RESPONSE TYPES ===
 export const createVentRequestSchema = z.object({
-  audio: z.string(), // Base64 audio
+  audio: z.string(),
   personality: z.enum(['smart-ass', 'calming', 'therapist', 'hype-man']),
+  mimeType: z.string().optional().default("audio/webm"),
+  extension: z.string().optional().default("webm"),
 });
 
 export type CreateVentRequest = z.infer<typeof createVentRequestSchema>;

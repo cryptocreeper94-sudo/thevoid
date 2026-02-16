@@ -32,12 +32,14 @@ export function useCreateVent() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ audioBlob, personality }: { audioBlob: Blob; personality: string }) => {
+    mutationFn: async ({ audioBlob, personality, mimeType, extension }: { audioBlob: Blob; personality: string; mimeType?: string; extension?: string }) => {
       const base64Audio = await blobToBase64(audioBlob);
       
       const payload: CreateVentRequest = {
         audio: base64Audio,
-        personality: personality as any, // Cast to enum type
+        personality: personality as any,
+        mimeType: mimeType || "audio/webm",
+        extension: extension || "webm",
       };
 
       const res = await fetch(api.vents.create.path, {
