@@ -14,8 +14,17 @@ import screamImg from "@/assets/images/scream-hero.png";
 
 type MicPermission = "prompt" | "granted" | "denied" | "unsupported" | "unknown";
 
+function isEmbeddedIframe(): boolean {
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+}
+
 function useMicPermission() {
   const [permission, setPermission] = useState<MicPermission>("unknown");
+  const [isEmbedded] = useState(() => isEmbeddedIframe());
 
   useEffect(() => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -46,7 +55,7 @@ function useMicPermission() {
     }
   }, []);
 
-  return { permission, requestPermission };
+  return { permission, requestPermission, isEmbedded };
 }
 
 export default function RecordPage() {
@@ -56,10 +65,15 @@ export default function RecordPage() {
   const recorder = useVoiceRecorder();
   const createVent = useCreateVent();
   const { toast } = useToast();
-  const { permission: micPermission, requestPermission } = useMicPermission();
+  const { permission: micPermission, requestPermission, isEmbedded } = useMicPermission();
 
   useEffect(() => {
     if (recorder.error) {
+      if (recorder.error.toLowerCase().includes("denied") || 
+          recorder.error.toLowerCase().includes("access") ||
+          recorder.error.toLowerCase().includes("permission")) {
+        requestPermission().catch(() => {});
+      }
       toast({
         title: "Microphone Error",
         description: recorder.error,
@@ -224,21 +238,36 @@ export default function RecordPage() {
                     <h3 className="text-lg font-bold text-white font-display mb-2">
                       {micPermission === "unsupported" ? "Microphone Not Available" : "Microphone Blocked"}
                     </h3>
-                    <p className="text-sm text-white/40 max-w-xs leading-relaxed mb-6">
+                    <p className="text-sm text-white/40 max-w-xs leading-relaxed mb-4">
                       {micPermission === "unsupported"
                         ? "Your browser doesn't support microphone access. Try opening this app in Chrome or Safari."
-                        : "Microphone access was denied. To fix this, tap the lock icon in your browser's address bar and allow microphone access, then reload the page."}
+                        : isEmbedded
+                          ? "Embedded previews can't access your microphone. Open this app in a full browser tab to record."
+                          : "Microphone access was denied. Tap the lock icon in your browser's address bar, allow microphone access, then reload."}
                     </p>
-                    {micPermission === "denied" && (
-                      <button
-                        onClick={() => window.location.reload()}
-                        className="px-5 py-2.5 rounded-full bg-white/5 hover:bg-white/10 text-white border border-white/10 flex items-center gap-2 transition-all text-sm"
-                        data-testid="button-reload-mic"
-                      >
-                        <RefreshCw className="w-3.5 h-3.5" />
-                        Reload Page
-                      </button>
-                    )}
+                    <div className="flex gap-3 flex-wrap justify-center">
+                      {isEmbedded && (
+                        <a
+                          href={window.location.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-5 py-2.5 rounded-full bg-primary hover:bg-primary/80 text-white shadow-lg shadow-primary/20 flex items-center gap-2 transition-all text-sm"
+                          data-testid="link-open-new-tab"
+                        >
+                          Open in New Tab
+                        </a>
+                      )}
+                      {micPermission === "denied" && !isEmbedded && (
+                        <button
+                          onClick={() => window.location.reload()}
+                          className="px-5 py-2.5 rounded-full bg-white/5 hover:bg-white/10 text-white border border-white/10 flex items-center gap-2 transition-all text-sm"
+                          data-testid="button-reload-mic"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                          Reload Page
+                        </button>
+                      )}
+                    </div>
                   </motion.div>
                 ) : (
                   <motion.div
@@ -254,13 +283,27 @@ export default function RecordPage() {
                     />
 
                     {recorder.state !== 'recording' && !createVent.isPending && (
-                      <motion.p
+                      <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mt-6 text-center text-white/30 max-w-xs text-sm leading-relaxed"
+                        className="mt-6 text-center max-w-xs space-y-3"
                       >
-                        Scream, rant, or whisper. <span className="text-white/50">We don't judge.</span>
-                      </motion.p>
+                        <p className="text-white/30 text-sm leading-relaxed">
+                          Scream, rant, or whisper. <span className="text-white/50">We don't judge.</span>
+                        </p>
+                        {isEmbedded && (
+                          <a
+                            href={window.location.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 text-white/60 border border-white/10 text-xs transition-all"
+                            data-testid="link-open-new-tab-hint"
+                          >
+                            <Mic className="w-3 h-3" />
+                            Having mic issues? Open in new tab
+                          </a>
+                        )}
+                      </motion.div>
                     )}
                   </motion.div>
                 )}

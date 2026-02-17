@@ -6,7 +6,7 @@ import { z } from "zod";
 import { createVentRequestSchema, insertRoadmapItemSchema, insertWhitelistedUserSchema } from "@shared/schema";
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
-import { openai, speechToText, ensureCompatibleFormat } from "./replit_integrations/audio/client";
+import { openai, speechToText, ensureCompatibleFormat, detectAudioFormat } from "./replit_integrations/audio/client";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   // Set up Auth first
@@ -267,10 +267,27 @@ async function transcribeAudio(base64Audio: string, mimeType: string, extension:
 
     console.log(`Transcribing audio: ${audioBuffer.length} bytes, mime: ${mimeType}, ext: ${extension}`);
 
-    const { buffer: compatibleBuffer, format } = await ensureCompatibleFormat(audioBuffer);
-    console.log(`Converted to ${format}, ${compatibleBuffer.length} bytes`);
+    let transcriptBuffer: Buffer;
+    let transcriptFormat: "wav" | "mp3" | "webm";
 
-    const transcript = await speechToText(compatibleBuffer, format);
+    try {
+      const { buffer: compatibleBuffer, format } = await ensureCompatibleFormat(audioBuffer);
+      console.log(`Converted to ${format}, ${compatibleBuffer.length} bytes`);
+      transcriptBuffer = compatibleBuffer;
+      transcriptFormat = format;
+    } catch (convErr: any) {
+      console.warn("Audio conversion failed, trying raw format:", convErr?.message);
+      const detected = detectAudioFormat(audioBuffer);
+      if (detected === "webm" || detected === "mp3" || detected === "wav") {
+        transcriptBuffer = audioBuffer;
+        transcriptFormat = detected;
+      } else {
+        transcriptBuffer = audioBuffer;
+        transcriptFormat = "webm";
+      }
+    }
+
+    const transcript = await speechToText(transcriptBuffer, transcriptFormat);
     console.log("Transcription result:", transcript?.substring(0, 100));
     return transcript ?? null;
   } catch (e: any) {
