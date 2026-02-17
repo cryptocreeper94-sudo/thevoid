@@ -10,7 +10,7 @@ import { useVoiceRecorder } from "../../replit_integrations/audio/useVoiceRecord
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, Phone, Play, RefreshCw, MessageCircle, Info, X, ShieldCheck, Mic, MicOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import screamImg from "@/assets/images/scream-hero.png";
+import { getSessionHeroImage } from "@/lib/heroImages";
 
 type MicPermission = "prompt" | "granted" | "denied" | "unsupported" | "unknown";
 
@@ -176,7 +176,7 @@ export default function RecordPage() {
             }`} />
 
             <img 
-              src={screamImg} 
+              src={getSessionHeroImage()} 
               alt="" 
               className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ${
                 recorder.state === 'recording' 

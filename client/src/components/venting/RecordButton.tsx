@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Mic, Square, Loader2 } from "lucide-react";
-import screamImg from "@/assets/images/scream-hero.png";
+import { getSessionHeroImage } from "@/lib/heroImages";
 
 interface RecordButtonProps {
   isRecording: boolean;
@@ -37,7 +37,7 @@ export function RecordButton({ isRecording, isProcessing, onToggleRecording }: R
           data-testid="button-record"
         >
           <img
-            src={screamImg}
+            src={getSessionHeroImage()}
             alt="Scream into the void"
             className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ${
               isRecording ? "scale-110 brightness-125" : isProcessing ? "brightness-50 grayscale" : "brightness-75"
