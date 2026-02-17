@@ -70,6 +70,7 @@ Voice-first venting application where users record frustrations and receive AI-g
 - API: POST /api/auth/pin (validate), POST /api/auth/change-pin (self-service, requires currentPin), GET/POST /api/whitelist, DELETE /api/whitelist/:id, PATCH /api/whitelist/:id/pin
 
 ## Recent Changes
+- Feb 17, 2026: Added 8 diverse hero images (Black, White, Hispanic, Asian x Male, Female) with random session-based rotation via sessionStorage
 - Feb 17, 2026: Added proactive microphone permission flow — shows enable mic prompt, denied state with instructions, and unsupported browser message
 - Feb 17, 2026: Added Roast Master personality — savage comedy roast comedian with vulgar humor and safety guardrails (no targeting identity/body, comedy not cruelty)
 - Feb 16, 2026: Added first-login PIN change flow — users set their own PIN on first login
