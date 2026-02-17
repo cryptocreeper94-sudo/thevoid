@@ -1,7 +1,7 @@
 # THE VOID by DarkWave Studios
 
 ## Overview
-Voice-first venting application where users record frustrations and receive AI-generated responses based on different personality modes (Smart-ass, Calming, Therapist, Hype Man). Dark glassmorphism design with Bento grid layout.
+Voice-first venting application where users record frustrations and receive AI-generated responses based on different personality modes (Smart-ass, Calming, Therapist, Hype Man, Roast Master). Dark glassmorphism design with Bento grid layout.
 
 ## Branding
 - **App Name**: THE VOID
@@ -13,7 +13,7 @@ Voice-first venting application where users record frustrations and receive AI-g
 ## Tech Stack
 - **Frontend**: React + Vite, Tailwind CSS, Framer Motion, shadcn/ui
 - **Backend**: Express.js, Drizzle ORM, PostgreSQL
-- **AI**: OpenAI (GPT-4o for responses, Whisper for transcription)
+- **AI**: OpenAI (GPT-5.2 for responses, gpt-4o-mini-transcribe for transcription via integration)
 - **Auth**: PIN-based whitelist system (master key: 0424, first-login PIN change) + Replit Auth (OIDC)
 - **Design**: Glassmorphism, Bento grid, Space Grotesk + Outfit fonts
 
@@ -70,6 +70,8 @@ Voice-first venting application where users record frustrations and receive AI-g
 - API: POST /api/auth/pin (validate), POST /api/auth/change-pin (self-service, requires currentPin), GET/POST /api/whitelist, DELETE /api/whitelist/:id, PATCH /api/whitelist/:id/pin
 
 ## Recent Changes
+- Feb 17, 2026: Added proactive microphone permission flow — shows enable mic prompt, denied state with instructions, and unsupported browser message
+- Feb 17, 2026: Added Roast Master personality — savage comedy roast comedian with vulgar humor and safety guardrails (no targeting identity/body, comedy not cruelty)
 - Feb 16, 2026: Added first-login PIN change flow — users set their own PIN on first login
 - Feb 16, 2026: Enhanced whitelist management: always-visible delete buttons, change PIN with inline editor
 - Feb 15, 2026: Added PIN-based access control with whitelist management in Developer portal

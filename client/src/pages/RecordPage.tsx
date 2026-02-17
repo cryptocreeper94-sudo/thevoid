@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Layout } from "@/components/ui/Layout";
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -8,9 +8,46 @@ import { VentHistory } from "@/components/venting/VentHistory";
 import { useCreateVent } from "@/hooks/use-vents";
 import { useVoiceRecorder } from "../../replit_integrations/audio/useVoiceRecorder";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, Phone, Play, RefreshCw, MessageCircle, Info, X, ShieldCheck } from "lucide-react";
+import { AlertCircle, Phone, Play, RefreshCw, MessageCircle, Info, X, ShieldCheck, Mic, MicOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import screamImg from "@/assets/images/scream-hero.png";
+
+type MicPermission = "prompt" | "granted" | "denied" | "unsupported" | "unknown";
+
+function useMicPermission() {
+  const [permission, setPermission] = useState<MicPermission>("unknown");
+
+  useEffect(() => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setPermission("unsupported");
+      return;
+    }
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: "microphone" as PermissionName }).then((result) => {
+        setPermission(result.state as MicPermission);
+        result.onchange = () => setPermission(result.state as MicPermission);
+      }).catch(() => {
+        setPermission("prompt");
+      });
+    } else {
+      setPermission("prompt");
+    }
+  }, []);
+
+  const requestPermission = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(t => t.stop());
+      setPermission("granted");
+      return true;
+    } catch {
+      setPermission("denied");
+      return false;
+    }
+  }, []);
+
+  return { permission, requestPermission };
+}
 
 export default function RecordPage() {
   const [personality, setPersonality] = useState('smart-ass');
@@ -19,6 +56,7 @@ export default function RecordPage() {
   const recorder = useVoiceRecorder();
   const createVent = useCreateVent();
   const { toast } = useToast();
+  const { permission: micPermission, requestPermission } = useMicPermission();
 
   useEffect(() => {
     if (recorder.error) {
@@ -172,6 +210,35 @@ export default function RecordPage() {
                         Listen
                       </button>
                     </div>
+                  </motion.div>
+                ) : micPermission === "denied" || micPermission === "unsupported" ? (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex flex-col items-center text-center px-4"
+                  >
+                    <div className="w-24 h-24 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-6">
+                      <MicOff className="w-10 h-10 text-red-400" />
+                    </div>
+                    <h3 className="text-lg font-bold text-white font-display mb-2">
+                      {micPermission === "unsupported" ? "Microphone Not Available" : "Microphone Blocked"}
+                    </h3>
+                    <p className="text-sm text-white/40 max-w-xs leading-relaxed mb-6">
+                      {micPermission === "unsupported"
+                        ? "Your browser doesn't support microphone access. Try opening this app in Chrome or Safari."
+                        : "Microphone access was denied. To fix this, tap the lock icon in your browser's address bar and allow microphone access, then reload the page."}
+                    </p>
+                    {micPermission === "denied" && (
+                      <button
+                        onClick={() => window.location.reload()}
+                        className="px-5 py-2.5 rounded-full bg-white/5 hover:bg-white/10 text-white border border-white/10 flex items-center gap-2 transition-all text-sm"
+                        data-testid="button-reload-mic"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        Reload Page
+                      </button>
+                    )}
                   </motion.div>
                 ) : (
                   <motion.div
