@@ -340,7 +340,12 @@ export default function RecordPage() {
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.9, y: 20 }}
                       transition={{ type: "spring", damping: 20, stiffness: 300 }}
-                      className="fixed z-[9991] left-4 right-4 top-1/2 -translate-y-1/2 max-w-sm mx-auto max-h-[80vh] overflow-y-auto p-5 rounded-2xl bg-black/90 backdrop-blur-xl border border-white/10 shadow-2xl"
+                      className="fixed z-[9991] inset-0 flex items-center justify-center p-4"
+                      style={{ pointerEvents: "none" }}
+                    >
+                    <div
+                      className="w-full max-w-sm max-h-[85vh] overflow-y-auto p-5 rounded-2xl bg-black/90 backdrop-blur-xl border border-white/10 shadow-2xl"
+                      style={{ pointerEvents: "auto" }}
                       data-testid="panel-crisis-info"
                     >
                       <div className="flex items-start justify-between gap-2 mb-3">
@@ -402,6 +407,7 @@ export default function RecordPage() {
                           <p className="text-xs font-medium text-red-200">Emergency: Call 911</p>
                         </div>
                       </div>
+                    </div>
                     </motion.div>
                   </>
                 )}
