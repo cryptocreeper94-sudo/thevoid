@@ -8,6 +8,7 @@ interface SubscriptionStatus {
   status: string;
   currentPeriodEnd?: string;
   voidId?: string | null;
+  isFounder?: boolean;
 }
 
 export function useSubscription(userId: number | null) {

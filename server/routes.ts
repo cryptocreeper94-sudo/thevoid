@@ -20,12 +20,24 @@ import { eq, and, count as dbCount } from "drizzle-orm";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-04-30.basil" as any });
 
-const VOID_PRICE_ID = "price_1T23bfRq977vVehdJ3Ho9j2R";
+const VOID_FOUNDERS_PRICE_ID = "price_1T23bfRq977vVehdJ3Ho9j2R";
+const VOID_STANDARD_PRICE_ID = "price_1T2JdkRq977vVehd3ZcYfDKB";
 const VOID_PRODUCT_ID = "prod_U03iMZln0CXr0m";
 const FREE_DAILY_VENT_LIMIT = 1;
+const FOUNDERS_LIMIT = 1000;
 
 function getTodayDate(): string {
   return new Date().toISOString().split("T")[0];
+}
+
+async function getFounderCount(): Promise<number> {
+  const result = await db.select({ count: dbCount() }).from(subscriptions).where(eq(subscriptions.isFounder, true));
+  return Number(result[0]?.count || 0);
+}
+
+async function getActivePriceId(): Promise<string> {
+  const founderCount = await getFounderCount();
+  return founderCount < FOUNDERS_LIMIT ? VOID_FOUNDERS_PRICE_ID : VOID_STANDARD_PRICE_ID;
 }
 
 let webhookSigningSecret: string | null = process.env.STRIPE_WEBHOOK_SECRET || null;
@@ -143,12 +155,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
             let finalVoidId = voidId;
             while (retries < 5) {
               try {
+                const isFounderFromCheckout = session.metadata?.isFounder === "true";
+                const checkoutPriceId = isFounderFromCheckout ? VOID_FOUNDERS_PRICE_ID : VOID_STANDARD_PRICE_ID;
                 await storage.upsertSubscription(userId, {
                   stripeCustomerId: session.customer as string,
                   stripeSubscriptionId: session.subscription as string,
-                  stripePriceId: VOID_PRICE_ID,
+                  stripePriceId: checkoutPriceId,
                   status: "active",
                   voidId: finalVoidId,
+                  isFounder: isFounderFromCheckout,
                 });
                 break;
               } catch (e: any) {
@@ -268,13 +283,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || process.env.REPLIT_DEV_DOMAIN;
       const baseUrl = `https://${domain}`;
 
+      const activePriceId = await getActivePriceId();
+      const isFounderCheckout = activePriceId === VOID_FOUNDERS_PRICE_ID;
+
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
         mode: "subscription",
-        line_items: [{ price: VOID_PRICE_ID, quantity: 1 }],
+        line_items: [{ price: activePriceId, quantity: 1 }],
         success_url: `${baseUrl}/?subscription=success`,
         cancel_url: `${baseUrl}/?subscription=canceled`,
-        metadata: { userId: String(userId) },
+        metadata: { userId: String(userId), isFounder: isFounderCheckout ? "true" : "false" },
       });
 
       res.json({ url: session.url });
@@ -332,9 +350,30 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         status: sub?.status || "free",
         currentPeriodEnd: sub?.currentPeriodEnd,
         voidId: sub?.voidId || null,
+        isFounder: sub?.isFounder || false,
       });
     } catch (err: any) {
       res.status(500).json({ message: "Failed to get subscription status" });
+    }
+  });
+
+  // === FOUNDERS PRICING INFO ===
+
+  app.get("/api/pricing/info", async (_req, res) => {
+    try {
+      const founderCount = await getFounderCount();
+      const foundersRemaining = Math.max(0, FOUNDERS_LIMIT - founderCount);
+      const isFoundersPricing = founderCount < FOUNDERS_LIMIT;
+      res.json({
+        foundersPrice: 9.99,
+        standardPrice: 14.99,
+        isFoundersPricing,
+        foundersRemaining,
+        foundersLimit: FOUNDERS_LIMIT,
+        founderCount,
+      });
+    } catch (err: any) {
+      res.status(500).json({ message: "Failed to get pricing info" });
     }
   });
 

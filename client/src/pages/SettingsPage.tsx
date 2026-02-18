@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Settings, Sparkles, Brain, Zap, Heart, Flame, Volume2, Type, Crown, CreditCard, Mic, Sliders, Lock, Copy, Check, Link2, Shield, Hash, Users, Gift } from "lucide-react";
+import { Settings, Sparkles, Brain, Zap, Heart, Flame, Volume2, Type, Crown, CreditCard, Mic, Sliders, Lock, Copy, Check, Link2, Shield, Hash, Users, Gift, Star } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { Switch } from "@/components/ui/switch";
@@ -229,6 +229,10 @@ export default function SettingsPage() {
 
   const isPremium = subStatus?.tier === "premium";
 
+  const { data: pricingInfo } = useQuery<any>({
+    queryKey: ["/api/pricing/info"],
+  });
+
   const { data: tuningData } = useQuery({
     queryKey: ["/api/user-settings", visitorId],
     queryFn: async () => {
@@ -326,12 +330,19 @@ export default function SettingsPage() {
                       )}
                     </div>
                     <div>
-                      <h2 className="text-base font-semibold text-foreground">
-                        {subStatus?.tier === "premium" ? "Premium Plan" : "Free Plan"}
-                      </h2>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h2 className="text-base font-semibold text-foreground">
+                          {subStatus?.tier === "premium" ? "Premium Plan" : "Free Plan"}
+                        </h2>
+                        {subStatus?.isFounder && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/30 text-[10px] font-bold text-amber-400 uppercase tracking-wider" data-testid="badge-founder">
+                            <Star className="w-3 h-3" /> Founder
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground">
                         {subStatus?.tier === "premium"
-                          ? "Unlimited venting — $9.99/month"
+                          ? `Unlimited venting — $${subStatus?.isFounder ? "9.99" : "14.99"}/month${subStatus?.isFounder ? " (Founders Rate)" : ""}`
                           : `${subStatus?.ventsRemaining ?? 1} vent${(subStatus?.ventsRemaining ?? 1) !== 1 ? "s" : ""} remaining today`}
                       </p>
                     </div>
@@ -360,23 +371,58 @@ export default function SettingsPage() {
                   </div>
                 )}
                 {subStatus?.tier !== "premium" && (
-                  <div className="mt-4 pt-4 border-t border-white/5 grid grid-cols-4 gap-3 text-center">
-                    <div>
-                      <p className="text-lg font-bold text-foreground">1</p>
-                      <p className="text-[10px] text-muted-foreground">Free vent/day</p>
+                  <div className="mt-4 pt-4 border-t border-white/5 space-y-4">
+                    <div className="grid grid-cols-4 gap-3 text-center">
+                      <div>
+                        <p className="text-lg font-bold text-foreground">1</p>
+                        <p className="text-[10px] text-muted-foreground">Free vent/day</p>
+                      </div>
+                      <div>
+                        <p className="text-lg font-bold text-purple-400">{creditData?.balance || 0}</p>
+                        <p className="text-[10px] text-muted-foreground">Credits</p>
+                      </div>
+                      <div>
+                        <p className="text-lg font-bold text-amber-400">&#8734;</p>
+                        <p className="text-[10px] text-muted-foreground">Premium vents</p>
+                      </div>
+                      <div>
+                        {pricingInfo?.isFoundersPricing ? (
+                          <>
+                            <p className="text-lg font-bold text-amber-400">$9.99</p>
+                            <p className="text-[10px] text-amber-400/70 line-through">$14.99</p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-lg font-bold text-foreground">$14.99</p>
+                            <p className="text-[10px] text-muted-foreground">per month</p>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-lg font-bold text-purple-400">{creditData?.balance || 0}</p>
-                      <p className="text-[10px] text-muted-foreground">Credits</p>
-                    </div>
-                    <div>
-                      <p className="text-lg font-bold text-amber-400">&#8734;</p>
-                      <p className="text-[10px] text-muted-foreground">Premium vents</p>
-                    </div>
-                    <div>
-                      <p className="text-lg font-bold text-foreground">$9.99</p>
-                      <p className="text-[10px] text-muted-foreground">per month</p>
-                    </div>
+                    {pricingInfo?.isFoundersPricing && (
+                      <div className="p-3 rounded-xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 border border-amber-500/20" data-testid="card-founders-pricing">
+                        <div className="flex items-center justify-between gap-4 flex-wrap">
+                          <div className="flex items-center gap-2">
+                            <Star className="w-4 h-4 text-amber-400" />
+                            <span className="text-sm font-semibold text-amber-400">Founders Rate</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {pricingInfo.foundersRemaining} of {pricingInfo.foundersLimit} spots left
+                          </span>
+                        </div>
+                        <div className="mt-2">
+                          <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500"
+                              style={{ width: `${((pricingInfo.foundersLimit - pricingInfo.foundersRemaining) / pricingInfo.foundersLimit) * 100}%` }}
+                            />
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-2">
+                          Lock in $9.99/mo forever. Price goes to $14.99/mo after {pricingInfo.foundersLimit} founders.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
