@@ -120,6 +120,18 @@ export const dailyVentUsage = pgTable("daily_vent_usage", {
 
 export type DailyVentUsage = typeof dailyVentUsage.$inferSelect;
 
+// === CONTACT MESSAGES SCHEMA ===
+export const contactMessages = pgTable("contact_messages", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  subject: text("subject").notNull().default("general"),
+  message: text("message").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type ContactMessage = typeof contactMessages.$inferSelect;
+
 // === API REQUEST/RESPONSE TYPES ===
 export const createVentRequestSchema = z.object({
   audio: z.string(),

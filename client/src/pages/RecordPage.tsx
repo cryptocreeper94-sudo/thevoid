@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Layout } from "@/components/ui/Layout";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { RecordButton } from "@/components/venting/RecordButton";
 import { PersonalitySelector } from "@/components/venting/PersonalitySelector";
@@ -62,6 +63,7 @@ function useMicPermission() {
 }
 
 export default function RecordPage() {
+  useDocumentTitle("Vent Now");
   const [personality, setPersonality] = useState('smart-ass');
   const [lastResponse, setLastResponse] = useState<{ transcript: string; response: string; audioResponse?: string } | null>(null);
   const [showCrisisInfo, setShowCrisisInfo] = useState(false);

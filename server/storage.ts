@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { vents, roadmapItems, whitelistedUsers, subscriptions, dailyVentUsage, type InsertVent, type Vent, type InsertRoadmapItem, type RoadmapItem, type InsertWhitelistedUser, type WhitelistedUser, type Subscription, type DailyVentUsage } from "@shared/schema";
+import { vents, roadmapItems, whitelistedUsers, subscriptions, dailyVentUsage, contactMessages, type InsertVent, type Vent, type InsertRoadmapItem, type RoadmapItem, type InsertWhitelistedUser, type WhitelistedUser, type Subscription, type DailyVentUsage, type ContactMessage } from "@shared/schema";
 import { eq, desc, and } from "drizzle-orm";
 
 export interface IStorage {
@@ -22,6 +22,8 @@ export interface IStorage {
   upsertSubscription(userId: number, data: Partial<Subscription>): Promise<Subscription>;
   getDailyVentUsage(userId: number, date: string): Promise<DailyVentUsage | undefined>;
   incrementDailyVentUsage(userId: number, date: string): Promise<DailyVentUsage>;
+  createContactMessage(data: { name: string; email: string; subject: string; message: string }): Promise<ContactMessage>;
+  getContactMessages(): Promise<ContactMessage[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -148,6 +150,14 @@ export class DatabaseStorage implements IStorage {
       .values({ userId, date, ventCount: 1 })
       .returning();
     return created;
+  }
+  async createContactMessage(data: { name: string; email: string; subject: string; message: string }): Promise<ContactMessage> {
+    const [created] = await db.insert(contactMessages).values(data).returning();
+    return created;
+  }
+
+  async getContactMessages(): Promise<ContactMessage[]> {
+    return await db.select().from(contactMessages).orderBy(desc(contactMessages.createdAt));
   }
 }
 

@@ -61,6 +61,11 @@ export function Footer() {
                 Terms of Service
               </span>
             </Link>
+            <Link href="/contact" data-testid="link-contact">
+              <span className="hover:text-foreground transition-colors cursor-pointer">
+                Contact
+              </span>
+            </Link>
             <Link href="/developer" data-testid="link-developer">
               <span className="hover:text-foreground transition-colors cursor-pointer">
                 Developer

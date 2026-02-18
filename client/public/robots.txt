@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /developer
+Disallow: /api/
+
+Sitemap: https://thevoid.replit.app/sitemap.xml

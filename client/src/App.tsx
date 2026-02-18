@@ -12,6 +12,7 @@ import SettingsPage from "@/pages/SettingsPage";
 import PrivacyPage from "@/pages/PrivacyPage";
 import TermsPage from "@/pages/TermsPage";
 import DeveloperPage from "@/pages/DeveloperPage";
+import ContactPage from "@/pages/ContactPage";
 
 function ProtectedRoutes() {
   return (
@@ -31,6 +32,7 @@ function Router() {
       <Route path="/privacy" component={PrivacyPage} />
       <Route path="/terms" component={TermsPage} />
       <Route path="/developer" component={DeveloperPage} />
+      <Route path="/contact" component={ContactPage} />
       <Route>
         <ProtectedRoutes />
       </Route>
