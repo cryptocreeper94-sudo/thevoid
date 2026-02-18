@@ -14,6 +14,7 @@ import TermsPage from "@/pages/TermsPage";
 import DeveloperPage from "@/pages/DeveloperPage";
 import ContactPage from "@/pages/ContactPage";
 import ConversationsPage from "@/pages/ConversationsPage";
+import SignalChatPage from "@/pages/SignalChatPage";
 
 function ProtectedRoutes() {
   return (
@@ -35,6 +36,7 @@ function Router() {
       <Route path="/terms" component={TermsPage} />
       <Route path="/developer" component={DeveloperPage} />
       <Route path="/contact" component={ContactPage} />
+      <Route path="/signal" component={SignalChatPage} />
       <Route>
         <ProtectedRoutes />
       </Route>

@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { vents, roadmapItems, whitelistedUsers, subscriptions, dailyVentUsage, contactMessages, userSettings, userCredits, conversationThreads, threadMessages, type InsertVent, type Vent, type InsertRoadmapItem, type RoadmapItem, type InsertWhitelistedUser, type WhitelistedUser, type Subscription, type DailyVentUsage, type ContactMessage, type UserSettings, type UserCredit, type ConversationThread, type ThreadMessage, type InsertConversationThread, type InsertThreadMessage } from "@shared/schema";
+import { vents, roadmapItems, whitelistedUsers, subscriptions, dailyVentUsage, contactMessages, userSettings, userCredits, conversationThreads, threadMessages, signalChats, type InsertVent, type Vent, type InsertRoadmapItem, type RoadmapItem, type InsertWhitelistedUser, type WhitelistedUser, type Subscription, type DailyVentUsage, type ContactMessage, type UserSettings, type UserCredit, type ConversationThread, type ThreadMessage, type InsertConversationThread, type InsertThreadMessage, type SignalChat, type InsertSignalChat } from "@shared/schema";
 import { eq, desc, and } from "drizzle-orm";
 
 export interface IStorage {
@@ -36,6 +36,8 @@ export interface IStorage {
   deleteConversationThread(id: number): Promise<boolean>;
   getThreadMessages(threadId: number): Promise<ThreadMessage[]>;
   createThreadMessage(data: InsertThreadMessage): Promise<ThreadMessage>;
+  getSignalChatMessages(sessionId: string): Promise<SignalChat[]>;
+  createSignalChatMessage(data: InsertSignalChat): Promise<SignalChat>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -258,6 +260,17 @@ export class DatabaseStorage implements IStorage {
 
   async createThreadMessage(data: InsertThreadMessage): Promise<ThreadMessage> {
     const [created] = await db.insert(threadMessages).values(data).returning();
+    return created;
+  }
+
+  async getSignalChatMessages(sessionId: string): Promise<SignalChat[]> {
+    return await db.select().from(signalChats)
+      .where(eq(signalChats.sessionId, sessionId))
+      .orderBy(signalChats.createdAt);
+  }
+
+  async createSignalChatMessage(data: InsertSignalChat): Promise<SignalChat> {
+    const [created] = await db.insert(signalChats).values(data).returning();
     return created;
   }
 }

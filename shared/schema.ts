@@ -206,6 +206,23 @@ export const insertThreadMessageSchema = createInsertSchema(threadMessages).omit
 export type ThreadMessage = typeof threadMessages.$inferSelect;
 export type InsertThreadMessage = z.infer<typeof insertThreadMessageSchema>;
 
+// === SIGNAL CHAT (CRISIS SUPPORT) SCHEMA ===
+export const signalChats = pgTable("signal_chats", {
+  id: serial("id").primaryKey(),
+  sessionId: text("session_id").notNull(),
+  role: text("role").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertSignalChatSchema = createInsertSchema(signalChats).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type SignalChat = typeof signalChats.$inferSelect;
+export type InsertSignalChat = z.infer<typeof insertSignalChatSchema>;
+
 // === API REQUEST/RESPONSE TYPES ===
 export const createVentRequestSchema = z.object({
   audio: z.string(),

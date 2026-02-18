@@ -71,13 +71,18 @@ export function Footer() {
                 Developer
               </span>
             </Link>
+            <Link href="/signal" data-testid="link-signal-chat">
+              <span className="text-red-400 hover:text-red-300 transition-colors cursor-pointer">
+                Signal Chat
+              </span>
+            </Link>
           </nav>
         </div>
 
         <div className="mt-4 pt-4 border-t border-white/5 text-center">
           <p className="text-[10px] text-muted-foreground/60">
             THE VOID is a safe space to blow off steam without hurting anyone or anything. It is not a substitute for professional mental health care.
-            Our AI will never encourage harm to yourself, others, or any living being. If you are in crisis, please call 988 (Suicide &amp; Crisis Lifeline).
+            Our AI will never encourage harm to yourself, others, or any living being. If you need support, visit <a href="/signal" className="text-red-400 underline underline-offset-2">Signal Chat</a> or call 988 (Suicide &amp; Crisis Lifeline).
           </p>
         </div>
       </div>
