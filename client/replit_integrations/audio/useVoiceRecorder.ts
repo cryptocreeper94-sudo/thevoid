@@ -32,14 +32,91 @@ function getFileExtension(mimeType: string): string {
   return "webm";
 }
 
-export function useVoiceRecorder() {
+export interface VoiceRecorderOptions {
+  onSilenceDetected?: () => void;
+  silenceThreshold?: number;
+  silenceTimeout?: number;
+}
+
+export function useVoiceRecorder(options?: VoiceRecorderOptions) {
   const [state, setState] = useState<RecordingState>("idle");
   const [error, setError] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const mimeTypeRef = useRef<string>("");
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const hasSpeechRef = useRef(false);
+  const onSilenceRef = useRef(options?.onSilenceDetected);
+  onSilenceRef.current = options?.onSilenceDetected;
 
-  const startRecording = useCallback(async (): Promise<void> => {
+  const cleanupSilenceDetection = useCallback(() => {
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close().catch(() => {});
+      audioContextRef.current = null;
+    }
+    analyserRef.current = null;
+    hasSpeechRef.current = false;
+  }, []);
+
+  const startSilenceDetection = useCallback((stream: MediaStream) => {
+    const threshold = options?.silenceThreshold ?? 15;
+    const timeout = options?.silenceTimeout ?? 2500;
+
+    try {
+      const audioContext = new AudioContext();
+      audioContextRef.current = audioContext;
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 512;
+      analyser.smoothingTimeConstant = 0.3;
+      source.connect(analyser);
+      analyserRef.current = analyser;
+
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      const checkAudio = () => {
+        if (!analyserRef.current) return;
+        analyser.getByteFrequencyData(dataArray);
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+          sum += dataArray[i];
+        }
+        const average = sum / dataArray.length;
+
+        if (average > threshold) {
+          hasSpeechRef.current = true;
+          if (silenceTimerRef.current) {
+            clearTimeout(silenceTimerRef.current);
+            silenceTimerRef.current = null;
+          }
+        } else if (hasSpeechRef.current && !silenceTimerRef.current) {
+          silenceTimerRef.current = setTimeout(() => {
+            if (onSilenceRef.current) {
+              onSilenceRef.current();
+            }
+          }, timeout);
+        }
+
+        rafRef.current = requestAnimationFrame(checkAudio);
+      };
+
+      rafRef.current = requestAnimationFrame(checkAudio);
+    } catch {
+    }
+  }, [options?.silenceThreshold, options?.silenceTimeout]);
+
+  const startRecording = useCallback(async (enableSilenceDetection?: boolean): Promise<void> => {
     setError(null);
 
     try {
@@ -70,11 +147,16 @@ export function useVoiceRecorder() {
       recorder.onerror = (e) => {
         console.error("MediaRecorder error:", e);
         setError("Recording failed. Please try again.");
+        cleanupSilenceDetection();
         setState("idle");
       };
 
       recorder.start(250);
       setState("recording");
+
+      if (enableSilenceDetection) {
+        startSilenceDetection(stream);
+      }
     } catch (err: any) {
       console.error("getUserMedia error:", err);
       if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
@@ -86,9 +168,10 @@ export function useVoiceRecorder() {
       }
       setState("idle");
     }
-  }, []);
+  }, [startSilenceDetection, cleanupSilenceDetection]);
 
   const stopRecording = useCallback((): Promise<{ blob: Blob; mimeType: string; extension: string }> => {
+    cleanupSilenceDetection();
     return new Promise((resolve) => {
       const recorder = mediaRecorderRef.current;
       if (!recorder || recorder.state !== "recording") {
@@ -107,7 +190,7 @@ export function useVoiceRecorder() {
 
       recorder.stop();
     });
-  }, []);
+  }, [cleanupSilenceDetection]);
 
   const clearError = useCallback(() => setError(null), []);
 
