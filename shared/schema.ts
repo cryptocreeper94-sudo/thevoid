@@ -216,6 +216,7 @@ export const chatUsers = pgTable("chat_users", {
   avatarColor: text("avatar_color").notNull().default("#06b6d4"),
   role: text("role").notNull().default("member"),
   trustLayerId: text("trust_layer_id").unique(),
+  voidId: varchar("void_id", { length: 12 }),
   isOnline: boolean("is_online").default(false),
   lastSeen: timestamp("last_seen").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
@@ -255,6 +256,35 @@ export const chatMessages = pgTable("chat_messages", {
 });
 
 export type ChatMessage = typeof chatMessages.$inferSelect;
+
+// === AFFILIATE REFERRALS SCHEMA ===
+export const referrals = pgTable("referrals", {
+  id: serial("id").primaryKey(),
+  referrerVoidId: varchar("referrer_void_id", { length: 12 }).notNull(),
+  referrerUserId: integer("referrer_user_id").notNull(),
+  referredUserId: integer("referred_user_id").notNull(),
+  referredSubscriptionId: integer("referred_subscription_id"),
+  status: text("status").notNull().default("pending"),
+  rewardCredited: boolean("reward_credited").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type Referral = typeof referrals.$inferSelect;
+
+// === BLOCKCHAIN HALLMARK / VOID STAMPS SCHEMA ===
+export const voidStamps = pgTable("void_stamps", {
+  id: serial("id").primaryKey(),
+  voidId: varchar("void_id", { length: 12 }).notNull().unique(),
+  userId: integer("user_id").notNull(),
+  stampHash: text("stamp_hash").notNull().unique(),
+  blockNumber: integer("block_number").notNull(),
+  previousHash: text("previous_hash"),
+  payload: jsonb("payload"),
+  verified: boolean("verified").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type VoidStamp = typeof voidStamps.$inferSelect;
 
 // === API REQUEST/RESPONSE TYPES ===
 export const createVentRequestSchema = z.object({
