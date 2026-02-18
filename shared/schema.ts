@@ -95,6 +95,31 @@ export const insertRoadmapItemSchema = createInsertSchema(roadmapItems).omit({
 export type RoadmapItem = typeof roadmapItems.$inferSelect;
 export type InsertRoadmapItem = z.infer<typeof insertRoadmapItemSchema>;
 
+// === SUBSCRIPTIONS SCHEMA ===
+export const subscriptions = pgTable("subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  stripePriceId: text("stripe_price_id"),
+  status: text("status").notNull().default("free"),
+  currentPeriodEnd: timestamp("current_period_end"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type Subscription = typeof subscriptions.$inferSelect;
+
+// === DAILY VENT USAGE SCHEMA ===
+export const dailyVentUsage = pgTable("daily_vent_usage", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  date: text("date").notNull(),
+  ventCount: integer("vent_count").notNull().default(0),
+});
+
+export type DailyVentUsage = typeof dailyVentUsage.$inferSelect;
+
 // === API REQUEST/RESPONSE TYPES ===
 export const createVentRequestSchema = z.object({
   audio: z.string(),

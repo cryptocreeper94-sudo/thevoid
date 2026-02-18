@@ -1,6 +1,6 @@
 import { db } from "./db";
-import { vents, roadmapItems, whitelistedUsers, type InsertVent, type Vent, type InsertRoadmapItem, type RoadmapItem, type InsertWhitelistedUser, type WhitelistedUser } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { vents, roadmapItems, whitelistedUsers, subscriptions, dailyVentUsage, type InsertVent, type Vent, type InsertRoadmapItem, type RoadmapItem, type InsertWhitelistedUser, type WhitelistedUser, type Subscription, type DailyVentUsage } from "@shared/schema";
+import { eq, desc, and } from "drizzle-orm";
 
 export interface IStorage {
   createVent(vent: InsertVent): Promise<Vent>;
@@ -16,6 +16,12 @@ export interface IStorage {
   createRoadmapItem(item: InsertRoadmapItem): Promise<RoadmapItem>;
   updateRoadmapItem(id: number, updates: Partial<InsertRoadmapItem>): Promise<RoadmapItem | undefined>;
   deleteRoadmapItem(id: number): Promise<boolean>;
+  getSubscription(userId: number): Promise<Subscription | undefined>;
+  getSubscriptionByStripeCustomerId(stripeCustomerId: string): Promise<Subscription | undefined>;
+  getSubscriptionByStripeSubscriptionId(stripeSubId: string): Promise<Subscription | undefined>;
+  upsertSubscription(userId: number, data: Partial<Subscription>): Promise<Subscription>;
+  getDailyVentUsage(userId: number, date: string): Promise<DailyVentUsage | undefined>;
+  incrementDailyVentUsage(userId: number, date: string): Promise<DailyVentUsage>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -91,6 +97,57 @@ export class DatabaseStorage implements IStorage {
   async deleteRoadmapItem(id: number): Promise<boolean> {
     const result = await db.delete(roadmapItems).where(eq(roadmapItems.id, id)).returning();
     return result.length > 0;
+  }
+
+  async getSubscription(userId: number): Promise<Subscription | undefined> {
+    const [sub] = await db.select().from(subscriptions).where(eq(subscriptions.userId, userId));
+    return sub;
+  }
+
+  async getSubscriptionByStripeCustomerId(stripeCustomerId: string): Promise<Subscription | undefined> {
+    const [sub] = await db.select().from(subscriptions).where(eq(subscriptions.stripeCustomerId, stripeCustomerId));
+    return sub;
+  }
+
+  async getSubscriptionByStripeSubscriptionId(stripeSubId: string): Promise<Subscription | undefined> {
+    const [sub] = await db.select().from(subscriptions).where(eq(subscriptions.stripeSubscriptionId, stripeSubId));
+    return sub;
+  }
+
+  async upsertSubscription(userId: number, data: Partial<Subscription>): Promise<Subscription> {
+    const existing = await this.getSubscription(userId);
+    if (existing) {
+      const [updated] = await db.update(subscriptions)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(subscriptions.userId, userId))
+        .returning();
+      return updated;
+    }
+    const [created] = await db.insert(subscriptions)
+      .values({ userId, ...data } as any)
+      .returning();
+    return created;
+  }
+
+  async getDailyVentUsage(userId: number, date: string): Promise<DailyVentUsage | undefined> {
+    const [usage] = await db.select().from(dailyVentUsage)
+      .where(and(eq(dailyVentUsage.userId, userId), eq(dailyVentUsage.date, date)));
+    return usage;
+  }
+
+  async incrementDailyVentUsage(userId: number, date: string): Promise<DailyVentUsage> {
+    const existing = await this.getDailyVentUsage(userId, date);
+    if (existing) {
+      const [updated] = await db.update(dailyVentUsage)
+        .set({ ventCount: existing.ventCount + 1 })
+        .where(eq(dailyVentUsage.id, existing.id))
+        .returning();
+      return updated;
+    }
+    const [created] = await db.insert(dailyVentUsage)
+      .values({ userId, date, ventCount: 1 })
+      .returning();
+    return created;
   }
 }
 

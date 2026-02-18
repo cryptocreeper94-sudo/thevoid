@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Settings, Sparkles, Brain, Zap, Heart, Flame, Volume2, Type } from "lucide-react";
+import { Settings, Sparkles, Brain, Zap, Heart, Flame, Volume2, Type, Crown, CreditCard } from "lucide-react";
 import { motion } from "framer-motion";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,8 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { usePinAuth } from "@/components/PinGate";
+import { useSubscription, createCheckoutSession, createPortalSession } from "@/hooks/use-subscription";
 import smartassImg from "@/assets/images/personality-smartass.png";
 import calmingImg from "@/assets/images/personality-calming.png";
 import therapistImg from "@/assets/images/personality-therapist.png";
@@ -52,6 +54,27 @@ function loadSettings() {
 export default function SettingsPage() {
   const [settings, setSettings] = useState(loadSettings);
   const { toast } = useToast();
+  const { visitorId, userName } = usePinAuth();
+  const { data: subStatus } = useSubscription(visitorId);
+  const [subLoading, setSubLoading] = useState(false);
+
+  const handleSubscriptionAction = async () => {
+    if (!visitorId) return;
+    setSubLoading(true);
+    try {
+      if (subStatus?.tier === "premium") {
+        const url = await createPortalSession(visitorId);
+        window.location.href = url;
+      } else {
+        const url = await createCheckoutSession(visitorId, userName || undefined);
+        window.location.href = url;
+      }
+    } catch {
+      toast({ title: "Error", description: "Could not connect to billing. Please try again.", variant: "destructive" });
+    } finally {
+      setSubLoading(false);
+    }
+  };
 
   const update = (key: string, value: any) => {
     setSettings((prev: any) => ({ ...prev, [key]: value }));
@@ -74,6 +97,58 @@ export default function SettingsPage() {
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground font-display mb-2">Settings</h1>
             <p className="text-sm text-muted-foreground">Customize your experience in The Void</p>
+          </motion.div>
+
+          <motion.div variants={fadeUp}>
+            <GlassCard className="overflow-hidden" hoverEffect>
+              <div className="p-5">
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2.5 rounded-xl ${subStatus?.tier === "premium" ? "bg-gradient-to-br from-amber-500/20 to-primary/20" : "bg-white/5"}`}>
+                      {subStatus?.tier === "premium" ? (
+                        <Crown className="w-6 h-6 text-amber-400" />
+                      ) : (
+                        <CreditCard className="w-6 h-6 text-white/50" />
+                      )}
+                    </div>
+                    <div>
+                      <h2 className="text-base font-semibold text-foreground">
+                        {subStatus?.tier === "premium" ? "Premium Plan" : "Free Plan"}
+                      </h2>
+                      <p className="text-xs text-muted-foreground">
+                        {subStatus?.tier === "premium"
+                          ? "Unlimited venting — $9.99/month"
+                          : `${subStatus?.ventsRemaining ?? 1} vent${(subStatus?.ventsRemaining ?? 1) !== 1 ? "s" : ""} remaining today`}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={handleSubscriptionAction}
+                    disabled={subLoading}
+                    variant={subStatus?.tier === "premium" ? "outline" : "default"}
+                    data-testid="button-subscription-action"
+                  >
+                    {subLoading ? "Loading..." : subStatus?.tier === "premium" ? "Manage Subscription" : "Upgrade to Premium"}
+                  </Button>
+                </div>
+                {subStatus?.tier !== "premium" && (
+                  <div className="mt-4 pt-4 border-t border-white/5 grid grid-cols-3 gap-3 text-center">
+                    <div>
+                      <p className="text-lg font-bold text-foreground">1</p>
+                      <p className="text-[10px] text-muted-foreground">Free vent/day</p>
+                    </div>
+                    <div>
+                      <p className="text-lg font-bold text-amber-400">&#8734;</p>
+                      <p className="text-[10px] text-muted-foreground">Premium vents</p>
+                    </div>
+                    <div>
+                      <p className="text-lg font-bold text-foreground">$9.99</p>
+                      <p className="text-[10px] text-muted-foreground">per month</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </GlassCard>
           </motion.div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
