@@ -6,7 +6,7 @@ import { z } from "zod";
 import { createVentRequestSchema, insertRoadmapItemSchema, insertWhitelistedUserSchema } from "@shared/schema";
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
-import { openai, speechToText, ensureCompatibleFormat, detectAudioFormat } from "./replit_integrations/audio/client";
+import { openai, speechToText, textToSpeech, ensureCompatibleFormat, detectAudioFormat } from "./replit_integrations/audio/client";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   // Set up Auth first
@@ -17,9 +17,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Note: registerChatRoutes takes app: Express
   registerChatRoutes(app);
 
-  app.get("/api/vents", async (_req, res) => {
+  app.get("/api/vents", async (req, res) => {
     try {
-      const ventList = await storage.getVents();
+      const userId = req.query.userId as string | undefined;
+      const ventList = await storage.getVents(userId);
       res.json(ventList);
     } catch (error) {
       console.error("Get vents error:", error);
@@ -29,7 +30,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.post("/api/vents", async (req, res) => {
     try {
-      const { audio, personality, mimeType, extension } = createVentRequestSchema.parse(req.body);
+      const { audio, personality, mimeType, extension, userId } = createVentRequestSchema.parse(req.body);
 
       // 1. Transcribe Audio (STT)
       const transcript = await transcribeAudio(audio, mimeType || "audio/webm", extension || "webm");
@@ -51,23 +52,36 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       });
       const responseText = completion.choices[0]?.message?.content || "Whoops, I zoned out.";
 
-      // 3. Generate Audio Response (TTS) - Optional but requested
-      // We'll skip complex TTS for MVP unless user insists, or use the integration's TTS if available.
-      // For now, let's stick to text response + transcript to be safe and fast.
+      // 3. Generate Audio Response (TTS)
+      let audioResponse: string | undefined;
+      try {
+        const voiceMap: Record<string, "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer"> = {
+          'smart-ass': 'onyx',
+          'calming': 'nova',
+          'therapist': 'alloy',
+          'hype-man': 'echo',
+          'roast-master': 'fable',
+        };
+        const voice = voiceMap[personality] || 'alloy';
+        const ttsBuffer = await textToSpeech(responseText, voice, "mp3");
+        audioResponse = ttsBuffer.toString("base64");
+      } catch (ttsErr: any) {
+        console.error("TTS generation failed:", ttsErr?.message);
+      }
       
       // 4. Save to DB
       const vent = await storage.createVent({
         transcript,
         response: responseText,
         personality,
-        audioUrl: null, // Not storing audio yet to save space/complexity
-        userId: null,
+        audioUrl: null,
+        userId: userId || null,
       });
 
       res.status(200).json({
         transcript,
         response: responseText,
-        // audioResponse: base64Audio // Future feature
+        audioResponse,
       });
 
     } catch (error) {

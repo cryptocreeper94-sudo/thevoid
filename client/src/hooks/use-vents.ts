@@ -17,11 +17,12 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
   });
 };
 
-export function useVents() {
+export function useVents(userId?: number | null) {
+  const path = userId ? `${api.vents.list.path}?userId=${userId}` : api.vents.list.path;
   return useQuery({
-    queryKey: [api.vents.list.path],
+    queryKey: [api.vents.list.path, userId],
     queryFn: async () => {
-      const res = await fetch(api.vents.list.path);
+      const res = await fetch(path);
       if (!res.ok) throw new Error("Failed to fetch vents");
       return await res.json();
     },
@@ -32,7 +33,7 @@ export function useCreateVent() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ audioBlob, personality, mimeType, extension }: { audioBlob: Blob; personality: string; mimeType?: string; extension?: string }) => {
+    mutationFn: async ({ audioBlob, personality, mimeType, extension, userId }: { audioBlob: Blob; personality: string; mimeType?: string; extension?: string; userId?: string }) => {
       const base64Audio = await blobToBase64(audioBlob);
       
       const payload: CreateVentRequest = {
@@ -40,6 +41,7 @@ export function useCreateVent() {
         personality: personality as any,
         mimeType: mimeType || "audio/webm",
         extension: extension || "webm",
+        userId,
       };
 
       const res = await fetch(api.vents.create.path, {

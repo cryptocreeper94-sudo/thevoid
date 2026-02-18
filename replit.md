@@ -70,6 +70,12 @@ Voice-first venting application where users record frustrations and receive AI-g
 - API: POST /api/auth/pin (validate), POST /api/auth/change-pin (self-service, requires currentPin), GET/POST /api/whitelist, DELETE /api/whitelist/:id, PATCH /api/whitelist/:id/pin
 
 ## Recent Changes
+- Feb 18, 2026: Added TTS voice responses — AI speaks back using OpenAI TTS with personality-specific voices (onyx, nova, alloy, echo, fable)
+- Feb 18, 2026: Fixed vent isolation — each user's vents are now tied to their PIN userId, users only see their own vents
+- Feb 18, 2026: Made vent history expandable — click any vent to see full transcript and response (no more truncation)
+- Feb 18, 2026: Fixed Roast Master image — regenerated in landscape format for wide card layout
+- Feb 18, 2026: Added Roast Master to Settings page personality selector
+- Feb 18, 2026: Auto-play setting now defaults to on and actually plays TTS audio when vent completes
 - Feb 17, 2026: Added 8 diverse hero images (Black, White, Hispanic, Asian x Male, Female) with random session-based rotation via sessionStorage
 - Feb 17, 2026: Added proactive microphone permission flow — shows enable mic prompt, denied state with instructions, and unsupported browser message
 - Feb 17, 2026: Added Roast Master personality — savage comedy roast comedian with vulgar humor and safety guardrails (no targeting identity/body, comedy not cruelty)

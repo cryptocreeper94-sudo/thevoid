@@ -48,7 +48,7 @@ export function PersonalitySelector({ selected, onSelect }: PersonalitySelectorP
               alt={p.label}
               className={cn(
                 "absolute inset-0 w-full h-full object-cover",
-                isLastOdd && "object-top"
+                isLastOdd && "object-center"
               )}
             />
             <div className={cn(

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Settings, Sparkles, Brain, Zap, Heart, Volume2, Type } from "lucide-react";
+import { Settings, Sparkles, Brain, Zap, Heart, Flame, Volume2, Type } from "lucide-react";
 import { motion } from "framer-motion";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,7 @@ import smartassImg from "@/assets/images/personality-smartass.png";
 import calmingImg from "@/assets/images/personality-calming.png";
 import therapistImg from "@/assets/images/personality-therapist.png";
 import hypemanImg from "@/assets/images/personality-hypeman.png";
+import roastmasterImg from "@/assets/images/personality-roastmaster.png";
 import audioImg from "@/assets/images/settings-audio.png";
 import displayImg from "@/assets/images/settings-display.png";
 
@@ -30,6 +31,7 @@ const personalities = [
   { id: "calming", label: "Calming", icon: Heart, color: "from-cyan-400 to-blue-500", desc: "Soothing & Gentle", img: calmingImg },
   { id: "therapist", label: "Therapist", icon: Brain, color: "from-emerald-400 to-green-600", desc: "Analytical & Deep", img: therapistImg },
   { id: "hype-man", label: "Hype Man", icon: Zap, color: "from-yellow-400 to-orange-500", desc: "High Energy!", img: hypemanImg },
+  { id: "roast-master", label: "Roast Master", icon: Flame, color: "from-red-600 to-amber-500", desc: "Savage Comedy", img: roastmasterImg },
 ];
 
 function loadSettings() {
@@ -40,7 +42,7 @@ function loadSettings() {
   return {
     defaultPersonality: "smart-ass",
     responseLength: "medium",
-    autoPlayResponse: false,
+    autoPlayResponse: true,
     hapticFeedback: true,
     showTranscript: true,
     fontSize: 16,
@@ -88,28 +90,31 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <div className="px-5 pb-5 grid grid-cols-2 gap-3">
-                    {personalities.map((p) => {
+                    {personalities.map((p, index) => {
                       const isSelected = settings.defaultPersonality === p.id;
                       const Icon = p.icon;
+                      const isLastOdd = personalities.length % 2 !== 0 && index === personalities.length - 1;
                       return (
                         <motion.button
                           key={p.id}
                           onClick={() => update("defaultPersonality", p.id)}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className={`relative rounded-2xl border text-left transition-all duration-300 overflow-hidden aspect-[3/4] ${
+                          className={`relative rounded-2xl border text-left transition-all duration-300 overflow-hidden ${
+                            isLastOdd ? "col-span-2 aspect-[8/3]" : "aspect-[3/4]"
+                          } ${
                             isSelected
                               ? "border-transparent shadow-lg ring-2 ring-primary/40"
                               : "border-white/5 hover:border-white/10"
                           }`}
                           data-testid={`button-personality-${p.id}`}
                         >
-                          <img src={p.img} alt={p.label} className="absolute inset-0 w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                          <img src={p.img} alt={p.label} className={`absolute inset-0 w-full h-full object-cover ${isLastOdd ? "object-center" : ""}`} />
+                          <div className={`absolute inset-0 ${isLastOdd ? "bg-gradient-to-r from-black/90 via-black/60 to-transparent" : "bg-gradient-to-t from-black/90 via-black/40 to-transparent"}`} />
                           {isSelected && (
                             <div className={`absolute inset-0 opacity-30 bg-gradient-to-br ${p.color}`} />
                           )}
-                          <div className="absolute bottom-0 left-0 right-0 p-3 z-10">
+                          <div className={`absolute p-3 z-10 ${isLastOdd ? "bottom-0 left-0 top-0 flex flex-col justify-center" : "bottom-0 left-0 right-0"}`}>
                             <div className={`p-1.5 rounded-lg w-fit mb-2 transition-colors ${isSelected ? "bg-white/20 text-white" : "bg-white/10 text-white/70"}`}>
                               <Icon className="w-4 h-4" />
                             </div>
