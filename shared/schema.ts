@@ -286,6 +286,76 @@ export const voidStamps = pgTable("void_stamps", {
 
 export type VoidStamp = typeof voidStamps.$inferSelect;
 
+// === GAMIFICATION: ACHIEVEMENTS & STREAKS ===
+export const achievements = pgTable("achievements", {
+  id: serial("id").primaryKey(),
+  key: varchar("key", { length: 50 }).notNull().unique(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  icon: text("icon").notNull().default("star"),
+  category: text("category").notNull().default("general"),
+  requirement: integer("requirement").notNull().default(1),
+});
+
+export type Achievement = typeof achievements.$inferSelect;
+
+export const userAchievements = pgTable("user_achievements", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  achievementKey: varchar("achievement_key", { length: 50 }).notNull(),
+  unlockedAt: timestamp("unlocked_at").defaultNow(),
+});
+
+export type UserAchievement = typeof userAchievements.$inferSelect;
+
+export const ventStreaks = pgTable("vent_streaks", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().unique(),
+  currentStreak: integer("current_streak").notNull().default(0),
+  longestStreak: integer("longest_streak").notNull().default(0),
+  lastVentDate: text("last_vent_date"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type VentStreak = typeof ventStreaks.$inferSelect;
+
+export const dailyPrompts = pgTable("daily_prompts", {
+  id: serial("id").primaryKey(),
+  prompt: text("prompt").notNull(),
+  category: text("category").notNull().default("general"),
+  activeDate: text("active_date").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type DailyPrompt = typeof dailyPrompts.$inferSelect;
+
+export const moodChecks = pgTable("mood_checks", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  ventId: integer("vent_id"),
+  moodBefore: integer("mood_before").notNull(),
+  moodAfter: integer("mood_after"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type MoodCheck = typeof moodChecks.$inferSelect;
+
+// === AI BLOG SCHEMA ===
+export const blogPosts = pgTable("blog_posts", {
+  id: serial("id").primaryKey(),
+  slug: varchar("slug", { length: 200 }).notNull().unique(),
+  title: text("title").notNull(),
+  excerpt: text("excerpt").notNull(),
+  content: text("content").notNull(),
+  category: text("category").notNull().default("wellness"),
+  tags: text("tags").array().default(sql`'{}'::text[]`),
+  metaDescription: text("meta_description"),
+  published: boolean("published").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type BlogPost = typeof blogPosts.$inferSelect;
+
 // === API REQUEST/RESPONSE TYPES ===
 export const createVentRequestSchema = z.object({
   audio: z.string(),
