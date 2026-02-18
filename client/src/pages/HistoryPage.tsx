@@ -1,11 +1,13 @@
 import { useVents } from "@/hooks/use-vents";
+import { usePinAuth } from "@/components/PinGate";
 import { Header } from "@/components/Header";
 import { Loader2, Calendar, Mic, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 
 export default function HistoryPage() {
-  const { data: vents, isLoading, error } = useVents();
+  const { visitorId } = usePinAuth();
+  const { data: vents, isLoading, error } = useVents(visitorId);
 
   if (isLoading) {
     return (
