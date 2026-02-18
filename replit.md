@@ -89,6 +89,14 @@ Voice-first venting application where users record frustrations and receive AI-g
 - **Content**: Welcome message, subscription details, Void ID, Trust Layer/TrustShield branding, app page links
 - **Module**: `server/email.ts` — generateVoidId(), sendSubscriptionConfirmationEmail()
 
+## Analytics Dashboard
+- **Location**: Developer portal (admin-only, requires master key)
+- **API**: GET /api/analytics (requires x-master-key: 0424 header)
+- **Metrics**: Total vents, vents today, vents this week, personality usage breakdown, peak hours (24h bar chart), 7-day trend, unique active users, whitelisted users, premium subscribers, avg vents/day, contact messages
+- **Data Source**: Real-time queries against vents, subscriptions, daily_vent_usage, whitelisted_users, contact_messages tables
+- **Refresh**: Auto-refreshes every 30 seconds
+- **UI**: Glassmorphism stat cards with animated bar charts, personality usage bars, subscription breakdown
+
 ## Pages
 - `/` - Main recording page (3-column Bento grid: Vent Log, Record Stage, Personality Selector)
 - `/settings` - User preferences (default personality, audio, display settings)
@@ -110,6 +118,8 @@ Voice-first venting application where users record frustrations and receive AI-g
 - `contact_messages` table stores submissions, admin GET via x-master-key header
 
 ## Recent Changes
+- Feb 18, 2026: Added Analytics Dashboard to Developer portal — real-time metrics (total vents, daily/weekly trends, personality usage, peak hours, subscription breakdown, user stats) with glassmorphism UI, animated bar charts, and live data from database
+- Feb 18, 2026: Added DWTL Premium UI System skill file (.local/skills/premium-ui/SKILL.md) — mandatory design standards for glassmorphism, Bento grids, responsive design, animations
 - Feb 18, 2026: Added voice preference setting — users can choose male, female, or default (personality-matched) voice for all AI responses
 - Feb 18, 2026: Added Resend email system — premium glassmorphism subscription confirmation email with Void ID, Trust Layer/TrustShield branding, and app page links
 - Feb 18, 2026: Added Void ID system — unique V-XXXXXXXX format member IDs generated on subscription, displayed on Settings page, ready for Trust Layer blockchain

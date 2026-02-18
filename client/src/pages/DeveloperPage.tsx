@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Code, Lock, Activity, Settings, Trash2, Map, Plus, ChevronLeft, ChevronRight, Check, X, Zap, Star, ArrowRight, Clock, CheckCircle2, Circle, Flame, Users, UserPlus, KeyRound, Eye, EyeOff } from "lucide-react";
+import { Code, Lock, Activity, Settings, Trash2, Map, Plus, ChevronLeft, ChevronRight, Check, X, Zap, Star, ArrowRight, Clock, CheckCircle2, Circle, Flame, Users, UserPlus, KeyRound, Eye, EyeOff, BarChart3, TrendingUp, MessageCircle, Crown, Mic, Mail } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -341,6 +341,273 @@ function RoadmapCarousel() {
             )}
           </div>
         </div>
+      </div>
+    </GlassCard>
+  );
+}
+
+interface AnalyticsData {
+  totalVents: number;
+  ventsToday: number;
+  ventsThisWeek: number;
+  personalityBreakdown: { personality: string; count: number }[];
+  peakHours: { hour: number; count: number }[];
+  dailyTrend: { date: string; count: number }[];
+  uniqueUsers: number;
+  totalWhitelistedUsers: number;
+  subscriptionBreakdown: { status: string; count: number }[];
+  premiumUsers: number;
+  avgVentsPerDay: number;
+  totalContactMessages: number;
+}
+
+const PERSONALITY_COLORS: Record<string, string> = {
+  "smart-ass": "bg-purple-500",
+  calming: "bg-cyan-500",
+  therapist: "bg-emerald-500",
+  "hype-man": "bg-amber-500",
+  "roast-master": "bg-red-500",
+};
+
+const PERSONALITY_LABELS: Record<string, string> = {
+  "smart-ass": "Smart-Ass",
+  calming: "Calming",
+  therapist: "Therapist",
+  "hype-man": "Hype Man",
+  "roast-master": "Roast Master",
+};
+
+function AnalyticsDashboard() {
+  const { data: analytics, isLoading } = useQuery<AnalyticsData>({
+    queryKey: ["/api/analytics"],
+    queryFn: async () => {
+      const res = await fetch("/api/analytics", { headers: { "x-master-key": "0424" } });
+      if (!res.ok) throw new Error("Failed to fetch analytics");
+      return res.json();
+    },
+    refetchInterval: 30000,
+  });
+
+  const formatHour = (h: number) => {
+    if (h === 0) return "12am";
+    if (h === 12) return "12pm";
+    return h > 12 ? `${h - 12}pm` : `${h}am`;
+  };
+
+  const maxHourCount = Math.max(...(analytics?.peakHours?.map((p) => p.count) || [1]), 1);
+  const maxDailyCount = Math.max(...(analytics?.dailyTrend?.map((d) => d.count) || [1]), 1);
+  const totalPersonalityVents = analytics?.personalityBreakdown?.reduce((sum, p) => sum + p.count, 0) || 1;
+
+  if (isLoading) {
+    return (
+      <GlassCard className="overflow-hidden" hoverEffect>
+        <div className="p-6">
+          <div className="animate-pulse space-y-4">
+            <div className="h-6 w-48 bg-white/5 rounded" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-24 bg-white/[0.03] rounded-xl border border-white/5" />
+              ))}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[1, 2].map((i) => (
+                <div key={i} className="h-48 bg-white/[0.03] rounded-xl border border-white/5" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </GlassCard>
+    );
+  }
+
+  return (
+    <GlassCard className="overflow-hidden" hoverEffect>
+      <div className="relative h-32 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/40 via-purple-900/30 to-pink-900/20" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80" />
+        <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-purple-500/20 backdrop-blur-sm">
+            <BarChart3 className="w-5 h-5 text-cyan-400" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-white font-display">Analytics</h2>
+            <p className="text-xs text-white/50">Real-time platform metrics</p>
+          </div>
+          <div className="ml-auto">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+              <span className="text-[10px] text-green-400 font-semibold uppercase tracking-wider" data-testid="badge-analytics-live">Live</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-4 sm:p-6 space-y-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { label: "Total Vents", value: Number(analytics?.totalVents || 0), icon: Mic, color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20" },
+            { label: "Today", value: Number(analytics?.ventsToday || 0), icon: TrendingUp, color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/20" },
+            { label: "This Week", value: Number(analytics?.ventsThisWeek || 0), icon: BarChart3, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
+            { label: "Active Users", value: Number(analytics?.uniqueUsers || 0), icon: Users, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
+          ].map((stat) => (
+            <motion.div
+              key={stat.label}
+              whileHover={{ scale: 1.02, y: -2 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              className={`p-4 rounded-xl border ${stat.bg} backdrop-blur-xl`}
+              data-testid={`stat-${stat.label.toLowerCase().replace(/\s/g, "-")}`}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                <span className="text-[10px] sm:text-xs text-white/50 uppercase tracking-wider">{stat.label}</span>
+              </div>
+              <p className={`text-2xl sm:text-3xl font-bold ${stat.color}`}>{stat.value}</p>
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { label: "Whitelisted", value: Number(analytics?.totalWhitelistedUsers || 0), icon: UserPlus, color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20" },
+            { label: "Premium", value: Number(analytics?.premiumUsers || 0), icon: Crown, color: "text-pink-400", bg: "bg-pink-500/10 border-pink-500/20" },
+            { label: "Avg/Day", value: analytics?.avgVentsPerDay || 0, icon: Activity, color: "text-orange-400", bg: "bg-orange-500/10 border-orange-500/20" },
+            { label: "Messages", value: Number(analytics?.totalContactMessages || 0), icon: Mail, color: "text-teal-400", bg: "bg-teal-500/10 border-teal-500/20" },
+          ].map((stat) => (
+            <motion.div
+              key={stat.label}
+              whileHover={{ scale: 1.02, y: -2 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              className={`p-4 rounded-xl border ${stat.bg} backdrop-blur-xl`}
+              data-testid={`stat-${stat.label.toLowerCase().replace(/\s/g, "-")}`}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                <span className="text-[10px] sm:text-xs text-white/50 uppercase tracking-wider">{stat.label}</span>
+              </div>
+              <p className={`text-2xl sm:text-3xl font-bold ${stat.color}`}>{stat.value}</p>
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5 backdrop-blur-xl">
+            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+              <MessageCircle className="w-4 h-4 text-purple-400" />
+              Personality Usage
+            </h3>
+            {analytics?.personalityBreakdown && analytics.personalityBreakdown.length > 0 ? (
+              <div className="space-y-3">
+                {analytics.personalityBreakdown.map((p) => {
+                  const pct = Math.round((p.count / totalPersonalityVents) * 100);
+                  const barColor = PERSONALITY_COLORS[p.personality] || "bg-gray-500";
+                  return (
+                    <div key={p.personality} data-testid={`personality-bar-${p.personality}`}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-white/70">{PERSONALITY_LABELS[p.personality] || p.personality}</span>
+                        <span className="text-xs text-white/50">{p.count} ({pct}%)</span>
+                      </div>
+                      <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${pct}%` }}
+                          transition={{ duration: 0.8, ease: "easeOut" }}
+                          className={`h-full rounded-full ${barColor}`}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-xs text-white/30 text-center py-6">No vent data yet</p>
+            )}
+          </div>
+
+          <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5 backdrop-blur-xl">
+            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-cyan-400" />
+              Peak Hours (UTC)
+            </h3>
+            {analytics?.peakHours && analytics.peakHours.length > 0 ? (
+              <div className="flex items-end gap-1 h-32">
+                {Array.from({ length: 24 }, (_, i) => {
+                  const hourData = analytics.peakHours.find((h) => h.hour === i);
+                  const count = hourData?.count || 0;
+                  const height = count > 0 ? Math.max((count / maxHourCount) * 100, 8) : 4;
+                  return (
+                    <div
+                      key={i}
+                      className="flex-1 flex flex-col items-center justify-end gap-1 group/bar"
+                      data-testid={`peak-hour-${i}`}
+                    >
+                      <span className="text-[8px] text-white/0 group-hover/bar:text-white/70 transition-colors">{count}</span>
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: `${height}%` }}
+                        transition={{ duration: 0.5, delay: i * 0.02 }}
+                        className={`w-full rounded-t-sm ${count > 0 ? "bg-gradient-to-t from-cyan-600 to-cyan-400" : "bg-white/5"}`}
+                      />
+                      {i % 6 === 0 && (
+                        <span className="text-[8px] text-white/30">{formatHour(i)}</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-xs text-white/30 text-center py-6">No activity data yet</p>
+            )}
+          </div>
+        </div>
+
+        {analytics?.dailyTrend && analytics.dailyTrend.length > 0 && (
+          <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5 backdrop-blur-xl">
+            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-amber-400" />
+              7-Day Trend
+            </h3>
+            <div className="flex items-end gap-2 h-24">
+              {analytics.dailyTrend.map((d, i) => {
+                const height = d.count > 0 ? Math.max((d.count / maxDailyCount) * 100, 8) : 4;
+                const dateLabel = new Date(d.date).toLocaleDateString("en-US", { weekday: "short" });
+                return (
+                  <div key={i} className="flex-1 flex flex-col items-center justify-end gap-1" data-testid={`daily-trend-${i}`}>
+                    <span className="text-[10px] text-white/50">{d.count}</span>
+                    <motion.div
+                      initial={{ height: 0 }}
+                      animate={{ height: `${height}%` }}
+                      transition={{ duration: 0.5, delay: i * 0.05 }}
+                      className="w-full rounded-t-md bg-gradient-to-t from-amber-600 to-amber-400"
+                    />
+                    <span className="text-[10px] text-white/30">{dateLabel}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {analytics?.subscriptionBreakdown && analytics.subscriptionBreakdown.length > 0 && (
+          <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5 backdrop-blur-xl">
+            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+              <Crown className="w-4 h-4 text-pink-400" />
+              Subscription Breakdown
+            </h3>
+            <div className="flex items-center gap-4 flex-wrap">
+              {analytics.subscriptionBreakdown.map((s) => (
+                <div key={s.status} className="flex items-center gap-2" data-testid={`sub-status-${s.status}`}>
+                  <span className={`w-3 h-3 rounded-full ${
+                    s.status === "active" ? "bg-emerald-400" :
+                    s.status === "free" ? "bg-blue-400" :
+                    s.status === "canceled" ? "bg-red-400" : "bg-gray-400"
+                  }`} />
+                  <span className="text-xs text-white/70 capitalize">{s.status}</span>
+                  <span className="text-xs text-white/40">({s.count})</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </GlassCard>
   );
@@ -755,6 +1022,10 @@ function AdminDashboard() {
 
       <motion.div variants={fadeUp}>
         <RoadmapCarousel />
+      </motion.div>
+
+      <motion.div variants={fadeUp}>
+        <AnalyticsDashboard />
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
