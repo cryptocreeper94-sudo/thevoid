@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useMeta } from "@/hooks/use-meta";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { Flame, Trophy, Target, BarChart3, ChevronLeft, ChevronRight, Lock, Star, Zap, Crown, Heart, MessageCircle, Calendar, Sparkles } from "lucide-react";
@@ -37,22 +38,26 @@ type Tab = "streak" | "achievements" | "mood" | "prompt";
 
 export default function GamificationPage() {
   useDocumentTitle("Your Progress");
+  useMeta({ description: "Track your venting streak, unlock achievements, monitor mood trends, and get daily prompts.", ogTitle: "Your Progress — THE VOID", ogDescription: "Streaks, achievements, and mood tracking for your emotional journey." });
   const { visitorId: userId } = usePinAuth();
   const [activeTab, setActiveTab] = useState<Tab>("streak");
   const [carouselIdx, setCarouselIdx] = useState(0);
 
   const { data: streak } = useQuery<{ currentStreak: number; longestStreak: number; lastVentDate: string | null }>({
     queryKey: ["/api/gamification/streak", userId],
+    queryFn: async () => { const res = await fetch(`/api/gamification/streak/${userId}`); return res.json(); },
     enabled: !!userId,
   });
 
   const { data: achievements } = useQuery<{ all: any[]; unlocked: string[] }>({
     queryKey: ["/api/gamification/achievements", userId],
+    queryFn: async () => { const res = await fetch(`/api/gamification/achievements/${userId}`); return res.json(); },
     enabled: !!userId,
   });
 
   const { data: moodData } = useQuery<{ recent: any[]; avgBefore: number; avgAfter: number }>({
     queryKey: ["/api/gamification/mood-stats", userId],
+    queryFn: async () => { const res = await fetch(`/api/gamification/mood-stats/${userId}`); return res.json(); },
     enabled: !!userId,
   });
 

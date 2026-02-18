@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useMeta } from "@/hooks/use-meta";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, ArrowLeft, ChevronLeft, ChevronRight, Tag, Calendar as CalendarIcon, Clock } from "lucide-react";
@@ -25,6 +26,7 @@ function readTime(content: string): string {
 
 export default function BlogPage() {
   useDocumentTitle("Blog — Mental Wellness Insights");
+  useMeta({ description: "AI-curated articles on emotional health, stress management, breathing techniques, and mental wellness from THE VOID.", ogTitle: "Void Blog — Mental Wellness Insights", ogDescription: "Expert insights on venting, stress relief, and emotional intelligence.", ogType: "blog" });
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const pageSize = 6;
@@ -36,6 +38,7 @@ export default function BlogPage() {
 
   const { data: selectedPost } = useQuery<any>({
     queryKey: ["/api/blog", selectedSlug],
+    queryFn: async () => { const res = await fetch(`/api/blog/${selectedSlug}`); if (!res.ok) return null; return res.json(); },
     enabled: !!selectedSlug,
   });
 

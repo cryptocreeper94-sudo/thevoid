@@ -15,6 +15,10 @@ import DeveloperPage from "@/pages/DeveloperPage";
 import ContactPage from "@/pages/ContactPage";
 import ConversationsPage from "@/pages/ConversationsPage";
 import SignalChatPage from "@/pages/SignalChatPage";
+import MissionPage from "@/pages/MissionPage";
+import GamificationPage from "@/pages/GamificationPage";
+import BlogPage from "@/pages/BlogPage";
+import ZenZonePage from "@/pages/ZenZonePage";
 
 function ProtectedRoutes() {
   return (
@@ -23,6 +27,7 @@ function ProtectedRoutes() {
         <Route path="/" component={RecordPage} />
         <Route path="/settings" component={SettingsPage} />
         <Route path="/conversations" component={ConversationsPage} />
+        <Route path="/progress" component={GamificationPage} />
         <Route component={NotFound} />
       </Switch>
     </PinGate>
@@ -37,6 +42,9 @@ function Router() {
       <Route path="/developer" component={DeveloperPage} />
       <Route path="/contact" component={ContactPage} />
       <Route path="/signal" component={SignalChatPage} />
+      <Route path="/mission" component={MissionPage} />
+      <Route path="/blog" component={BlogPage} />
+      <Route path="/zen" component={ZenZonePage} />
       <Route>
         <ProtectedRoutes />
       </Route>

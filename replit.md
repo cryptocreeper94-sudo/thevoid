@@ -30,6 +30,10 @@ The application is built with a React + Vite frontend utilizing Tailwind CSS, Fr
 - **Security**: Features robust rate limiting across various API endpoints and integrates TrustShield.tech.
 - **Email System**: Utilizes Resend (via Replit integration) for subscription confirmation emails, adhering to the premium design.
 - **Signal Chat**: A real-time global chat system with crisis hotline integration, powered by Trust Layer SSO, using JWT-based authentication and WebSockets.
+- **Mission Page**: "From the Void" page at `/mission` explaining DarkWave Studios' origin story, values, and promises.
+- **Gamification System**: Streak tracking (daily venting streaks), achievements (10 unlockable badges), daily prompts (rotated by day of week), and mood check-ins (before/after venting). Protected page at `/progress`. Backend routes under `/api/gamification/*`.
+- **AI Blog**: SEO-optimized blog at `/blog` with 4 seed articles on mental wellness. Markdown-like content rendering, category badges, read time estimates. Backend routes at `/api/blog` and `/api/blog/:slug`. Meta descriptions and Open Graph tags for SEO.
+- **Zen Zone**: Meditation page at `/zen` with guided breathing exercises (Box Breathing, 4-7-8, Calming Breath), ambient sound selector (Rain, Ocean, Forest, Fire), and customizable meditation timer (2-20 minutes).
 
 ## External Dependencies
 - **AI Services**: OpenAI (GPT-5.2, gpt-4o-mini-transcribe for transcription)
