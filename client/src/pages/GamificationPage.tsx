@@ -8,6 +8,9 @@ import { Flame, Trophy, Target, BarChart3, ChevronLeft, ChevronRight, Lock, Star
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { usePinAuth } from "@/components/PinGate";
+import streakImg from "@/assets/images/gamification-streak.png";
+import moodImg from "@/assets/images/gamification-mood.png";
+import promptImg from "@/assets/images/gamification-prompt.png";
 
 const stagger = {
   hidden: { opacity: 0 },
@@ -141,9 +144,18 @@ export default function GamificationPage() {
                   </div>
                 </GlassCard>
               </div>
-              <GlassCard className="mt-4 overflow-hidden">
+              <GlassCard className="mt-4 overflow-hidden" hoverEffect>
+                <div className="relative h-28 overflow-hidden">
+                  <img src={streakImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-orange-500/20 backdrop-blur-sm">
+                      <Flame className="w-5 h-5 text-orange-400" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-white">How Streaks Work</h3>
+                  </div>
+                </div>
                 <div className="p-5 space-y-3">
-                  <h3 className="text-sm font-semibold text-foreground">How Streaks Work</h3>
                   <ul className="space-y-2 text-xs text-muted-foreground">
                     <li className="flex items-start gap-2"><Flame className="w-3.5 h-3.5 text-orange-400 mt-0.5 shrink-0" /> Vent at least once per day to maintain your streak</li>
                     <li className="flex items-start gap-2"><Trophy className="w-3.5 h-3.5 text-yellow-400 mt-0.5 shrink-0" /> Reach 7-day streaks to unlock achievements</li>
@@ -210,9 +222,18 @@ export default function GamificationPage() {
                   </div>
                 </GlassCard>
               </div>
-              <GlassCard className="mt-4 overflow-hidden">
+              <GlassCard className="mt-4 overflow-hidden" hoverEffect>
+                <div className="relative h-28 overflow-hidden">
+                  <img src={moodImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-cyan-500/20 backdrop-blur-sm">
+                      <BarChart3 className="w-5 h-5 text-cyan-400" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-white">Recent Mood Checks</h3>
+                  </div>
+                </div>
                 <div className="p-5 space-y-3">
-                  <h3 className="text-sm font-semibold text-foreground">Recent Mood Checks</h3>
                   {(!moodData?.recent || moodData.recent.length === 0) ? (
                     <p className="text-xs text-muted-foreground">No mood data yet. Start venting to track your emotional journey.</p>
                   ) : (
@@ -237,11 +258,17 @@ export default function GamificationPage() {
           {activeTab === "prompt" && (
             <motion.div key="prompt" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
               <GlassCard className="overflow-hidden" hoverEffect>
-                <div className="p-6 md:p-8 text-center space-y-4">
-                  <div className="p-3 rounded-full bg-primary/10 w-fit mx-auto">
-                    <Target className="w-6 h-6 text-primary" />
+                <div className="relative h-28 overflow-hidden">
+                  <img src={promptImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-purple-500/20 backdrop-blur-sm">
+                      <Target className="w-5 h-5 text-purple-400" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-white">Today's Prompt</h3>
                   </div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Today's Prompt</p>
+                </div>
+                <div className="p-6 md:p-8 text-center space-y-4">
                   <p className="text-lg md:text-xl font-medium text-foreground max-w-lg mx-auto leading-relaxed" data-testid="text-daily-prompt">
                     {prompt?.prompt ?? "No prompt for today. Come back tomorrow."}
                   </p>

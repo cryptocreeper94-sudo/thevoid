@@ -11,6 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import contactFormImg from "@/assets/images/contact-form.png";
+import contactEmailImg from "@/assets/images/contact-email.png";
+import contactSupportImg from "@/assets/images/contact-support.png";
 
 const stagger = {
   hidden: { opacity: 0 },
@@ -71,6 +74,16 @@ export default function ContactPage() {
           <div className="lg:col-span-7">
             <motion.div variants={fadeUp}>
               <GlassCard className="overflow-hidden" hoverEffect>
+                <div className="relative h-32 overflow-hidden">
+                  <img src={contactFormImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-cyan-500/20 backdrop-blur-sm">
+                      <MessageSquare className="w-5 h-5 text-cyan-400" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-white">Send a Message</h3>
+                  </div>
+                </div>
                 <div className="p-5">
                   {sent ? (
                     <div className="text-center py-10 space-y-4">
@@ -163,8 +176,17 @@ export default function ContactPage() {
           <div className="lg:col-span-5 space-y-4">
             <motion.div variants={fadeUp}>
               <GlassCard className="overflow-hidden" hoverEffect>
-                <div className="p-5 space-y-4">
-                  <h3 className="text-sm font-semibold text-foreground">Direct Email</h3>
+                <div className="relative h-24 overflow-hidden">
+                  <img src={contactEmailImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-cyan-500/20 backdrop-blur-sm">
+                      <Mail className="w-5 h-5 text-cyan-400" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-white">Direct Email</h3>
+                  </div>
+                </div>
+                <div className="p-5">
                   <a
                     href="mailto:team@dwsc.io"
                     className="flex items-center gap-3 group"
@@ -184,8 +206,17 @@ export default function ContactPage() {
 
             <motion.div variants={fadeUp}>
               <GlassCard className="overflow-hidden" hoverEffect>
+                <div className="relative h-24 overflow-hidden">
+                  <img src={contactSupportImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-amber-500/20 backdrop-blur-sm">
+                      <Clock className="w-5 h-5 text-amber-400" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-white">What to Expect</h3>
+                  </div>
+                </div>
                 <div className="p-5 space-y-3">
-                  <h3 className="text-sm font-semibold text-foreground">What to Expect</h3>
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
                       <Clock className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
