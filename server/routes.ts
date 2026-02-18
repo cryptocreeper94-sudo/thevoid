@@ -1166,7 +1166,365 @@ CRITICAL RULES:
   seedChatChannels();
   setupChatWebSocket(httpServer);
 
+  // === GAMIFICATION ROUTES ===
+  seedAchievements();
+  seedDailyPrompt();
+
+  app.get("/api/gamification/streak/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId as string);
+      if (isNaN(userId)) return res.status(400).json({ message: "Invalid userId" });
+      const [streak] = await db.select().from(ventStreaks).where(eq(ventStreaks.userId, userId));
+      res.json(streak || { currentStreak: 0, longestStreak: 0, lastVentDate: null });
+    } catch (e) { res.status(500).json({ message: "Failed to get streak" }); }
+  });
+
+  app.get("/api/gamification/achievements/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId as string);
+      if (isNaN(userId)) return res.status(400).json({ message: "Invalid userId" });
+      const all = await db.select().from(achievements);
+      const unlocked = await db.select().from(userAchievements).where(eq(userAchievements.userId, userId));
+      res.json({ all, unlocked: unlocked.map((u) => u.achievementKey) });
+    } catch (e) { res.status(500).json({ message: "Failed to get achievements" }); }
+  });
+
+  app.get("/api/gamification/mood-stats/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId as string);
+      if (isNaN(userId)) return res.status(400).json({ message: "Invalid userId" });
+      const recent = await db.select().from(moodChecks).where(eq(moodChecks.userId, userId)).orderBy(moodChecks.createdAt).limit(50);
+      const withAfter = recent.filter((m) => m.moodAfter !== null);
+      const avgBefore = withAfter.length > 0 ? withAfter.reduce((s, m) => s + m.moodBefore, 0) / withAfter.length : 3;
+      const avgAfter = withAfter.length > 0 ? withAfter.reduce((s, m) => s + (m.moodAfter ?? 0), 0) / withAfter.length : 3;
+      res.json({ recent: recent.slice(-20).reverse(), avgBefore: Math.round(avgBefore * 10) / 10, avgAfter: Math.round(avgAfter * 10) / 10 });
+    } catch (e) { res.status(500).json({ message: "Failed to get mood stats" }); }
+  });
+
+  app.post("/api/gamification/mood", async (req: Request, res: Response) => {
+    try {
+      const { userId, ventId, moodBefore, moodAfter } = req.body;
+      if (!userId || moodBefore === undefined) return res.status(400).json({ message: "Missing fields" });
+      const [created] = await db.insert(moodChecks).values({ userId, ventId, moodBefore, moodAfter }).returning();
+      res.json(created);
+    } catch (e) { res.status(500).json({ message: "Failed to save mood" }); }
+  });
+
+  app.post("/api/gamification/streak/update", async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.body;
+      if (!userId) return res.status(400).json({ message: "Missing userId" });
+      const today = getTodayDate();
+      const [existing] = await db.select().from(ventStreaks).where(eq(ventStreaks.userId, userId));
+      if (!existing) {
+        const [created] = await db.insert(ventStreaks).values({ userId, currentStreak: 1, longestStreak: 1, lastVentDate: today }).returning();
+        await checkAndAwardAchievements(userId, 1);
+        return res.json(created);
+      }
+      if (existing.lastVentDate === today) return res.json(existing);
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split("T")[0];
+      let newStreak = 1;
+      if (existing.lastVentDate === yesterdayStr) {
+        newStreak = existing.currentStreak + 1;
+      }
+      const newLongest = Math.max(existing.longestStreak, newStreak);
+      const [updated] = await db.update(ventStreaks).set({ currentStreak: newStreak, longestStreak: newLongest, lastVentDate: today, updatedAt: new Date() }).where(eq(ventStreaks.userId, userId)).returning();
+      await checkAndAwardAchievements(userId, newStreak);
+      res.json(updated);
+    } catch (e) { res.status(500).json({ message: "Failed to update streak" }); }
+  });
+
+  app.get("/api/gamification/daily-prompt", async (_req: Request, res: Response) => {
+    try {
+      const today = getTodayDate();
+      const [prompt] = await db.select().from(dailyPrompts).where(eq(dailyPrompts.activeDate, today));
+      res.json(prompt || null);
+    } catch (e) { res.status(500).json({ message: "Failed to get prompt" }); }
+  });
+
+  // === AI BLOG ROUTES ===
+  seedBlogPosts();
+
+  app.get("/api/blog", async (_req: Request, res: Response) => {
+    try {
+      const posts = await db.select().from(blogPosts).where(eq(blogPosts.published, true)).orderBy(blogPosts.createdAt);
+      res.json(posts);
+    } catch (e) { res.status(500).json({ message: "Failed to get blog posts" }); }
+  });
+
+  app.get("/api/blog/:slug", async (req: Request, res: Response) => {
+    try {
+      const [post] = await db.select().from(blogPosts).where(eq(blogPosts.slug, req.params.slug as string));
+      if (!post) return res.status(404).json({ message: "Post not found" });
+      res.json(post);
+    } catch (e) { res.status(500).json({ message: "Failed to get blog post" }); }
+  });
+
   return httpServer;
+}
+
+// === GAMIFICATION & BLOG SEED HELPERS ===
+async function seedAchievements() {
+  try {
+    const existing = await db.select().from(achievements);
+    if (existing.length > 0) return;
+    const defs = [
+      { key: "first_vent", title: "First Scream", description: "Complete your first vent session", icon: "zap", category: "milestone", requirement: 1 },
+      { key: "streak_3", title: "On a Roll", description: "Maintain a 3-day venting streak", icon: "flame", category: "streak", requirement: 3 },
+      { key: "streak_7", title: "Week Warrior", description: "Maintain a 7-day venting streak", icon: "flame", category: "streak", requirement: 7 },
+      { key: "streak_30", title: "Void Devotee", description: "Maintain a 30-day venting streak", icon: "crown", category: "streak", requirement: 30 },
+      { key: "all_personalities", title: "Personality Explorer", description: "Try all 5 AI personalities", icon: "sparkles", category: "exploration", requirement: 5 },
+      { key: "premium_member", title: "Premium Soul", description: "Subscribe to Premium", icon: "crown", category: "milestone", requirement: 1 },
+      { key: "mood_tracker", title: "Mood Mapper", description: "Complete 10 mood check-ins", icon: "heart", category: "wellness", requirement: 10 },
+      { key: "night_owl", title: "Night Owl", description: "Vent after midnight", icon: "star", category: "special", requirement: 1 },
+      { key: "conversation_starter", title: "Deep Diver", description: "Start 5 conversation threads", icon: "message", category: "engagement", requirement: 5 },
+      { key: "zen_master", title: "Zen Master", description: "Complete 10 breathing sessions", icon: "sparkles", category: "wellness", requirement: 10 },
+    ];
+    await db.insert(achievements).values(defs);
+    console.log("[Gamification] Seeded achievements");
+  } catch (e) { console.log("[Gamification] Achievements already seeded or error"); }
+}
+
+async function seedDailyPrompt() {
+  try {
+    const today = getTodayDate();
+    const [existing] = await db.select().from(dailyPrompts).where(eq(dailyPrompts.activeDate, today));
+    if (existing) return;
+    const prompts = [
+      { prompt: "What's one thing you wish you could say to someone but haven't?", category: "reflection" },
+      { prompt: "Describe the last thing that made you genuinely angry. Why did it hit so hard?", category: "anger" },
+      { prompt: "If your stress had a color and shape, what would it look like?", category: "creative" },
+      { prompt: "What's something you're tired of pretending is fine?", category: "honesty" },
+      { prompt: "Think of a boundary you need to set. Vent about why it's hard.", category: "boundaries" },
+      { prompt: "What would you tell your younger self about handling frustration?", category: "wisdom" },
+      { prompt: "Describe a moment this week where you felt genuinely at peace.", category: "gratitude" },
+    ];
+    const dayIdx = new Date().getDay();
+    const selected = prompts[dayIdx % prompts.length];
+    await db.insert(dailyPrompts).values({ ...selected, activeDate: today });
+    console.log("[Gamification] Seeded daily prompt");
+  } catch (e) { console.log("[Gamification] Daily prompt seed error"); }
+}
+
+async function checkAndAwardAchievements(userId: number, currentStreak: number) {
+  try {
+    const streakAchievements = [
+      { key: "first_vent", req: 1 },
+      { key: "streak_3", req: 3 },
+      { key: "streak_7", req: 7 },
+      { key: "streak_30", req: 30 },
+    ];
+    for (const sa of streakAchievements) {
+      if (currentStreak >= sa.req) {
+        const [exists] = await db.select().from(userAchievements).where(and(eq(userAchievements.userId, userId), eq(userAchievements.achievementKey, sa.key)));
+        if (!exists) {
+          await db.insert(userAchievements).values({ userId, achievementKey: sa.key });
+          console.log(`[Gamification] Awarded ${sa.key} to user ${userId}`);
+        }
+      }
+    }
+  } catch (e) { console.error("[Gamification] Achievement check error:", e); }
+}
+
+async function seedBlogPosts() {
+  try {
+    const existing = await db.select().from(blogPosts).limit(1);
+    if (existing.length > 0) return;
+    const posts = [
+      {
+        slug: "science-of-venting",
+        title: "The Science of Venting: Why Screaming Into the Void Actually Works",
+        excerpt: "Research shows that emotional expression through voice reduces cortisol levels and activates the parasympathetic nervous system.",
+        content: `## Why We Need to Vent
+
+The urge to express frustration isn't a weakness — it's biology. When stress hormones build up, your body needs an outlet. Suppressing emotions has been linked to increased anxiety, depression, and even physical health problems.
+
+## The Cortisol Connection
+
+Cortisol, the stress hormone, spikes when we bottle up emotions. Research from the University of Texas found that participants who expressed their frustrations through voice experienced a 23% greater reduction in cortisol compared to those who wrote about them.
+
+## Voice vs. Text
+
+There's something uniquely powerful about using your voice. When you speak — or shout — your body engages differently. The vibrations in your vocal cords activate the vagus nerve, which helps regulate your nervous system.
+
+### The Vagus Nerve Effect
+
+- Speaking activates the vagus nerve, promoting calm
+- Lower vocal tones trigger parasympathetic response
+- The physical act of exhaling while speaking naturally slows heart rate
+
+## How THE VOID Uses This Science
+
+Our voice-first approach isn't just a design choice — it's grounded in research. By encouraging vocal expression and pairing it with AI that responds in varied emotional registers, we create a feedback loop that helps process and release tension.
+
+## Practical Tips
+
+- Don't hold back — volume and intensity matter
+- Try different AI personalities to match your emotional state
+- Use the Zen Zone breathing exercises after an intense vent
+- Track your mood before and after to see the impact over time`,
+        category: "science",
+        tags: ["cortisol", "venting", "mental-health", "voice-therapy"],
+        metaDescription: "Discover the science behind why venting and vocal expression reduces stress. Learn how voice-first emotional processing works.",
+      },
+      {
+        slug: "breathing-techniques-anxiety",
+        title: "5 Breathing Techniques That Actually Calm Anxiety (In Under 5 Minutes)",
+        excerpt: "From Navy SEAL box breathing to the 4-7-8 method, these evidence-based techniques can lower your heart rate in minutes.",
+        content: `## Why Breathing Works
+
+Your breath is the only autonomic function you can consciously control. By changing your breathing pattern, you can directly influence your heart rate, blood pressure, and nervous system state.
+
+## 1. Box Breathing (4-4-4-4)
+
+Used by Navy SEALs and first responders, box breathing creates a sense of control and focus.
+
+- Inhale for 4 seconds
+- Hold for 4 seconds
+- Exhale for 4 seconds
+- Hold for 4 seconds
+- Repeat 4 times
+
+## 2. The 4-7-8 Method
+
+Developed by Dr. Andrew Weil, this technique acts as a natural tranquilizer for your nervous system.
+
+- Inhale through your nose for 4 seconds
+- Hold your breath for 7 seconds
+- Exhale slowly through your mouth for 8 seconds
+
+## 3. Physiological Sigh
+
+Discovered by Stanford researchers, this is the fastest way to calm down in real-time.
+
+- Take a quick double inhale through your nose
+- Follow with a long, slow exhale through your mouth
+- Even one cycle can reduce stress
+
+## 4. Alternate Nostril Breathing
+
+A yoga technique that balances your nervous system and reduces anxiety.
+
+- Close your right nostril, inhale through the left
+- Close your left nostril, exhale through the right
+- Inhale through the right, close it
+- Exhale through the left
+
+## 5. Belly Breathing
+
+The simplest technique — perfect for beginners and daily practice.
+
+- Place one hand on your chest, one on your belly
+- Breathe so only your belly hand moves
+- Practice for 5 minutes daily
+
+## Try It Now
+
+Head to the Zen Zone in THE VOID to practice guided versions of these techniques with visual timers and ambient sounds.`,
+        category: "wellness",
+        tags: ["breathing", "anxiety", "meditation", "calm"],
+        metaDescription: "Learn 5 proven breathing techniques for anxiety relief including box breathing, 4-7-8 method, and physiological sigh.",
+      },
+      {
+        slug: "emotional-intelligence-digital-age",
+        title: "Emotional Intelligence in the Digital Age: Why AI Might Be Your Best Listener",
+        excerpt: "How AI-powered emotional support tools are filling a gap in modern mental wellness without replacing human connection.",
+        content: `## The Loneliness Paradox
+
+We're more connected than ever, yet loneliness is at epidemic levels. Social media gives us audiences but rarely gives us listeners. The result? A generation that has plenty of followers but few people to truly talk to.
+
+## The Judgment Gap
+
+One of the biggest barriers to emotional expression is fear of judgment. Studies show that 67% of people hold back their true feelings because they worry about how others will react.
+
+### Why We Bottle Up
+
+- Fear of being seen as "too much"
+- Worry about burdening friends and family
+- Uncertainty about how emotions will be received
+- Social pressure to "stay positive"
+
+## Enter AI: The Non-Judgmental Space
+
+AI doesn't judge. It doesn't get tired. It doesn't gossip. For many people, this creates a uniquely safe space for raw emotional expression.
+
+## What AI Does Well
+
+- Provides immediate availability — no scheduling, no waiting
+- Offers consistent responses without emotional fatigue
+- Creates a safe space free from social consequences
+- Can adapt its communication style to what you need
+
+## What AI Cannot Replace
+
+- Deep human empathy built on shared experience
+- Physical comfort (hugs, presence)
+- Long-term therapeutic relationships
+- Crisis intervention and clinical care
+
+## The Hybrid Approach
+
+The healthiest approach uses AI tools like THE VOID alongside human connection. Vent to the void when you need immediate release. Talk to your therapist for deeper work. Call a friend when you need to be seen.
+
+## THE VOID's Philosophy
+
+We built THE VOID not to replace human connection, but to complement it. Sometimes you need to process the raw emotion before you're ready to have a constructive conversation with the people in your life.`,
+        category: "technology",
+        tags: ["AI", "emotional-intelligence", "mental-health", "digital-wellness"],
+        metaDescription: "Explore how AI emotional support tools complement human connection in modern mental wellness practices.",
+      },
+      {
+        slug: "streak-habit-science",
+        title: "The Psychology of Streaks: How Daily Habits Transform Mental Health",
+        excerpt: "Why maintaining a daily venting streak can rewire your brain's approach to stress management.",
+        content: `## The Power of Consistency
+
+James Clear's research on habit formation shows that small, consistent actions compound into transformative change. A daily 2-minute vent might seem insignificant, but over 30 days it creates a new neural pathway for emotional processing.
+
+## How Streaks Work in Your Brain
+
+When you maintain a streak, your brain releases dopamine not just for the activity, but for the act of maintaining consistency. This creates a positive feedback loop.
+
+### The Habit Loop
+
+- Cue: Feeling stressed or frustrated
+- Routine: Opening THE VOID and venting
+- Reward: Emotional release + streak maintenance + AI response
+
+## Why Streaks Are Powerful
+
+- They reduce decision fatigue (you don't debate whether to do it)
+- They build identity (you become "someone who processes emotions")
+- They compound benefits over time
+- They create accountability without judgment
+
+## The Streak Sweet Spots
+
+- 3 days: Initial momentum builds
+- 7 days: Habit starts to feel natural
+- 21 days: New neural pathways strengthen
+- 30 days: The behavior becomes part of your identity
+
+## Tips for Maintaining Your Streak
+
+- Set a consistent time each day
+- Start small — even a 30-second vent counts
+- Use daily prompts when you're not sure what to say
+- Don't break the chain — the streak itself becomes motivating
+
+## Beyond Streaks: Mood Tracking
+
+Pairing your streak with mood check-ins creates powerful self-awareness. Over time, you'll notice patterns in what triggers stress and how effectively venting resolves it.`,
+        category: "psychology",
+        tags: ["habits", "streaks", "psychology", "self-improvement"],
+        metaDescription: "Learn the psychology behind streaks and daily habits, and how consistent emotional expression improves mental health.",
+      },
+    ];
+    await db.insert(blogPosts).values(posts);
+    console.log("[Blog] Seeded initial blog posts");
+  } catch (e) { console.log("[Blog] Posts already seeded or error"); }
 }
 
 // Safety preamble applied to ALL personality modes

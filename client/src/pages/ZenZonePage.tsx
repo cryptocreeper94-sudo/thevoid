@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useMeta } from "@/hooks/use-meta";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { Wind, Play, Pause, RotateCcw, Waves, TreePine, CloudRain, Flame as FlameIcon, Timer, Sparkles } from "lucide-react";
@@ -80,6 +81,7 @@ type Tab = "breathe" | "ambient" | "timer";
 
 export default function ZenZonePage() {
   useDocumentTitle("Zen Zone — Meditation & Calm");
+  useMeta({ description: "Guided breathing exercises, ambient sounds, and meditation timers to find your calm. Box breathing, 4-7-8 method, and more.", ogTitle: "Zen Zone — Find Your Calm", ogDescription: "Breathing exercises, ambient sounds, and guided meditation." });
   const [activeTab, setActiveTab] = useState<Tab>("breathe");
   const [selectedPattern, setSelectedPattern] = useState(0);
   const [isBreathing, setIsBreathing] = useState(false);

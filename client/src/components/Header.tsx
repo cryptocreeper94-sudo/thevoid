@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, Home, Settings, Code, Download, Share, Smartphone, Mail, MessageSquare, Sun, Moon, Heart } from "lucide-react";
+import { Menu, Home, Settings, Code, Download, Share, Smartphone, Mail, MessageSquare, Sun, Moon, Heart, Sparkles, Trophy, BookOpen, Wind } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import {
   Sheet,
@@ -16,7 +16,11 @@ import { usePwaInstall } from "@/hooks/use-pwa-install";
 const navItems = [
   { href: "/", icon: Home, label: "Home" },
   { href: "/conversations", icon: MessageSquare, label: "Conversations" },
+  { href: "/progress", icon: Trophy, label: "Progress" },
+  { href: "/zen", icon: Wind, label: "Zen Zone" },
   { href: "/signal", icon: Heart, label: "Signal Chat" },
+  { href: "/blog", icon: BookOpen, label: "Blog" },
+  { href: "/mission", icon: Sparkles, label: "From the Void" },
   { href: "/settings", icon: Settings, label: "Settings" },
   { href: "/contact", icon: Mail, label: "Contact" },
   { href: "/developer", icon: Code, label: "Developer" },
