@@ -6,6 +6,12 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { Wind, Play, Pause, RotateCcw, Waves, TreePine, CloudRain, Flame as FlameIcon, Timer, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import breatheImg from "@/assets/images/zen-breathe.png";
+import rainImg from "@/assets/images/zen-rain.png";
+import oceanImg from "@/assets/images/zen-ocean.png";
+import forestImg from "@/assets/images/zen-forest.png";
+import fireImg from "@/assets/images/zen-fire.png";
+import timerImg from "@/assets/images/zen-timer.png";
 
 const stagger = {
   hidden: { opacity: 0 },
@@ -76,6 +82,13 @@ const AMBIENT_SOUNDS = [
   { key: "forest", icon: TreePine, label: "Forest" },
   { key: "fire", icon: FlameIcon, label: "Fire" },
 ];
+
+const AMBIENT_IMAGES: Record<string, string> = {
+  rain: rainImg,
+  ocean: oceanImg,
+  forest: forestImg,
+  fire: fireImg,
+};
 
 type Tab = "breathe" | "ambient" | "timer";
 
@@ -217,6 +230,16 @@ export default function ZenZonePage() {
               </div>
 
               <GlassCard className="overflow-hidden">
+                <div className="relative h-28 overflow-hidden">
+                  <img src={breatheImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-cyan-500/20 backdrop-blur-sm">
+                      <Wind className="w-5 h-5 text-cyan-400" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-white">{pattern.name}</h3>
+                  </div>
+                </div>
                 <div className="p-6 md:p-8 flex flex-col items-center space-y-6">
                   <p className="text-xs text-muted-foreground">{pattern.desc}</p>
 
@@ -284,14 +307,24 @@ export default function ZenZonePage() {
                   return (
                     <GlassCard key={s.key} className={`cursor-pointer overflow-hidden ${active ? "ring-1 ring-primary" : ""}`} hoverEffect>
                       <div
-                        className="p-6 text-center space-y-3"
+                        className="relative h-20 overflow-hidden"
                         onClick={() => setActiveAmbient(active ? null : s.key)}
                         data-testid={`button-ambient-${s.key}`}
                       >
-                        <s.icon className={`w-8 h-8 mx-auto ${active ? "text-primary" : "text-muted-foreground"}`} />
-                        <p className={`text-sm font-medium ${active ? "text-foreground" : "text-muted-foreground"}`}>{s.label}</p>
-                        {active && <span className="text-[10px] text-primary">Playing</span>}
+                        <img src={AMBIENT_IMAGES[s.key]} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
+                        <div className="absolute bottom-0 left-0 right-0 p-3 flex items-center gap-2">
+                          <div className="p-1.5 rounded-lg bg-cyan-500/20 backdrop-blur-sm">
+                            <s.icon className="w-4 h-4 text-cyan-400" />
+                          </div>
+                          <p className="text-xs font-medium text-white">{s.label}</p>
+                        </div>
                       </div>
+                      {active && (
+                        <div className="p-3 text-center">
+                          <span className="text-[10px] text-primary font-medium">Playing</span>
+                        </div>
+                      )}
                     </GlassCard>
                   );
                 })}
@@ -311,8 +344,17 @@ export default function ZenZonePage() {
           {activeTab === "timer" && (
             <motion.div key="timer" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
               <GlassCard className="overflow-hidden">
+                <div className="relative h-28 overflow-hidden">
+                  <img src={timerImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-purple-500/20 backdrop-blur-sm">
+                      <Timer className="w-5 h-5 text-purple-400" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-white">Meditation Timer</h3>
+                  </div>
+                </div>
                 <div className="p-6 md:p-8 flex flex-col items-center space-y-6">
-                  <Timer className="w-8 h-8 text-primary" />
                   <p className="text-xs text-muted-foreground">Set a meditation timer and just be.</p>
 
                   {!timerActive && timerSecondsLeft === 0 && (

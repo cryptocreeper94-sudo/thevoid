@@ -6,6 +6,7 @@ import { Loader2, Calendar, Mic, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import archiveImg from "@/assets/images/history-archive.png";
 
 interface Vent {
   id: number;
@@ -66,6 +67,24 @@ export default function HistoryPage() {
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
             A chronicle of your rage and our wisdom.
           </p>
+        </motion.div>
+
+        <motion.div variants={fadeUp}>
+          <GlassCard className="overflow-hidden">
+            <div className="relative h-32 overflow-hidden">
+              <img src={archiveImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
+              <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-amber-500/20 backdrop-blur-sm">
+                  <Mic className="w-5 h-5 text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white">Your Archive</h3>
+                  <p className="text-[10px] text-white/60">{vents?.length || 0} vents recorded</p>
+                </div>
+              </div>
+            </div>
+          </GlassCard>
         </motion.div>
 
         {!vents || vents.length === 0 ? (

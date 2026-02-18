@@ -4,6 +4,8 @@ import { useMeta } from "@/hooks/use-meta";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { motion } from "framer-motion";
 import { Zap, Shield, Heart, Users, Globe, Sparkles } from "lucide-react";
+import originImg from "@/assets/images/mission-origin.png";
+import promiseImg from "@/assets/images/mission-promise.png";
 
 const stagger = {
   hidden: { opacity: 0 },
@@ -50,8 +52,17 @@ export default function MissionPage() {
 
         <motion.div variants={fadeUp}>
           <GlassCard className="overflow-hidden" hoverEffect>
+            <div className="relative h-32 overflow-hidden">
+              <img src={originImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
+              <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-purple-500/20 backdrop-blur-sm">
+                  <Zap className="w-5 h-5 text-purple-400" />
+                </div>
+                <h3 className="text-sm font-semibold text-white">The Origin Story</h3>
+              </div>
+            </div>
             <div className="p-6 md:p-8 space-y-4">
-              <h2 className="text-xl font-bold text-foreground font-display">The Origin Story</h2>
               <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
                 <p>
                   DarkWave Studios started with a question: <span className="text-foreground font-medium">What if there was a place where you could say anything — no filter, no judgment, no consequences?</span>
@@ -91,8 +102,17 @@ export default function MissionPage() {
 
         <motion.div variants={fadeUp}>
           <GlassCard className="overflow-hidden">
+            <div className="relative h-32 overflow-hidden">
+              <img src={promiseImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
+              <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-cyan-500/20 backdrop-blur-sm">
+                  <Shield className="w-5 h-5 text-cyan-400" />
+                </div>
+                <h3 className="text-sm font-semibold text-white">The DarkWave Promise</h3>
+              </div>
+            </div>
             <div className="p-6 md:p-8 text-center space-y-4">
-              <h2 className="text-xl font-bold text-foreground font-display">The DarkWave Promise</h2>
               <p className="text-sm text-muted-foreground max-w-xl mx-auto leading-relaxed">
                 We will never sell your data. We will never weaponize your emotions. We will never stop building tools that put people first. THE VOID is just the beginning.
               </p>

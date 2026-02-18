@@ -8,6 +8,10 @@ import { BookOpen, ArrowLeft, ChevronLeft, ChevronRight, Tag, Calendar as Calend
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
+import wellnessImg from "@/assets/images/blog-wellness.png";
+import stressImg from "@/assets/images/blog-stress.png";
+import breathingImg from "@/assets/images/blog-breathing.png";
+import emotionsImg from "@/assets/images/blog-emotions.png";
 
 const stagger = {
   hidden: { opacity: 0 },
@@ -16,6 +20,13 @@ const stagger = {
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+};
+
+const BLOG_CATEGORY_IMAGES: Record<string, string> = {
+  "Emotional Health": emotionsImg,
+  "Stress Management": stressImg,
+  "Breathing & Mindfulness": breathingImg,
+  "Mental Wellness": wellnessImg,
 };
 
 function readTime(content: string): string {
@@ -56,9 +67,18 @@ export default function BlogPage() {
           </Button>
 
           <GlassCard className="overflow-hidden">
+            <div className="relative h-32 overflow-hidden">
+              <img src={BLOG_CATEGORY_IMAGES[selectedPost.category] || wellnessImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                <h1 className="text-2xl md:text-3xl font-bold text-white font-display mb-2" data-testid="text-blog-post-title">
+                  {selectedPost.title}
+                </h1>
+                <Badge variant="secondary" className="text-[10px]" data-testid="badge-blog-category">{selectedPost.category}</Badge>
+              </div>
+            </div>
             <div className="p-6 md:p-8 space-y-4">
               <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="secondary" className="text-[10px]" data-testid="badge-blog-category">{selectedPost.category}</Badge>
                 <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                   <Clock className="w-3 h-3" /> {readTime(selectedPost.content)}
                 </span>
@@ -66,9 +86,6 @@ export default function BlogPage() {
                   <CalendarIcon className="w-3 h-3" /> {new Date(selectedPost.createdAt).toLocaleDateString()}
                 </span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="text-blog-post-title">
-                {selectedPost.title}
-              </h1>
               <div className="prose prose-sm prose-invert max-w-none text-muted-foreground leading-relaxed space-y-3">
                 {selectedPost.content.split("\n\n").map((para: string, i: number) => {
                   if (para.startsWith("## ")) return <h2 key={i} className="text-lg font-semibold text-foreground mt-6 mb-2">{para.slice(3)}</h2>;
@@ -148,9 +165,15 @@ export default function BlogPage() {
                     onClick={() => setSelectedSlug(post.slug)}
                   >
                     <GlassCard className="h-full overflow-hidden" hoverEffect>
+                      <div className="relative h-32 overflow-hidden">
+                        <img src={BLOG_CATEGORY_IMAGES[post.category] || wellnessImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
+                        <div className="absolute bottom-0 left-0 right-0 p-3">
+                          <Badge variant="secondary" className="text-[10px]">{post.category}</Badge>
+                        </div>
+                      </div>
                       <div className="p-5 space-y-3">
                         <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className="text-[10px]">{post.category}</Badge>
                           <span className="text-[10px] text-muted-foreground">{readTime(post.content)}</span>
                         </div>
                         <h3 className="text-sm font-semibold text-foreground line-clamp-2" data-testid={`text-blog-card-${post.slug}`}>
