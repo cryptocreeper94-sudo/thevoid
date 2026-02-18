@@ -9,7 +9,7 @@ import { VentHistory } from "@/components/venting/VentHistory";
 import { useCreateVent } from "@/hooks/use-vents";
 import { useVoiceRecorder } from "../../replit_integrations/audio/useVoiceRecorder";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, Phone, Play, RefreshCw, MessageCircle, Info, X, ShieldCheck, Mic, MicOff, Volume2, Sparkles, Crown } from "lucide-react";
+import { AlertCircle, Phone, Play, RefreshCw, MessageCircle, Info, X, ShieldCheck, Mic, MicOff, Volume2, Sparkles, Crown, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSessionHeroImage } from "@/lib/heroImages";
 import { usePinAuth } from "@/components/PinGate";
@@ -67,6 +67,10 @@ export default function RecordPage() {
   const [personality, setPersonality] = useState('smart-ass');
   const [lastResponse, setLastResponse] = useState<{ transcript: string; response: string; audioResponse?: string } | null>(null);
   const [showCrisisInfo, setShowCrisisInfo] = useState(false);
+  const [voicePref, setVoicePref] = useState<string>(() => {
+    const saved = JSON.parse(localStorage.getItem("void-settings") || "{}");
+    return saved.voicePreference || "default";
+  });
   const recorder = useVoiceRecorder();
   const createVent = useCreateVent();
   const { toast } = useToast();
@@ -77,6 +81,15 @@ export default function RecordPage() {
   const [upgradeLoading, setUpgradeLoading] = useState(false);
 
   const isLimitReached = subStatus?.tier === "free" && subStatus?.ventsRemaining === 0;
+
+  const cycleVoicePref = () => {
+    const order = ["default", "male", "female"];
+    const next = order[(order.indexOf(voicePref) + 1) % order.length];
+    setVoicePref(next);
+    const saved = JSON.parse(localStorage.getItem("void-settings") || "{}");
+    saved.voicePreference = next;
+    localStorage.setItem("void-settings", JSON.stringify(saved));
+  };
 
   const handleUpgrade = async () => {
     if (!visitorId) return;
@@ -521,6 +534,22 @@ export default function RecordPage() {
                 selected={personality}
                 onSelect={setPersonality}
               />
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-white/5">
+              <button
+                onClick={cycleVoicePref}
+                className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
+                data-testid="button-voice-toggle"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Volume2 className="w-4 h-4 text-primary/70" />
+                  <span className="text-xs text-white/60 uppercase tracking-widest font-display">Voice</span>
+                </div>
+                <span className="text-xs font-medium text-white/80 capitalize" data-testid="text-voice-preference">
+                  {voicePref === "default" ? "Auto" : voicePref === "male" ? "Male" : "Female"}
+                </span>
+              </button>
             </div>
 
             <div className="mt-4 pt-4 border-t border-white/5 lg:hidden">
