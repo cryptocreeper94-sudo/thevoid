@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Code, Lock, Activity, Settings, Trash2, Map, Plus, ChevronLeft, ChevronRight, Check, X, Zap, Star, ArrowRight, Clock, CheckCircle2, Circle, Flame, Users, UserPlus, KeyRound } from "lucide-react";
+import { Code, Lock, Activity, Settings, Trash2, Map, Plus, ChevronLeft, ChevronRight, Check, X, Zap, Star, ArrowRight, Clock, CheckCircle2, Circle, Flame, Users, UserPlus, KeyRound, Eye, EyeOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -353,6 +353,8 @@ function WhitelistManager() {
   const [newPin, setNewPin] = useState("");
   const [editingPinId, setEditingPinId] = useState<number | null>(null);
   const [editPin, setEditPin] = useState("");
+  const [showNewPin, setShowNewPin] = useState(false);
+  const [showEditPin, setShowEditPin] = useState(false);
 
   const { data: users = [], isLoading } = useQuery<{ id: number; name: string; createdAt: string }[]>({
     queryKey: ["/api/whitelist"],
@@ -467,18 +469,23 @@ function WhitelistManager() {
                       data-testid="input-whitelist-name"
                     />
                   </div>
-                  <div className="w-28">
+                  <div className="w-36">
                     <Label className="text-xs text-muted-foreground mb-1 block">4-Digit PIN</Label>
-                    <Input
-                      type="password"
-                      inputMode="numeric"
-                      maxLength={4}
-                      placeholder="****"
-                      value={newPin}
-                      onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ""))}
-                      className="bg-white/5 border-white/10 text-center tracking-widest font-mono"
-                      data-testid="input-whitelist-pin"
-                    />
+                    <div className="relative">
+                      <Input
+                        type={showNewPin ? "text" : "password"}
+                        inputMode="numeric"
+                        maxLength={4}
+                        placeholder="****"
+                        value={newPin}
+                        onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ""))}
+                        className="bg-white/5 border-white/10 text-center tracking-widest font-mono pr-9"
+                        data-testid="input-whitelist-pin"
+                      />
+                      <button type="button" onClick={() => setShowNewPin(!showNewPin)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors" data-testid="button-toggle-whitelist-pin">
+                        {showNewPin ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <Button
@@ -580,17 +587,22 @@ function WhitelistManager() {
                       className="overflow-hidden"
                     >
                       <div className="px-3 pb-3 pt-1 flex items-center gap-2 border-t border-white/5">
-                        <Input
-                          type="password"
-                          inputMode="numeric"
-                          maxLength={4}
-                          placeholder="New PIN"
-                          value={editPin}
-                          onChange={(e) => setEditPin(e.target.value.replace(/\D/g, ""))}
-                          className="bg-white/5 border-white/10 text-center tracking-widest font-mono flex-1"
-                          autoFocus
-                          data-testid={`input-change-pin-${user.id}`}
-                        />
+                        <div className="relative flex-1">
+                          <Input
+                            type={showEditPin ? "text" : "password"}
+                            inputMode="numeric"
+                            maxLength={4}
+                            placeholder="New PIN"
+                            value={editPin}
+                            onChange={(e) => setEditPin(e.target.value.replace(/\D/g, ""))}
+                            className="bg-white/5 border-white/10 text-center tracking-widest font-mono pr-9"
+                            autoFocus
+                            data-testid={`input-change-pin-${user.id}`}
+                          />
+                          <button type="button" onClick={() => setShowEditPin(!showEditPin)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors" data-testid={`button-toggle-edit-pin-${user.id}`}>
+                            {showEditPin ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
                         <Button
                           size="sm"
                           variant="ghost"
@@ -630,6 +642,7 @@ function PinLogin({ onSuccess }: { onSuccess: () => void }) {
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
   const [attempts, setAttempts] = useState(0);
+  const [showPin, setShowPin] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -656,19 +669,22 @@ function PinLogin({ onSuccess }: { onSuccess: () => void }) {
           <p className="text-xs text-muted-foreground mt-1">Enter your PIN to continue</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+          <div className="relative">
             <Input
-              type="password"
+              type={showPin ? "text" : "password"}
               inputMode="numeric"
               maxLength={4}
               placeholder="Enter 4-digit PIN"
               value={pin}
               onChange={(e) => { setPin(e.target.value); setError(""); }}
-              className="text-center text-2xl tracking-[0.5em] font-mono bg-white/5 border-white/10"
+              className="text-center text-2xl tracking-[0.5em] font-mono bg-white/5 border-white/10 pr-10"
               disabled={attempts >= 3}
               autoFocus
               data-testid="input-pin"
             />
+            <button type="button" onClick={() => setShowPin(!showPin)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors" data-testid="button-toggle-dev-pin">
+              {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
           </div>
           {error && (
             <motion.p

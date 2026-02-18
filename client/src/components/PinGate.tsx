@@ -1,7 +1,7 @@
 import { useState, createContext, useContext } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Lock, Shield, KeyRound, Check } from "lucide-react";
+import { Lock, Shield, KeyRound, Check, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,9 @@ export function PinGate({ children }: { children: React.ReactNode }) {
   const [confirmPin, setConfirmPin] = useState("");
   const [changePinError, setChangePinError] = useState("");
   const [changePinLoading, setChangePinLoading] = useState(false);
+  const [showPin, setShowPin] = useState(false);
+  const [showNewPin, setShowNewPin] = useState(false);
+  const [showConfirmPin, setShowConfirmPin] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,7 +155,7 @@ export function PinGate({ children }: { children: React.ReactNode }) {
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
                     <Input
-                      type="password"
+                      type={showNewPin ? "text" : "password"}
                       inputMode="numeric"
                       maxLength={4}
                       placeholder="Enter new PIN"
@@ -161,10 +164,13 @@ export function PinGate({ children }: { children: React.ReactNode }) {
                         setNewPin(e.target.value.replace(/\D/g, ""));
                         setChangePinError("");
                       }}
-                      className="text-center text-2xl tracking-[0.5em] font-mono bg-white/5 border-white/10 pl-10"
+                      className="text-center text-2xl tracking-[0.5em] font-mono bg-white/5 border-white/10 pl-10 pr-10"
                       autoFocus
                       data-testid="input-new-pin"
                     />
+                    <button type="button" onClick={() => setShowNewPin(!showNewPin)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors" data-testid="button-toggle-new-pin">
+                      {showNewPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
                 </div>
 
@@ -173,7 +179,7 @@ export function PinGate({ children }: { children: React.ReactNode }) {
                   <div className="relative">
                     <Check className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
                     <Input
-                      type="password"
+                      type={showConfirmPin ? "text" : "password"}
                       inputMode="numeric"
                       maxLength={4}
                       placeholder="Confirm new PIN"
@@ -182,9 +188,12 @@ export function PinGate({ children }: { children: React.ReactNode }) {
                         setConfirmPin(e.target.value.replace(/\D/g, ""));
                         setChangePinError("");
                       }}
-                      className="text-center text-2xl tracking-[0.5em] font-mono bg-white/5 border-white/10 pl-10"
+                      className="text-center text-2xl tracking-[0.5em] font-mono bg-white/5 border-white/10 pl-10 pr-10"
                       data-testid="input-confirm-pin"
                     />
+                    <button type="button" onClick={() => setShowConfirmPin(!showConfirmPin)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors" data-testid="button-toggle-confirm-pin">
+                      {showConfirmPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
                 </div>
 
@@ -243,7 +252,7 @@ export function PinGate({ children }: { children: React.ReactNode }) {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
                 <Input
-                  type="password"
+                  type={showPin ? "text" : "password"}
                   inputMode="numeric"
                   maxLength={4}
                   placeholder="4-digit PIN"
@@ -253,11 +262,14 @@ export function PinGate({ children }: { children: React.ReactNode }) {
                     setPin(val);
                     setError("");
                   }}
-                  className="text-center text-2xl tracking-[0.5em] font-mono bg-white/5 border-white/10 pl-10"
+                  className="text-center text-2xl tracking-[0.5em] font-mono bg-white/5 border-white/10 pl-10 pr-10"
                   disabled={attempts >= 5 || loading}
                   autoFocus
                   data-testid="input-app-pin"
                 />
+                <button type="button" onClick={() => setShowPin(!showPin)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors" data-testid="button-toggle-app-pin">
+                  {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
 
               {error && (
