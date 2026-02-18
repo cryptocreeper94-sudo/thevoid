@@ -91,9 +91,9 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
 
           <motion.p
             initial={{ opacity: 0 }}
-            animate={{ opacity: 0.4 }}
+            animate={{ opacity: 0.8 }}
             transition={{ duration: 0.5, delay: 1.1 }}
-            className="text-xs text-white/40 tracking-[0.4em] uppercase font-display"
+            className="text-xs text-white/80 tracking-[0.4em] uppercase font-display"
           >
             Scream into the abyss
           </motion.p>
