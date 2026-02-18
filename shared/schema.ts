@@ -133,6 +133,79 @@ export const contactMessages = pgTable("contact_messages", {
 
 export type ContactMessage = typeof contactMessages.$inferSelect;
 
+// === USER PERSONALITY TUNING SCHEMA ===
+export const userSettings = pgTable("user_settings", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().unique(),
+  sarcasmLevel: integer("sarcasm_level").notNull().default(50),
+  empathyLevel: integer("empathy_level").notNull().default(50),
+  responseLength: text("response_length").notNull().default("medium"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertUserSettingsSchema = createInsertSchema(userSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type UserSettings = typeof userSettings.$inferSelect;
+export type InsertUserSettings = z.infer<typeof insertUserSettingsSchema>;
+
+// === CREDIT PACKS SCHEMA ===
+export const creditPacks = pgTable("credit_packs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  credits: integer("credits").notNull().default(0),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type CreditPack = typeof creditPacks.$inferSelect;
+
+export const userCredits = pgTable("user_credits", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().unique(),
+  balance: integer("balance").notNull().default(0),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type UserCredit = typeof userCredits.$inferSelect;
+
+// === CONVERSATION THREADS SCHEMA ===
+export const conversationThreads = pgTable("conversation_threads", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  title: text("title").notNull(),
+  personality: text("personality").notNull().default("smart-ass"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertConversationThreadSchema = createInsertSchema(conversationThreads).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type ConversationThread = typeof conversationThreads.$inferSelect;
+export type InsertConversationThread = z.infer<typeof insertConversationThreadSchema>;
+
+export const threadMessages = pgTable("thread_messages", {
+  id: serial("id").primaryKey(),
+  threadId: integer("thread_id").notNull().references(() => conversationThreads.id, { onDelete: "cascade" }),
+  role: text("role").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertThreadMessageSchema = createInsertSchema(threadMessages).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type ThreadMessage = typeof threadMessages.$inferSelect;
+export type InsertThreadMessage = z.infer<typeof insertThreadMessageSchema>;
+
 // === API REQUEST/RESPONSE TYPES ===
 export const createVentRequestSchema = z.object({
   audio: z.string(),
@@ -141,6 +214,8 @@ export const createVentRequestSchema = z.object({
   extension: z.string().optional().default("webm"),
   userId: z.string().optional(),
   voicePreference: z.enum(['default', 'male', 'female']).optional().default('default'),
+  sarcasmLevel: z.number().min(0).max(100).optional(),
+  empathyLevel: z.number().min(0).max(100).optional(),
 });
 
 export type CreateVentRequest = z.infer<typeof createVentRequestSchema>;

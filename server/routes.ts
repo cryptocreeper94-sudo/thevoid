@@ -9,6 +9,7 @@ import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
 import { openai, speechToText, textToSpeech, ensureCompatibleFormat, detectAudioFormat } from "./replit_integrations/audio/client";
 import Stripe from "stripe";
 import { generateVoidId, sendSubscriptionConfirmationEmail } from "./email";
+import rateLimit from "express-rate-limit";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-04-30.basil" as any });
 
@@ -63,6 +64,35 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   ensureWebhookEndpoint();
 
+  const generalLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 60,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Too many requests. Please slow down." },
+  });
+
+  const ventLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Too many vent requests. Please wait a moment before trying again." },
+  });
+
+  const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 15,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Too many login attempts. Please try again later." },
+  });
+
+  app.use("/api/", generalLimiter);
+  app.use("/api/vents", ventLimiter);
+  app.use("/api/auth/pin", authLimiter);
+  app.use("/api/auth/change-pin", authLimiter);
+
   app.post("/api/stripe/webhook", async (req: Request, res: Response) => {
     try {
       let event: Stripe.Event;
@@ -88,6 +118,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         case "checkout.session.completed": {
           const session = event.data.object as Stripe.Checkout.Session;
           const userId = parseInt(session.metadata?.userId || "0");
+
+          if (session.metadata?.creditPack && userId) {
+            const credits = parseInt(session.metadata.credits || "0");
+            if (credits > 0) {
+              await storage.addCredits(userId, credits);
+              console.log(`[Stripe] Added ${credits} credits to user ${userId}`);
+            }
+            break;
+          }
+
           if (userId && session.customer && session.subscription) {
             const existingSub = await storage.getSubscription(userId);
             const voidId = existingSub?.voidId || generateVoidId();
@@ -248,12 +288,18 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       const isPremium = sub?.status === "active";
       const tier = isPremium ? "premium" : "free";
-      const ventsRemaining = isPremium ? -1 : Math.max(0, FREE_DAILY_VENT_LIMIT - ventsUsedToday);
+      const freeRemaining = Math.max(0, FREE_DAILY_VENT_LIMIT - ventsUsedToday);
+      const userCredits = await storage.getUserCredits(userId);
+      const creditBalance = userCredits?.balance || 0;
+      const ventsRemaining = isPremium ? -1 : (freeRemaining > 0 ? freeRemaining : 0);
+      const creditsAvailable = !isPremium && freeRemaining === 0 && creditBalance > 0;
 
       res.json({
         tier,
         ventsUsedToday,
         ventsRemaining,
+        creditsAvailable,
+        creditBalance,
         status: sub?.status || "free",
         currentPeriodEnd: sub?.currentPeriodEnd,
         voidId: sub?.voidId || null,
@@ -308,7 +354,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       const { audio, personality, mimeType, extension, userId, voicePreference } = createVentRequestSchema.parse(req.body);
 
-      // Check daily vent limit for free users
+      let usedCredit = false;
       if (userId) {
         const numericUserId = parseInt(userId);
         if (numericUserId) {
@@ -318,10 +364,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
             const today = getTodayDate();
             const usage = await storage.getDailyVentUsage(numericUserId, today);
             if (usage && usage.ventCount >= FREE_DAILY_VENT_LIMIT) {
-              return res.status(403).json({
-                message: "You've used your free vent for today. Upgrade to Premium for unlimited venting.",
-                limitReached: true,
-              });
+              const creditUsed = await storage.useCredit(numericUserId);
+              if (!creditUsed) {
+                return res.status(403).json({
+                  message: "You've used your free vent for today. Upgrade to Premium for unlimited venting, or buy a credit pack.",
+                  limitReached: true,
+                });
+              }
+              usedCredit = true;
             }
           }
         }
@@ -336,8 +386,18 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         return res.status(400).json({ message: "No speech detected. Please speak louder or closer to your microphone." });
       }
 
-      // 2. Generate Response (based on personality)
-      const systemPrompt = getPersonalityPrompt(personality);
+      let tuning: { sarcasmLevel?: number; empathyLevel?: number; responseLength?: string } = {};
+      if (userId) {
+        const numericUserId = parseInt(userId);
+        if (numericUserId) {
+          const settings = await storage.getUserSettings(numericUserId);
+          if (settings) {
+            tuning = { sarcasmLevel: settings.sarcasmLevel, empathyLevel: settings.empathyLevel, responseLength: settings.responseLength };
+          }
+        }
+      }
+
+      const systemPrompt = getPersonalityPrompt(personality, tuning);
       const completion = await openai.chat.completions.create({
         model: "gpt-5.2",
         messages: [
@@ -530,6 +590,224 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  app.get("/api/user-settings", async (req, res) => {
+    try {
+      const userId = parseInt(req.query.userId as string);
+      if (!userId) return res.json({ sarcasmLevel: 50, empathyLevel: 50, responseLength: "medium" });
+      const settings = await storage.getUserSettings(userId);
+      res.json(settings || { sarcasmLevel: 50, empathyLevel: 50, responseLength: "medium" });
+    } catch (err: any) {
+      res.status(500).json({ message: "Failed to fetch settings" });
+    }
+  });
+
+  app.post("/api/user-settings", async (req, res) => {
+    try {
+      const data = z.object({
+        userId: z.number(),
+        sarcasmLevel: z.number().min(0).max(100).optional(),
+        empathyLevel: z.number().min(0).max(100).optional(),
+        responseLength: z.enum(["short", "medium", "long"]).optional(),
+      }).parse(req.body);
+      const settings = await storage.upsertUserSettings(data.userId, {
+        sarcasmLevel: data.sarcasmLevel,
+        empathyLevel: data.empathyLevel,
+        responseLength: data.responseLength,
+      });
+      res.json(settings);
+    } catch (err: any) {
+      res.status(400).json({ message: "Invalid settings data" });
+    }
+  });
+
+  app.get("/api/credits", async (req, res) => {
+    try {
+      const userId = parseInt(req.query.userId as string);
+      if (!userId) return res.json({ balance: 0 });
+      const credits = await storage.getUserCredits(userId);
+      res.json({ balance: credits?.balance || 0 });
+    } catch (err: any) {
+      res.status(500).json({ message: "Failed to fetch credits" });
+    }
+  });
+
+  app.post("/api/credits/purchase", async (req, res) => {
+    try {
+      const { userId, packSize } = z.object({
+        userId: z.number(),
+        packSize: z.enum(["25", "50", "100"]),
+      }).parse(req.body);
+
+      const packPrices: Record<string, { credits: number; amount: number; label: string }> = {
+        "25": { credits: 25, amount: 199, label: "25 Vent Credits" },
+        "50": { credits: 50, amount: 299, label: "50 Vent Credits" },
+        "100": { credits: 100, amount: 499, label: "100 Vent Credits" },
+      };
+      const pack = packPrices[packSize];
+
+      const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || process.env.REPLIT_DEV_DOMAIN;
+      const baseUrl = `https://${domain}`;
+
+      const session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        line_items: [{
+          price_data: {
+            currency: "usd",
+            unit_amount: pack.amount,
+            product_data: { name: pack.label, description: `${pack.credits} additional vent credits for THE VOID` },
+          },
+          quantity: 1,
+        }],
+        success_url: `${baseUrl}/?credits=success&pack=${packSize}`,
+        cancel_url: `${baseUrl}/?credits=canceled`,
+        metadata: { userId: String(userId), creditPack: packSize, credits: String(pack.credits) },
+      });
+
+      res.json({ url: session.url });
+    } catch (err: any) {
+      console.error("[Credits] Purchase error:", err?.message);
+      res.status(500).json({ message: "Failed to create credit purchase session" });
+    }
+  });
+
+  app.get("/api/threads", async (req, res) => {
+    try {
+      const userId = parseInt(req.query.userId as string);
+      if (!userId) return res.json([]);
+      const threads = await storage.getConversationThreads(userId);
+      res.json(threads);
+    } catch (err: any) {
+      res.status(500).json({ message: "Failed to fetch threads" });
+    }
+  });
+
+  app.post("/api/threads", async (req, res) => {
+    try {
+      const data = z.object({
+        userId: z.number(),
+        title: z.string().min(1).max(100),
+        personality: z.enum(['smart-ass', 'calming', 'therapist', 'hype-man', 'roast-master']),
+      }).parse(req.body);
+      const thread = await storage.createConversationThread(data);
+      res.status(201).json(thread);
+    } catch (err: any) {
+      res.status(400).json({ message: "Invalid thread data" });
+    }
+  });
+
+  app.get("/api/threads/:id/messages", async (req, res) => {
+    try {
+      const threadId = parseInt(req.params.id);
+      const thread = await storage.getConversationThread(threadId);
+      if (!thread) return res.status(404).json({ message: "Thread not found" });
+      const messages = await storage.getThreadMessages(threadId);
+      res.json({ thread, messages });
+    } catch (err: any) {
+      res.status(500).json({ message: "Failed to fetch messages" });
+    }
+  });
+
+  app.post("/api/threads/:id/messages", async (req, res) => {
+    try {
+      const threadId = parseInt(req.params.id);
+      const thread = await storage.getConversationThread(threadId);
+      if (!thread) return res.status(404).json({ message: "Thread not found" });
+
+      const { content, userId, voicePreference, audio, mimeType, extension } = z.object({
+        content: z.string().optional(),
+        audio: z.string().optional(),
+        mimeType: z.string().optional(),
+        extension: z.string().optional(),
+        userId: z.number(),
+        voicePreference: z.enum(['default', 'male', 'female']).optional().default('default'),
+      }).parse(req.body);
+
+      let userMessage = content || "";
+
+      if (audio && !content) {
+        const transcript = await transcribeAudio(audio, mimeType || "audio/webm", extension || "webm");
+        if (!transcript || !transcript.trim()) {
+          return res.status(400).json({ message: "Could not transcribe audio." });
+        }
+        userMessage = transcript;
+      }
+
+      if (!userMessage.trim()) {
+        return res.status(400).json({ message: "Message cannot be empty." });
+      }
+
+      await storage.createThreadMessage({ threadId, role: "user", content: userMessage });
+
+      const previousMessages = await storage.getThreadMessages(threadId);
+      const chatHistory = previousMessages.map(m => ({
+        role: m.role as "user" | "assistant" | "system",
+        content: m.content,
+      }));
+
+      let tuning: { sarcasmLevel?: number; empathyLevel?: number; responseLength?: string } = {};
+      const settings = await storage.getUserSettings(userId);
+      if (settings) {
+        tuning = { sarcasmLevel: settings.sarcasmLevel, empathyLevel: settings.empathyLevel, responseLength: settings.responseLength };
+      }
+
+      const systemPrompt = getPersonalityPrompt(thread.personality, tuning);
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-5.2",
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...chatHistory.slice(-20),
+        ],
+      });
+      const responseText = completion.choices[0]?.message?.content || "Hmm, I got nothing.";
+
+      await storage.createThreadMessage({ threadId, role: "assistant", content: responseText });
+      await storage.updateConversationThread(threadId, {});
+
+      let audioResponse: string | undefined;
+      try {
+        const voiceMap: Record<string, "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer"> = {
+          'smart-ass': 'onyx', 'calming': 'nova', 'therapist': 'alloy', 'hype-man': 'echo', 'roast-master': 'fable',
+        };
+        let voice = voiceMap[thread.personality] || 'alloy';
+        if (voicePreference === 'male') voice = 'onyx';
+        else if (voicePreference === 'female') voice = 'nova';
+        const ttsBuffer = await textToSpeech(responseText, voice, "mp3");
+        audioResponse = ttsBuffer.toString("base64");
+      } catch (ttsErr: any) {
+        console.error("Thread TTS failed:", ttsErr?.message);
+      }
+
+      res.json({ userMessage, response: responseText, audioResponse });
+    } catch (err: any) {
+      console.error("[Thread] Message error:", err?.message);
+      res.status(500).json({ message: "Failed to process message" });
+    }
+  });
+
+  app.patch("/api/threads/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { title } = z.object({ title: z.string().min(1).max(100) }).parse(req.body);
+      const updated = await storage.updateConversationThread(id, { title });
+      if (!updated) return res.status(404).json({ message: "Thread not found" });
+      res.json(updated);
+    } catch (err: any) {
+      res.status(400).json({ message: "Invalid data" });
+    }
+  });
+
+  app.delete("/api/threads/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteConversationThread(id);
+      if (!deleted) return res.status(404).json({ message: "Thread not found" });
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ message: "Failed to delete thread" });
+    }
+  });
+
   app.get("/api/analytics", async (req, res) => {
     const masterKey = req.headers["x-master-key"];
     if (masterKey !== "0424") {
@@ -612,8 +890,24 @@ const SAFETY_PREAMBLE = `CRITICAL SAFETY RULES — You MUST follow these at all 
 
 `;
 
-// Helper: Personality Prompts
-function getPersonalityPrompt(personality: string): string {
+function getTuningAddendum(tuning: { sarcasmLevel?: number; empathyLevel?: number; responseLength?: string }): string {
+  const parts: string[] = [];
+  if (tuning.sarcasmLevel !== undefined && tuning.sarcasmLevel !== 50) {
+    const level = tuning.sarcasmLevel > 70 ? "very high" : tuning.sarcasmLevel > 50 ? "slightly elevated" : tuning.sarcasmLevel < 30 ? "very low" : "slightly reduced";
+    parts.push(`Sarcasm intensity: ${level} (${tuning.sarcasmLevel}/100).`);
+  }
+  if (tuning.empathyLevel !== undefined && tuning.empathyLevel !== 50) {
+    const level = tuning.empathyLevel > 70 ? "very empathetic and warm" : tuning.empathyLevel > 50 ? "slightly more empathetic" : tuning.empathyLevel < 30 ? "more blunt and direct" : "slightly less empathetic";
+    parts.push(`Empathy style: ${level} (${tuning.empathyLevel}/100).`);
+  }
+  if (tuning.responseLength && tuning.responseLength !== "medium") {
+    const lengths: Record<string, string> = { short: "Keep responses very brief — 1-2 sentences max.", long: "Give detailed, thorough responses — 4-6 sentences." };
+    parts.push(lengths[tuning.responseLength] || "");
+  }
+  return parts.length > 0 ? "\n\nUser tuning preferences: " + parts.join(" ") : "";
+}
+
+function getPersonalityPrompt(personality: string, tuning?: { sarcasmLevel?: number; empathyLevel?: number; responseLength?: string }): string {
   let personalityPrompt: string;
   switch (personality) {
     case 'smart-ass':
@@ -635,7 +929,8 @@ function getPersonalityPrompt(personality: string): string {
       personalityPrompt = "You are a helpful, caring listener. Always prioritize the user's safety and well-being.";
       break;
   }
-  return SAFETY_PREAMBLE + personalityPrompt;
+  const tuningAddendum = tuning ? getTuningAddendum(tuning) : "";
+  return SAFETY_PREAMBLE + personalityPrompt + tuningAddendum;
 }
 
 async function transcribeAudio(base64Audio: string, mimeType: string, extension: string): Promise<string | null> {

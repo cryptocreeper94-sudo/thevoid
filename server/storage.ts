@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { vents, roadmapItems, whitelistedUsers, subscriptions, dailyVentUsage, contactMessages, type InsertVent, type Vent, type InsertRoadmapItem, type RoadmapItem, type InsertWhitelistedUser, type WhitelistedUser, type Subscription, type DailyVentUsage, type ContactMessage } from "@shared/schema";
+import { vents, roadmapItems, whitelistedUsers, subscriptions, dailyVentUsage, contactMessages, userSettings, userCredits, conversationThreads, threadMessages, type InsertVent, type Vent, type InsertRoadmapItem, type RoadmapItem, type InsertWhitelistedUser, type WhitelistedUser, type Subscription, type DailyVentUsage, type ContactMessage, type UserSettings, type UserCredit, type ConversationThread, type ThreadMessage, type InsertConversationThread, type InsertThreadMessage } from "@shared/schema";
 import { eq, desc, and } from "drizzle-orm";
 
 export interface IStorage {
@@ -24,6 +24,18 @@ export interface IStorage {
   incrementDailyVentUsage(userId: number, date: string): Promise<DailyVentUsage>;
   createContactMessage(data: { name: string; email: string; subject: string; message: string }): Promise<ContactMessage>;
   getContactMessages(): Promise<ContactMessage[]>;
+  getUserSettings(userId: number): Promise<UserSettings | undefined>;
+  upsertUserSettings(userId: number, data: Partial<UserSettings>): Promise<UserSettings>;
+  getUserCredits(userId: number): Promise<UserCredit | undefined>;
+  addCredits(userId: number, amount: number): Promise<UserCredit>;
+  useCredit(userId: number): Promise<boolean>;
+  getConversationThreads(userId: number): Promise<ConversationThread[]>;
+  getConversationThread(id: number): Promise<ConversationThread | undefined>;
+  createConversationThread(data: InsertConversationThread): Promise<ConversationThread>;
+  updateConversationThread(id: number, updates: Partial<ConversationThread>): Promise<ConversationThread | undefined>;
+  deleteConversationThread(id: number): Promise<boolean>;
+  getThreadMessages(threadId: number): Promise<ThreadMessage[]>;
+  createThreadMessage(data: InsertThreadMessage): Promise<ThreadMessage>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -158,6 +170,95 @@ export class DatabaseStorage implements IStorage {
 
   async getContactMessages(): Promise<ContactMessage[]> {
     return await db.select().from(contactMessages).orderBy(desc(contactMessages.createdAt));
+  }
+
+  async getUserSettings(userId: number): Promise<UserSettings | undefined> {
+    const [settings] = await db.select().from(userSettings).where(eq(userSettings.userId, userId));
+    return settings;
+  }
+
+  async upsertUserSettings(userId: number, data: Partial<UserSettings>): Promise<UserSettings> {
+    const existing = await this.getUserSettings(userId);
+    if (existing) {
+      const [updated] = await db.update(userSettings)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(userSettings.userId, userId))
+        .returning();
+      return updated;
+    }
+    const [created] = await db.insert(userSettings)
+      .values({ userId, ...data } as any)
+      .returning();
+    return created;
+  }
+
+  async getUserCredits(userId: number): Promise<UserCredit | undefined> {
+    const [credit] = await db.select().from(userCredits).where(eq(userCredits.userId, userId));
+    return credit;
+  }
+
+  async addCredits(userId: number, amount: number): Promise<UserCredit> {
+    const existing = await this.getUserCredits(userId);
+    if (existing) {
+      const [updated] = await db.update(userCredits)
+        .set({ balance: existing.balance + amount, updatedAt: new Date() })
+        .where(eq(userCredits.userId, userId))
+        .returning();
+      return updated;
+    }
+    const [created] = await db.insert(userCredits)
+      .values({ userId, balance: amount })
+      .returning();
+    return created;
+  }
+
+  async useCredit(userId: number): Promise<boolean> {
+    const existing = await this.getUserCredits(userId);
+    if (!existing || existing.balance <= 0) return false;
+    await db.update(userCredits)
+      .set({ balance: existing.balance - 1, updatedAt: new Date() })
+      .where(eq(userCredits.userId, userId));
+    return true;
+  }
+
+  async getConversationThreads(userId: number): Promise<ConversationThread[]> {
+    return await db.select().from(conversationThreads)
+      .where(eq(conversationThreads.userId, userId))
+      .orderBy(desc(conversationThreads.updatedAt));
+  }
+
+  async getConversationThread(id: number): Promise<ConversationThread | undefined> {
+    const [thread] = await db.select().from(conversationThreads).where(eq(conversationThreads.id, id));
+    return thread;
+  }
+
+  async createConversationThread(data: InsertConversationThread): Promise<ConversationThread> {
+    const [created] = await db.insert(conversationThreads).values(data).returning();
+    return created;
+  }
+
+  async updateConversationThread(id: number, updates: Partial<ConversationThread>): Promise<ConversationThread | undefined> {
+    const [updated] = await db.update(conversationThreads)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(conversationThreads.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteConversationThread(id: number): Promise<boolean> {
+    const result = await db.delete(conversationThreads).where(eq(conversationThreads.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getThreadMessages(threadId: number): Promise<ThreadMessage[]> {
+    return await db.select().from(threadMessages)
+      .where(eq(threadMessages.threadId, threadId))
+      .orderBy(threadMessages.createdAt);
+  }
+
+  async createThreadMessage(data: InsertThreadMessage): Promise<ThreadMessage> {
+    const [created] = await db.insert(threadMessages).values(data).returning();
+    return created;
   }
 }
 

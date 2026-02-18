@@ -13,6 +13,7 @@ import PrivacyPage from "@/pages/PrivacyPage";
 import TermsPage from "@/pages/TermsPage";
 import DeveloperPage from "@/pages/DeveloperPage";
 import ContactPage from "@/pages/ContactPage";
+import ConversationsPage from "@/pages/ConversationsPage";
 
 function ProtectedRoutes() {
   return (
@@ -20,6 +21,7 @@ function ProtectedRoutes() {
       <Switch>
         <Route path="/" component={RecordPage} />
         <Route path="/settings" component={SettingsPage} />
+        <Route path="/conversations" component={ConversationsPage} />
         <Route component={NotFound} />
       </Switch>
     </PinGate>

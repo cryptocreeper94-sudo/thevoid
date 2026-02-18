@@ -88,8 +88,27 @@ export default function RecordPage() {
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const { data: subStatus } = useSubscription(visitorId);
   const [upgradeLoading, setUpgradeLoading] = useState(false);
+  const [creditLoading, setCreditLoading] = useState<string | null>(null);
 
-  const isLimitReached = subStatus?.tier === "free" && subStatus?.ventsRemaining === 0;
+  const isLimitReached = subStatus?.tier === "free" && subStatus?.ventsRemaining === 0 && !(subStatus as any)?.creditsAvailable;
+
+  const handleBuyCredits = async (packSize: string) => {
+    if (!visitorId) return;
+    setCreditLoading(packSize);
+    try {
+      const res = await fetch("/api/credits/purchase", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: visitorId, packSize }),
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+    } catch {
+      toast({ title: "Error", description: "Could not start checkout.", variant: "destructive" });
+    } finally {
+      setCreditLoading(null);
+    }
+  };
 
   const cycleVoicePref = () => {
     const order = ["default", "male", "female"];
@@ -340,19 +359,43 @@ export default function RecordPage() {
                     <h3 className="text-lg font-bold text-white font-display mb-2">
                       Daily Vent Used
                     </h3>
-                    <p className="text-sm text-white/40 max-w-xs leading-relaxed mb-6">
-                      You've used your free vent for today. Upgrade to Premium for <span className="text-white/70 font-semibold">unlimited venting</span> — just $9.99/month.
+                    <p className="text-sm text-white/40 max-w-xs leading-relaxed mb-4">
+                      You've used your free vent for today. Upgrade or grab a credit pack to keep venting.
                     </p>
                     <button
                       onClick={handleUpgrade}
                       disabled={upgradeLoading}
-                      className="px-8 py-3 rounded-full bg-gradient-to-r from-amber-500 to-primary text-white font-semibold shadow-lg shadow-primary/30 flex items-center gap-2 transition-all hover:shadow-xl hover:shadow-primary/40 disabled:opacity-50 text-sm"
+                      className="px-8 py-3 rounded-full bg-gradient-to-r from-amber-500 to-primary text-white font-semibold shadow-lg shadow-primary/30 flex items-center gap-2 transition-all hover:shadow-xl hover:shadow-primary/40 disabled:opacity-50 text-sm mb-4"
                       data-testid="button-upgrade-premium"
                     >
                       <Sparkles className="w-4 h-4" />
-                      {upgradeLoading ? "Loading..." : "Upgrade to Premium"}
+                      {upgradeLoading ? "Loading..." : "Unlimited — $9.99/mo"}
                     </button>
-                    <p className="text-[10px] text-white/20 mt-4">Come back tomorrow for another free vent</p>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="h-px flex-1 bg-white/10" />
+                      <span className="text-[10px] text-white/30 uppercase tracking-wider">or buy credits</span>
+                      <div className="h-px flex-1 bg-white/10" />
+                    </div>
+                    <div className="flex gap-2">
+                      {[
+                        { size: "25", price: "$1.99", label: "25" },
+                        { size: "50", price: "$2.99", label: "50" },
+                        { size: "100", price: "$4.99", label: "100" },
+                      ].map((pack) => (
+                        <button
+                          key={pack.size}
+                          onClick={() => handleBuyCredits(pack.size)}
+                          disabled={!!creditLoading}
+                          className="flex-1 py-2 px-3 rounded-lg bg-white/5 border border-white/10 text-center transition-all hover:bg-white/10 hover:border-white/20 disabled:opacity-50"
+                          data-testid={`button-buy-credits-${pack.size}`}
+                        >
+                          <span className="text-sm font-bold text-purple-400 block">{pack.label}</span>
+                          <span className="text-[10px] text-white/40">credits</span>
+                          <span className="text-xs text-white/60 block mt-0.5">{pack.price}</span>
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-white/20 mt-3">1 credit = 1 extra vent</p>
                   </motion.div>
                 ) : micPermission === "denied" || micPermission === "unsupported" ? (
                   <motion.div
