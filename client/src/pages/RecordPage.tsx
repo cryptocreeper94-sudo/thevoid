@@ -402,7 +402,7 @@ export default function RecordPage() {
               </AnimatePresence>
             </div>
 
-            <div className="absolute bottom-4 right-4 z-20">
+            <div className="absolute top-4 right-4 z-20">
               <button
                 onClick={() => setShowCrisisInfo(!showCrisisInfo)}
                 className={`p-2.5 rounded-full backdrop-blur-sm border transition-all ${
