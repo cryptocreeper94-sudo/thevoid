@@ -282,7 +282,7 @@ function RoadmapCarousel() {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
-                    className="flex-shrink-0 w-[280px] snap-start"
+                    className="flex-shrink-0 w-[320px] snap-start"
                   >
                     <div className="h-full p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-3 group/card relative">
                       <div className="flex items-start justify-between gap-2">
@@ -295,7 +295,7 @@ function RoadmapCarousel() {
                           >
                             <StatusIcon className="w-3.5 h-3.5" />
                           </button>
-                          <h3 className={`text-sm font-semibold truncate ${item.status === "completed" ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                          <h3 className={`text-sm font-semibold ${item.status === "completed" ? "text-muted-foreground" : "text-foreground"}`}>
                             {item.title}
                           </h3>
                         </div>
