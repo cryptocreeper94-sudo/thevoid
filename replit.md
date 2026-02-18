@@ -19,7 +19,10 @@ The application is built with a React + Vite frontend utilizing Tailwind CSS, Fr
 - **AI Personalities**: Five distinct AI personalities offer varied response styles. All AI interactions are governed by strict safety guardrails, including mandatory safety preambles, and an auto-detection system for crisis situations, providing immediate access to crisis resources. AI responses can be delivered via text and OpenAI TTS, with personality-specific voices and user-selectable voice preferences.
 - **Authentication**: A PIN-based whitelist system secures the main application areas, featuring a master key, first-login PIN change, and Replit Auth (OIDC).
 - **Subscription & Monetization**: Implements Stripe for a subscription system offering free and premium tiers, and a credit pack system for purchasing additional vents.
-- **Void ID System**: Generates unique `V-XXXXXXXX` identifiers for premium subscribers, designed for future Trust Layer blockchain integration.
+- **Void ID System**: Generates unique `V-XXXXXXXX` identifiers for premium subscribers. Serves as both a membership hallmark and affiliate referral code.
+- **Blockchain Hallmark**: SHA-256 hash-chained stamps minted for each Void ID on the Trust Layer v1 network. Each stamp includes a block number, previous hash (chain integrity), and DW-STAMP-1.0 standard metadata. Verification endpoint at `/api/stamp/verify/:voidId`.
+- **Affiliate Program**: Premium users share their Void ID as a referral code. Referred users who convert to Premium earn the referrer 5 bonus credits. Stats tracked at `/api/referral/stats/:userId`.
+- **Trust Layer Bridge**: Void IDs are linked to Trust Layer SSO chat accounts, embedded in JWT tokens, enabling cross-ecosystem member recognition across DarkWave apps.
 - **Conversation Threads**: Allows for multi-turn conversations with AI personalities, including text and voice input/output, and context retention.
 - **Custom Personality Tuning**: Premium users can adjust AI personality traits like sarcasm and empathy via sliders.
 - **Developer Tools**: An admin-only Developer portal provides a database-backed roadmap carousel and an analytics dashboard with real-time metrics.

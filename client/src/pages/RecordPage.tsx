@@ -168,7 +168,20 @@ export default function RecordPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
       window.history.replaceState({}, "", "/");
     }
-  }, []);
+    const refCode = params.get("ref");
+    if (refCode && refCode.startsWith("V-") && visitorId) {
+      fetch("/api/referral/apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ referralCode: refCode, userId: visitorId }),
+      }).then(res => res.json()).then(data => {
+        if (data.success) {
+          toast({ title: "Referral Applied!", description: `You were referred by ${refCode}. Welcome!` });
+        }
+      }).catch(() => {});
+      window.history.replaceState({}, "", "/");
+    }
+  }, [visitorId]);
 
   const submitRecording = useCallback(async () => {
     try {
