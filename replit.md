@@ -69,9 +69,25 @@ Voice-first venting application where users record frustrations and receive AI-g
 - **Stripe Key**: Stored manually as STRIPE_SECRET_KEY secret (not via Replit integration)
 - **Free tier**: 1 vent/day, all personalities, TTS responses
 - **Premium tier**: Unlimited vents — $9.99/month
-- **Tables**: `subscriptions` (userId, stripeCustomerId, stripeSubscriptionId, status), `daily_vent_usage` (userId, date, ventCount)
+- **Tables**: `subscriptions` (userId, voidId, stripeCustomerId, stripeSubscriptionId, status), `daily_vent_usage` (userId, date, ventCount)
 - **API**: POST /api/stripe/create-checkout, POST /api/stripe/create-portal, POST /api/stripe/webhook, GET /api/subscription/status
 - **Frontend**: Upgrade prompt on RecordPage when limit reached, subscription card on SettingsPage
+
+## Void ID System
+- **Format**: `V-XXXXXXXX` (V- prefix + 8 random digits)
+- **Purpose**: Unique member identifier for Trust Layer blockchain integration (dwtl.io)
+- **Generation**: Auto-generated on checkout.session.completed webhook event
+- **Storage**: `voidId` column on `subscriptions` table (varchar(12), unique)
+- **Display**: Shown on Settings page for premium subscribers
+- **Future**: Will be sent to Trust Layer (dwtl.io) as blockchain-verified membership reference
+
+## Email System (Resend via Replit Integration)
+- **Provider**: Resend (connected via Replit integration, API key auto-managed)
+- **From**: dwsc.io domain (configured in Resend)
+- **Trigger**: Subscription confirmation email sent on checkout.session.completed
+- **Template**: Premium dark glassmorphism HTML email matching site design
+- **Content**: Welcome message, subscription details, Void ID, Trust Layer/TrustShield branding, app page links
+- **Module**: `server/email.ts` — generateVoidId(), sendSubscriptionConfirmationEmail()
 
 ## Pages
 - `/` - Main recording page (3-column Bento grid: Vent Log, Record Stage, Personality Selector)
@@ -94,6 +110,8 @@ Voice-first venting application where users record frustrations and receive AI-g
 - `contact_messages` table stores submissions, admin GET via x-master-key header
 
 ## Recent Changes
+- Feb 18, 2026: Added Resend email system — premium glassmorphism subscription confirmation email with Void ID, Trust Layer/TrustShield branding, and app page links
+- Feb 18, 2026: Added Void ID system — unique V-XXXXXXXX format member IDs generated on subscription, displayed on Settings page, ready for Trust Layer blockchain
 - Feb 18, 2026: Added SEO legitimacy package — robots.txt, sitemap.xml, Twitter cards, JSON-LD structured data, canonical URLs, trimmed fonts, Contact page
 - Feb 18, 2026: Added Stripe subscription system — Free (1 vent/day) + Premium ($9.99/mo unlimited), webhook auto-created, checkout/portal/usage tracking
 - Feb 18, 2026: Added TTS voice responses — AI speaks back using OpenAI TTS with personality-specific voices (onyx, nova, alloy, echo, fable)

@@ -8,6 +8,7 @@ import { registerChatRoutes } from "./replit_integrations/chat";
 import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
 import { openai, speechToText, textToSpeech, ensureCompatibleFormat, detectAudioFormat } from "./replit_integrations/audio/client";
 import Stripe from "stripe";
+import { generateVoidId, sendSubscriptionConfirmationEmail } from "./email";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-04-30.basil" as any });
 
@@ -88,13 +89,50 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           const session = event.data.object as Stripe.Checkout.Session;
           const userId = parseInt(session.metadata?.userId || "0");
           if (userId && session.customer && session.subscription) {
-            await storage.upsertSubscription(userId, {
-              stripeCustomerId: session.customer as string,
-              stripeSubscriptionId: session.subscription as string,
-              stripePriceId: VOID_PRICE_ID,
-              status: "active",
-            });
-            console.log(`[Stripe] Subscription activated for user ${userId}`);
+            const existingSub = await storage.getSubscription(userId);
+            const voidId = existingSub?.voidId || generateVoidId();
+
+            let retries = 0;
+            let finalVoidId = voidId;
+            while (retries < 5) {
+              try {
+                await storage.upsertSubscription(userId, {
+                  stripeCustomerId: session.customer as string,
+                  stripeSubscriptionId: session.subscription as string,
+                  stripePriceId: VOID_PRICE_ID,
+                  status: "active",
+                  voidId: finalVoidId,
+                });
+                break;
+              } catch (e: any) {
+                if (e?.message?.includes("unique") || e?.code === "23505") {
+                  finalVoidId = generateVoidId();
+                  retries++;
+                } else {
+                  throw e;
+                }
+              }
+            }
+            console.log(`[Stripe] Subscription activated for user ${userId}, Void ID: ${finalVoidId}`);
+
+            try {
+              const customer = await stripe.customers.retrieve(session.customer as string) as Stripe.Customer;
+              const customerEmail = session.customer_email || customer.email;
+              const customerName = customer.name || `User ${userId}`;
+              if (customerEmail) {
+                const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || process.env.REPLIT_DEV_DOMAIN;
+                const appUrl = `https://${domain}`;
+                await sendSubscriptionConfirmationEmail({
+                  toEmail: customerEmail,
+                  userName: customerName,
+                  voidId: finalVoidId,
+                  subscriptionId: session.subscription as string,
+                  appUrl,
+                });
+              }
+            } catch (emailErr: any) {
+              console.error("[Stripe] Email sending failed (non-critical):", emailErr?.message);
+            }
           }
           break;
         }
@@ -218,6 +256,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         ventsRemaining,
         status: sub?.status || "free",
         currentPeriodEnd: sub?.currentPeriodEnd,
+        voidId: sub?.voidId || null,
       });
     } catch (err: any) {
       res.status(500).json({ message: "Failed to get subscription status" });
