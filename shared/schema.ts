@@ -99,6 +99,7 @@ export type InsertRoadmapItem = z.infer<typeof insertRoadmapItemSchema>;
 export const subscriptions = pgTable("subscriptions", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
+  voidId: varchar("void_id", { length: 12 }).unique(),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   stripePriceId: text("stripe_price_id"),
