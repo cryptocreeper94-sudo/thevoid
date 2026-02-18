@@ -13,7 +13,7 @@ import rateLimit from "express-rate-limit";
 import { registerUser, loginUser, getUserFromToken } from "./trustlayer-sso";
 import { setupChatWebSocket } from "./chat-ws";
 import { seedChatChannels } from "./seedChat";
-import { chatChannels, referrals, voidStamps, chatUsers, subscriptions } from "@shared/schema";
+import { chatChannels, referrals, voidStamps, chatUsers, subscriptions, achievements, userAchievements, ventStreaks, dailyPrompts, moodChecks, blogPosts } from "@shared/schema";
 import { db } from "./db";
 import { mintVoidStamp, verifyVoidStamp, getStampStats } from "./blockchain-hallmark";
 import { eq, and, count as dbCount } from "drizzle-orm";
