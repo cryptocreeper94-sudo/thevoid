@@ -584,6 +584,7 @@ export default function SignalChatPage() {
   const switchChannel = (channelId: string) => {
     setActiveChannel(channelId);
     setViewMode("chat");
+    if (window.innerWidth < 640) setShowSidebar(false);
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type: "switch_channel", channelId }));
     }
@@ -665,7 +666,7 @@ export default function SignalChatPage() {
                   onlineCount={onlineCount}
                   channelUsers={channelUsers}
                   crisisActive={viewMode === "crisis"}
-                  onCrisis={() => setViewMode("crisis")}
+                  onCrisis={() => { setViewMode("crisis"); if (window.innerWidth < 640) setShowSidebar(false); }}
                 />
               </GlassCard>
             </div>
