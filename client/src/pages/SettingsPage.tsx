@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Settings, Sparkles, Brain, Zap, Heart, Flame, Volume2, Type, Crown, CreditCard } from "lucide-react";
+import { Settings, Sparkles, Brain, Zap, Heart, Flame, Volume2, Type, Crown, CreditCard, Mic } from "lucide-react";
 import { motion } from "framer-motion";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -46,6 +46,7 @@ function loadSettings() {
     defaultPersonality: "smart-ass",
     responseLength: "medium",
     autoPlayResponse: true,
+    voicePreference: "default",
     hapticFeedback: true,
     showTranscript: true,
     fontSize: 16,
@@ -250,6 +251,20 @@ export default function SettingsPage() {
                         onCheckedChange={(v) => update("autoPlayResponse", v)}
                         data-testid="switch-autoplay"
                       />
+                    </div>
+                    <div>
+                      <Label className="text-sm text-foreground mb-2 block">Voice Preference</Label>
+                      <p className="text-xs text-muted-foreground mb-2">Choose the voice gender for AI responses</p>
+                      <Select value={settings.voicePreference || "default"} onValueChange={(v) => update("voicePreference", v)}>
+                        <SelectTrigger data-testid="select-voice-preference">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="default">Default &ndash; Matches personality</SelectItem>
+                          <SelectItem value="male">Male Voice</SelectItem>
+                          <SelectItem value="female">Female Voice</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="flex items-center justify-between gap-4">
                       <div>

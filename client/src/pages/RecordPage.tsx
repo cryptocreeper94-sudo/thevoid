@@ -141,8 +141,10 @@ export default function RecordPage() {
           });
           return;
         }
+        const savedSettings = JSON.parse(localStorage.getItem("void-settings") || "{}");
+        const voicePreference = savedSettings.voicePreference || 'default';
         createVent.mutate(
-          { audioBlob: blob, personality, mimeType, extension, userId: visitorId ? String(visitorId) : undefined },
+          { audioBlob: blob, personality, mimeType, extension, userId: visitorId ? String(visitorId) : undefined, voicePreference },
           {
             onSuccess: (data) => {
               setLastResponse(data);
@@ -152,8 +154,7 @@ export default function RecordPage() {
                 description: "The AI has analyzed your rage.",
               });
               if (data.audioResponse) {
-                const settings = JSON.parse(localStorage.getItem("void-settings") || "{}");
-                if (settings.autoPlayResponse !== false) {
+                if (savedSettings.autoPlayResponse !== false) {
                   playAudioResponse(data.audioResponse);
                 }
               }

@@ -306,7 +306,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.post("/api/vents", async (req, res) => {
     try {
-      const { audio, personality, mimeType, extension, userId } = createVentRequestSchema.parse(req.body);
+      const { audio, personality, mimeType, extension, userId, voicePreference } = createVentRequestSchema.parse(req.body);
 
       // Check daily vent limit for free users
       if (userId) {
@@ -357,7 +357,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           'hype-man': 'echo',
           'roast-master': 'fable',
         };
-        const voice = voiceMap[personality] || 'alloy';
+        let voice = voiceMap[personality] || 'alloy';
+        if (voicePreference === 'male') {
+          voice = 'onyx';
+        } else if (voicePreference === 'female') {
+          voice = 'nova';
+        }
         const ttsBuffer = await textToSpeech(responseText, voice, "mp3");
         audioResponse = ttsBuffer.toString("base64");
       } catch (ttsErr: any) {
