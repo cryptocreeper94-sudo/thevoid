@@ -8,9 +8,10 @@ import { VentHistory } from "@/components/venting/VentHistory";
 import { useCreateVent } from "@/hooks/use-vents";
 import { useVoiceRecorder } from "../../replit_integrations/audio/useVoiceRecorder";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, Phone, Play, RefreshCw, MessageCircle, Info, X, ShieldCheck, Mic, MicOff } from "lucide-react";
+import { AlertCircle, Phone, Play, RefreshCw, MessageCircle, Info, X, ShieldCheck, Mic, MicOff, Volume2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSessionHeroImage } from "@/lib/heroImages";
+import { usePinAuth } from "@/components/PinGate";
 
 type MicPermission = "prompt" | "granted" | "denied" | "unsupported" | "unknown";
 
@@ -60,12 +61,27 @@ function useMicPermission() {
 
 export default function RecordPage() {
   const [personality, setPersonality] = useState('smart-ass');
-  const [lastResponse, setLastResponse] = useState<{ transcript: string; response: string } | null>(null);
+  const [lastResponse, setLastResponse] = useState<{ transcript: string; response: string; audioResponse?: string } | null>(null);
   const [showCrisisInfo, setShowCrisisInfo] = useState(false);
   const recorder = useVoiceRecorder();
   const createVent = useCreateVent();
   const { toast } = useToast();
   const { permission: micPermission, requestPermission, isEmbedded } = useMicPermission();
+  const { visitorId } = usePinAuth();
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+
+  const playAudioResponse = useCallback((base64Audio: string) => {
+    try {
+      const audioData = `data:audio/mp3;base64,${base64Audio}`;
+      const audio = new Audio(audioData);
+      setIsPlayingAudio(true);
+      audio.onended = () => setIsPlayingAudio(false);
+      audio.onerror = () => setIsPlayingAudio(false);
+      audio.play().catch(() => setIsPlayingAudio(false));
+    } catch {
+      setIsPlayingAudio(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (recorder.error) {
@@ -96,7 +112,7 @@ export default function RecordPage() {
           return;
         }
         createVent.mutate(
-          { audioBlob: blob, personality, mimeType, extension },
+          { audioBlob: blob, personality, mimeType, extension, userId: visitorId ? String(visitorId) : undefined },
           {
             onSuccess: (data) => {
               setLastResponse(data);
@@ -104,6 +120,12 @@ export default function RecordPage() {
                 title: "Vent Processed",
                 description: "The AI has analyzed your rage.",
               });
+              if (data.audioResponse) {
+                const settings = JSON.parse(localStorage.getItem("void-settings") || "{}");
+                if (settings.autoPlayResponse !== false) {
+                  playAudioResponse(data.audioResponse);
+                }
+              }
             },
             onError: (err: any) => {
               toast({
@@ -133,7 +155,7 @@ export default function RecordPage() {
             <p className="text-xs text-white/40 uppercase tracking-widest">Your history of frustration</p>
           </div>
           <div className="flex-1 overflow-y-auto">
-            <VentHistory />
+            <VentHistory userId={visitorId} />
           </div>
 
           <div className="mt-auto pt-6 border-t border-white/5">
@@ -216,13 +238,21 @@ export default function RecordPage() {
                         <RefreshCw className="w-3.5 h-3.5" />
                         Vent Again
                       </button>
-                      <button
-                        className="px-5 py-2.5 rounded-full bg-primary hover:bg-primary/80 text-white shadow-lg shadow-primary/20 flex items-center gap-2 transition-all text-sm"
-                        data-testid="button-listen"
-                      >
-                        <Play className="w-3.5 h-3.5 fill-current" />
-                        Listen
-                      </button>
+                      {lastResponse.audioResponse && (
+                        <button
+                          onClick={() => playAudioResponse(lastResponse.audioResponse!)}
+                          disabled={isPlayingAudio}
+                          className="px-5 py-2.5 rounded-full bg-primary hover:bg-primary/80 text-white shadow-lg shadow-primary/20 flex items-center gap-2 transition-all text-sm disabled:opacity-50"
+                          data-testid="button-listen"
+                        >
+                          {isPlayingAudio ? (
+                            <Volume2 className="w-3.5 h-3.5 animate-pulse" />
+                          ) : (
+                            <Play className="w-3.5 h-3.5 fill-current" />
+                          )}
+                          {isPlayingAudio ? "Playing..." : "Listen"}
+                        </button>
+                      )}
                     </div>
                   </motion.div>
                 ) : micPermission === "denied" || micPermission === "unsupported" ? (
@@ -434,7 +464,7 @@ export default function RecordPage() {
             <div className="mt-4 pt-4 border-t border-white/5 lg:hidden">
               <h3 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-2">Recent History</h3>
               <div className="h-40 overflow-y-auto">
-                <VentHistory />
+                <VentHistory userId={visitorId} />
               </div>
             </div>
           </GlassCard>

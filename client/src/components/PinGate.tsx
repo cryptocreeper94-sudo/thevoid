@@ -9,10 +9,11 @@ import { apiRequest } from "@/lib/queryClient";
 
 interface PinContextType {
   userName: string | null;
+  visitorId: number | null;
   logout: () => void;
 }
 
-const PinContext = createContext<PinContextType>({ userName: null, logout: () => {} });
+const PinContext = createContext<PinContextType>({ userName: null, visitorId: null, logout: () => {} });
 
 export function usePinAuth() {
   return useContext(PinContext);
@@ -51,6 +52,7 @@ export function PinGate({ children }: { children: React.ReactNode }) {
         } else {
           setAuthenticated(true);
           setUserName(data.name);
+          if (data.userId) setUserId(data.userId);
         }
       }
     } catch {
@@ -115,7 +117,7 @@ export function PinGate({ children }: { children: React.ReactNode }) {
 
   if (authenticated) {
     return (
-      <PinContext.Provider value={{ userName, logout }}>
+      <PinContext.Provider value={{ userName, visitorId: userId, logout }}>
         {children}
       </PinContext.Provider>
     );

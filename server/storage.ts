@@ -4,7 +4,7 @@ import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
   createVent(vent: InsertVent): Promise<Vent>;
-  getVents(): Promise<Vent[]>;
+  getVents(userId?: string): Promise<Vent[]>;
   getVent(id: number): Promise<Vent | undefined>;
   getWhitelistedUsers(): Promise<WhitelistedUser[]>;
   createWhitelistedUser(user: InsertWhitelistedUser): Promise<WhitelistedUser>;
@@ -24,7 +24,10 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
   
-  async getVents(): Promise<Vent[]> {
+  async getVents(userId?: string): Promise<Vent[]> {
+    if (userId) {
+      return await db.select().from(vents).where(eq(vents.userId, userId)).orderBy(desc(vents.createdAt));
+    }
     return await db.select().from(vents).orderBy(desc(vents.createdAt));
   }
   

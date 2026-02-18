@@ -101,6 +101,7 @@ export const createVentRequestSchema = z.object({
   personality: z.enum(['smart-ass', 'calming', 'therapist', 'hype-man', 'roast-master']),
   mimeType: z.string().optional().default("audio/webm"),
   extension: z.string().optional().default("webm"),
+  userId: z.string().optional(),
 });
 
 export type CreateVentRequest = z.infer<typeof createVentRequestSchema>;
