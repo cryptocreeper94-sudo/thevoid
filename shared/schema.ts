@@ -140,6 +140,7 @@ export const createVentRequestSchema = z.object({
   mimeType: z.string().optional().default("audio/webm"),
   extension: z.string().optional().default("webm"),
   userId: z.string().optional(),
+  voicePreference: z.enum(['default', 'male', 'female']).optional().default('default'),
 });
 
 export type CreateVentRequest = z.infer<typeof createVentRequestSchema>;

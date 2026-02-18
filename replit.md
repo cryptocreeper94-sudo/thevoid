@@ -110,6 +110,7 @@ Voice-first venting application where users record frustrations and receive AI-g
 - `contact_messages` table stores submissions, admin GET via x-master-key header
 
 ## Recent Changes
+- Feb 18, 2026: Added voice preference setting — users can choose male, female, or default (personality-matched) voice for all AI responses
 - Feb 18, 2026: Added Resend email system — premium glassmorphism subscription confirmation email with Void ID, Trust Layer/TrustShield branding, and app page links
 - Feb 18, 2026: Added Void ID system — unique V-XXXXXXXX format member IDs generated on subscription, displayed on Settings page, ready for Trust Layer blockchain
 - Feb 18, 2026: Added SEO legitimacy package — robots.txt, sitemap.xml, Twitter cards, JSON-LD structured data, canonical URLs, trimmed fonts, Contact page
