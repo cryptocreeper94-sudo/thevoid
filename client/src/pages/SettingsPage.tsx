@@ -133,6 +133,20 @@ export default function SettingsPage() {
                     {subLoading ? "Loading..." : subStatus?.tier === "premium" ? "Manage Subscription" : "Upgrade to Premium"}
                   </Button>
                 </div>
+                {subStatus?.tier === "premium" && subStatus?.voidId && (
+                  <div className="mt-4 pt-4 border-t border-white/5">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-widest text-blue-400/60 mb-1">Your Void ID</p>
+                        <p className="font-mono text-lg font-bold text-blue-400 tracking-wider" data-testid="text-void-id">{subStatus.voidId}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] text-muted-foreground">Verified by Trust Layer</p>
+                        <a href="https://dwtl.io" target="_blank" rel="noopener noreferrer" className="text-[10px] text-purple-400/70 hover:text-purple-400" data-testid="link-trust-layer">dwtl.io</a>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {subStatus?.tier !== "premium" && (
                   <div className="mt-4 pt-4 border-t border-white/5 grid grid-cols-3 gap-3 text-center">
                     <div>

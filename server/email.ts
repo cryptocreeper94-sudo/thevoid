@@ -39,8 +39,12 @@ async function getUncachableResendClient() {
 }
 
 function generateVoidId(): string {
-  const digits = Math.floor(10000000 + Math.random() * 90000000);
-  return `V-${digits}`;
+  const chars = '0123456789';
+  let id = 'V-';
+  for (let i = 0; i < 8; i++) {
+    id += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return id;
 }
 
 function buildSubscriptionEmailHtml(params: {

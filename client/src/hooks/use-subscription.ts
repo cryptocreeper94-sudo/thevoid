@@ -7,6 +7,7 @@ interface SubscriptionStatus {
   ventsRemaining: number;
   status: string;
   currentPeriodEnd?: string;
+  voidId?: string | null;
 }
 
 export function useSubscription(userId: number | null) {
