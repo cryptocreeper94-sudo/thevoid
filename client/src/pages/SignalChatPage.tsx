@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send, Hash, Users, LogOut, ArrowLeft, Phone,
-  AlertTriangle, ExternalLink, Heart, LogIn, UserPlus, Eye, EyeOff
+  ExternalLink, Heart, LogIn, UserPlus, Eye, EyeOff,
+  ShieldCheck, Loader2, ChevronDown, ChevronUp
 } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
@@ -50,6 +51,11 @@ interface ChatMsg {
   content: string;
   replyToId: string | null;
   createdAt: string;
+}
+
+interface AiMsg {
+  role: "user" | "assistant";
+  content: string;
 }
 
 function AuthScreen({ onAuth }: { onAuth: (user: ChatUser, token: string) => void }) {
@@ -214,14 +220,182 @@ function AuthScreen({ onAuth }: { onAuth: (user: ChatUser, token: string) => voi
   );
 }
 
+function CrisisSupportView() {
+  const [aiMessages, setAiMessages] = useState<AiMsg[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showResources, setShowResources] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [aiMessages]);
+
+  const sendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const msg = input.trim();
+    if (!msg || loading) return;
+
+    const userMsg: AiMsg = { role: "user", content: msg };
+    const updated = [...aiMessages, userMsg];
+    setAiMessages(updated);
+    setInput("");
+    setLoading(true);
+
+    try {
+      const res = await apiRequest("POST", "/api/signal-ai", { messages: updated });
+      const data = await res.json();
+      setAiMessages((prev) => [...prev, { role: "assistant", content: data.response }]);
+    } catch {
+      setAiMessages((prev) => [...prev, { role: "assistant", content: "I'm having trouble connecting right now. If you're in crisis, please call or text 988 immediately." }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between gap-2 p-3 border-b border-white/5">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-red-400 flex-shrink-0" />
+          <span className="text-sm font-medium text-foreground">Crisis Support</span>
+        </div>
+        <button
+          onClick={() => setShowResources(!showResources)}
+          className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+          data-testid="button-toggle-crisis-resources"
+        >
+          <Phone className="w-3 h-3" />
+          <span className="hidden sm:inline">Hotlines</span>
+          {showResources ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+        </button>
+      </div>
+
+      <AnimatePresence>
+        {showResources && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden border-b border-white/5"
+          >
+            <div className="p-2.5 space-y-1">
+              {CRISIS_RESOURCES.map((r) => (
+                <a
+                  key={r.name}
+                  href={r.href}
+                  target={r.href.startsWith("http") ? "_blank" : undefined}
+                  rel={r.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                  className="flex items-center justify-between gap-2 px-2 py-1 rounded-md bg-white/5 hover-elevate"
+                  data-testid={`link-crisis-${r.name.replace(/\s+/g, "-").toLowerCase()}`}
+                >
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-medium text-foreground truncate">{r.name}</p>
+                    <p className="text-[9px] text-muted-foreground">{r.detail} — {r.available}</p>
+                  </div>
+                  <ExternalLink className="w-3 h-3 text-muted-foreground/50 flex-shrink-0" />
+                </a>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="flex-1 overflow-y-auto p-3 space-y-3" data-testid="crisis-ai-messages">
+        {aiMessages.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-full text-center px-4 space-y-3">
+            <div className="p-3 rounded-full bg-red-400/10">
+              <ShieldCheck className="w-8 h-8 text-red-400" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground mb-1">Signal AI</p>
+              <p className="text-xs text-muted-foreground max-w-xs">
+                A compassionate AI trained to listen and connect you with professional crisis resources. Not a replacement for real help — a bridge until you get there.
+              </p>
+            </div>
+            <div className="p-2 rounded-md bg-red-400/5 border border-red-400/10">
+              <p className="text-[10px] text-red-400/80">
+                If you are in immediate danger, call 911 or go to your nearest emergency room.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {aiMessages.map((msg, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-start gap-2"
+          >
+            <div
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 mt-0.5 ${
+                msg.role === "assistant" ? "bg-red-400" : "bg-primary"
+              }`}
+            >
+              {msg.role === "assistant" ? <ShieldCheck className="w-3.5 h-3.5" /> : "Y"}
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="text-xs font-semibold text-foreground">
+                {msg.role === "assistant" ? "Signal" : "You"}
+              </span>
+              <p className="text-sm text-foreground/90 whitespace-pre-wrap break-words mt-0.5">{msg.content}</p>
+            </div>
+          </motion.div>
+        ))}
+
+        {loading && (
+          <div className="flex items-start gap-2">
+            <div className="w-7 h-7 rounded-full flex items-center justify-center bg-red-400 flex-shrink-0">
+              <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
+            </div>
+            <div className="mt-1">
+              <span className="text-xs text-muted-foreground">Signal is listening...</span>
+            </div>
+          </div>
+        )}
+
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div className="border-t border-white/5 p-3">
+        <form onSubmit={sendMessage} className="flex items-center gap-2">
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Talk to Signal..."
+            className="flex-1 bg-white/5 border-white/10"
+            maxLength={1000}
+            disabled={loading}
+            data-testid="input-crisis-message"
+          />
+          <Button
+            type="submit"
+            size="icon"
+            disabled={!input.trim() || loading}
+            data-testid="button-crisis-send"
+          >
+            <Send className="w-4 h-4" />
+          </Button>
+        </form>
+        <p className="text-[9px] text-muted-foreground/40 mt-1.5">
+          Signal AI is not a crisis counselor. For immediate help, expand Hotlines above.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function ChannelSidebar({
-  channels, activeChannel, onSelect, onlineCount, channelUsers
+  channels, activeChannel, onSelect, onlineCount, channelUsers, crisisActive, onCrisis
 }: {
   channels: ChatChannel[];
   activeChannel: string | null;
   onSelect: (id: string) => void;
   onlineCount: number;
   channelUsers: Record<string, string[]>;
+  crisisActive: boolean;
+  onCrisis: () => void;
 }) {
   const grouped: Record<string, ChatChannel[]> = {};
   channels.forEach((ch) => {
@@ -244,6 +418,22 @@ function ChannelSidebar({
           <span className="text-xs text-muted-foreground">{onlineCount} online</span>
         </div>
       </div>
+
+      <div className="p-2 border-b border-white/5">
+        <button
+          onClick={onCrisis}
+          className={`w-full flex items-center gap-2 px-2 py-2 rounded-md text-sm transition-colors ${
+            crisisActive
+              ? "bg-red-400/15 text-red-400 font-medium"
+              : "text-red-400/70 hover-elevate"
+          }`}
+          data-testid="button-crisis-support"
+        >
+          <ShieldCheck className="w-4 h-4 flex-shrink-0" />
+          <span>Crisis Support</span>
+        </button>
+      </div>
+
       <div className="flex-1 overflow-y-auto p-2 space-y-3">
         {Object.entries(grouped).map(([cat, chs]) => (
           <div key={cat}>
@@ -257,7 +447,7 @@ function ChannelSidebar({
                   key={ch.id}
                   onClick={() => onSelect(ch.id)}
                   className={`w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-md text-sm transition-colors ${
-                    activeChannel === ch.id
+                    !crisisActive && activeChannel === ch.id
                       ? "bg-primary/10 text-primary font-medium"
                       : "text-muted-foreground hover-elevate"
                   }`}
@@ -276,17 +466,6 @@ function ChannelSidebar({
           </div>
         ))}
       </div>
-
-      <div className="p-2 border-t border-white/5">
-        <button
-          onClick={() => {}}
-          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-red-400 hover-elevate"
-          data-testid="button-crisis-resources-sidebar"
-        >
-          <Phone className="w-3.5 h-3.5" />
-          Crisis Resources
-        </button>
-      </div>
     </div>
   );
 }
@@ -301,8 +480,8 @@ export default function SignalChatPage() {
   const [onlineCount, setOnlineCount] = useState(0);
   const [channelUsers, setChannelUsers] = useState<Record<string, string[]>>({});
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
-  const [showResources, setShowResources] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
+  const [viewMode, setViewMode] = useState<"chat" | "crisis">("chat");
   const wsRef = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
@@ -404,6 +583,7 @@ export default function SignalChatPage() {
 
   const switchChannel = (channelId: string) => {
     setActiveChannel(channelId);
+    setViewMode("chat");
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type: "switch_channel", channelId }));
     }
@@ -455,69 +635,22 @@ export default function SignalChatPage() {
               Signal Chat
             </h1>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowResources(!showResources)}
-              data-testid="button-toggle-resources"
-            >
-              <Phone className="w-3.5 h-3.5 mr-1.5" />
-              <span className="hidden sm:inline">Crisis Lines</span>
-            </Button>
-            {user && (
-              <div className="flex items-center gap-2">
-                <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
-                  style={{ backgroundColor: user.avatarColor }}
-                  data-testid="avatar-current-user"
-                >
-                  {user.displayName[0]?.toUpperCase()}
-                </div>
-                <span className="text-xs text-muted-foreground hidden sm:inline">{user.displayName}</span>
-                <Button size="icon" variant="ghost" onClick={handleLogout} data-testid="button-chat-logout">
-                  <LogOut className="w-3.5 h-3.5" />
-                </Button>
+          {user && (
+            <div className="flex items-center gap-2">
+              <div
+                className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
+                style={{ backgroundColor: user.avatarColor }}
+                data-testid="avatar-current-user"
+              >
+                {user.displayName[0]?.toUpperCase()}
               </div>
-            )}
-          </div>
-        </div>
-
-        <AnimatePresence>
-          {showResources && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mb-2 overflow-hidden"
-            >
-              <GlassCard className="p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertTriangle className="w-4 h-4 text-amber-400" />
-                  <h2 className="text-xs font-semibold text-foreground">Crisis Resources</h2>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1.5">
-                  {CRISIS_RESOURCES.map((r) => (
-                    <a
-                      key={r.name}
-                      href={r.href}
-                      target={r.href.startsWith("http") ? "_blank" : undefined}
-                      rel={r.href.startsWith("http") ? "noopener noreferrer" : undefined}
-                      className="flex items-center justify-between gap-1 p-2 rounded-md bg-white/5 hover-elevate group"
-                      data-testid={`link-crisis-${r.name.replace(/\s+/g, "-").toLowerCase()}`}
-                    >
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-medium text-foreground truncate">{r.name}</p>
-                        <p className="text-[9px] text-muted-foreground">{r.detail}</p>
-                      </div>
-                      <ExternalLink className="w-3 h-3 text-muted-foreground/50 flex-shrink-0" />
-                    </a>
-                  ))}
-                </div>
-              </GlassCard>
-            </motion.div>
+              <span className="text-xs text-muted-foreground hidden sm:inline">{user.displayName}</span>
+              <Button size="icon" variant="ghost" onClick={handleLogout} data-testid="button-chat-logout">
+                <LogOut className="w-3.5 h-3.5" />
+              </Button>
+            </div>
           )}
-        </AnimatePresence>
+        </div>
 
         {!user ? (
           <AuthScreen onAuth={handleAuth} />
@@ -531,108 +664,116 @@ export default function SignalChatPage() {
                   onSelect={switchChannel}
                   onlineCount={onlineCount}
                   channelUsers={channelUsers}
+                  crisisActive={viewMode === "crisis"}
+                  onCrisis={() => setViewMode("crisis")}
                 />
               </GlassCard>
             </div>
 
             <GlassCard className="flex-1 flex flex-col min-h-0 overflow-hidden">
-              <div className="flex items-center justify-between gap-2 p-3 border-b border-white/5">
-                <div className="flex items-center gap-2 min-w-0">
-                  <button
-                    className="sm:hidden"
-                    onClick={() => setShowSidebar(!showSidebar)}
-                    data-testid="button-toggle-sidebar"
-                  >
-                    <Hash className="w-4 h-4 text-muted-foreground" />
-                  </button>
-                  <Hash className="w-4 h-4 text-primary flex-shrink-0 hidden sm:block" />
-                  <span className="text-sm font-medium text-foreground truncate">
-                    {activeChannelObj?.name || "Select a channel"}
-                  </span>
-                </div>
-                {activeChannelObj?.description && (
-                  <span className="text-[10px] text-muted-foreground truncate hidden md:block max-w-[200px]">
-                    {activeChannelObj.description}
-                  </span>
-                )}
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-3 space-y-2" data-testid="signal-messages-container">
-                {messages.length === 0 && (
-                  <div className="flex items-center justify-center h-full">
-                    <p className="text-sm text-muted-foreground/50">No messages yet. Start the conversation.</p>
-                  </div>
-                )}
-                {messages.map((msg) => {
-                  const isMe = msg.userId === user.id;
-                  return (
-                    <motion.div
-                      key={msg.id}
-                      initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="flex items-start gap-2 group"
-                      data-testid={`signal-message-${msg.id}`}
-                    >
-                      <div
-                        className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 mt-0.5"
-                        style={{ backgroundColor: msg.avatarColor || "#06b6d4" }}
+              {viewMode === "crisis" ? (
+                <CrisisSupportView />
+              ) : (
+                <>
+                  <div className="flex items-center justify-between gap-2 p-3 border-b border-white/5">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <button
+                        className="sm:hidden"
+                        onClick={() => setShowSidebar(!showSidebar)}
+                        data-testid="button-toggle-sidebar"
                       >
-                        {msg.username?.[0]?.toUpperCase() || "?"}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-baseline gap-2 flex-wrap">
-                          <span className={`text-xs font-semibold ${isMe ? "text-primary" : "text-foreground"}`}>
-                            {msg.username}
-                          </span>
-                          {msg.role === "admin" && (
-                            <span className="text-[9px] bg-primary/20 text-primary px-1 py-0.5 rounded">ADMIN</span>
-                          )}
-                          <span className="text-[9px] text-muted-foreground/40">
-                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                          </span>
-                        </div>
-                        <p className="text-sm text-foreground/90 whitespace-pre-wrap break-words">{msg.content}</p>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-
-                {typingUsers.length > 0 && (
-                  <div className="text-[10px] text-muted-foreground/60 pl-9">
-                    {typingUsers.join(", ")} {typingUsers.length === 1 ? "is" : "are"} typing...
+                        <Hash className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                      <Hash className="w-4 h-4 text-primary flex-shrink-0 hidden sm:block" />
+                      <span className="text-sm font-medium text-foreground truncate">
+                        {activeChannelObj?.name || "Select a channel"}
+                      </span>
+                    </div>
+                    {activeChannelObj?.description && (
+                      <span className="text-[10px] text-muted-foreground truncate hidden md:block max-w-[200px]">
+                        {activeChannelObj.description}
+                      </span>
+                    )}
                   </div>
-                )}
 
-                <div ref={messagesEndRef} />
-              </div>
+                  <div className="flex-1 overflow-y-auto p-3 space-y-2" data-testid="signal-messages-container">
+                    {messages.length === 0 && (
+                      <div className="flex items-center justify-center h-full">
+                        <p className="text-sm text-muted-foreground/50">No messages yet. Start the conversation.</p>
+                      </div>
+                    )}
+                    {messages.map((msg) => {
+                      const isMe = msg.userId === user.id;
+                      return (
+                        <motion.div
+                          key={msg.id}
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="flex items-start gap-2 group"
+                          data-testid={`signal-message-${msg.id}`}
+                        >
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 mt-0.5"
+                            style={{ backgroundColor: msg.avatarColor || "#06b6d4" }}
+                          >
+                            {msg.username?.[0]?.toUpperCase() || "?"}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-baseline gap-2 flex-wrap">
+                              <span className={`text-xs font-semibold ${isMe ? "text-primary" : "text-foreground"}`}>
+                                {msg.username}
+                              </span>
+                              {msg.role === "admin" && (
+                                <span className="text-[9px] bg-primary/20 text-primary px-1 py-0.5 rounded">ADMIN</span>
+                              )}
+                              <span className="text-[9px] text-muted-foreground/40">
+                                {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                              </span>
+                            </div>
+                            <p className="text-sm text-foreground/90 whitespace-pre-wrap break-words">{msg.content}</p>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
 
-              <div className="border-t border-white/5 p-3">
-                <form onSubmit={sendMessage} className="flex items-center gap-2">
-                  <Input
-                    value={input}
-                    onChange={(e) => {
-                      setInput(e.target.value);
-                      handleTyping();
-                    }}
-                    placeholder={activeChannelObj ? `Message #${activeChannelObj.name}` : "Select a channel..."}
-                    className="flex-1 bg-white/5 border-white/10"
-                    maxLength={2000}
-                    disabled={!activeChannel}
-                    data-testid="input-signal-message"
-                  />
-                  <Button
-                    type="submit"
-                    size="icon"
-                    disabled={!input.trim() || !activeChannel}
-                    data-testid="button-signal-send"
-                  >
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </form>
-                <p className="text-[9px] text-muted-foreground/40 mt-1.5">
-                  Powered by Trust Layer SSO — your account works across the DarkWave ecosystem
-                </p>
-              </div>
+                    {typingUsers.length > 0 && (
+                      <div className="text-[10px] text-muted-foreground/60 pl-9">
+                        {typingUsers.join(", ")} {typingUsers.length === 1 ? "is" : "are"} typing...
+                      </div>
+                    )}
+
+                    <div ref={messagesEndRef} />
+                  </div>
+
+                  <div className="border-t border-white/5 p-3">
+                    <form onSubmit={sendMessage} className="flex items-center gap-2">
+                      <Input
+                        value={input}
+                        onChange={(e) => {
+                          setInput(e.target.value);
+                          handleTyping();
+                        }}
+                        placeholder={activeChannelObj ? `Message #${activeChannelObj.name}` : "Select a channel..."}
+                        className="flex-1 bg-white/5 border-white/10"
+                        maxLength={2000}
+                        disabled={!activeChannel}
+                        data-testid="input-signal-message"
+                      />
+                      <Button
+                        type="submit"
+                        size="icon"
+                        disabled={!input.trim() || !activeChannel}
+                        data-testid="button-signal-send"
+                      >
+                        <Send className="w-4 h-4" />
+                      </Button>
+                    </form>
+                    <p className="text-[9px] text-muted-foreground/40 mt-1.5">
+                      Powered by Trust Layer SSO — your account works across the DarkWave ecosystem
+                    </p>
+                  </div>
+                </>
+              )}
             </GlassCard>
           </div>
         )}
