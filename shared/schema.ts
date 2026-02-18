@@ -206,22 +206,55 @@ export const insertThreadMessageSchema = createInsertSchema(threadMessages).omit
 export type ThreadMessage = typeof threadMessages.$inferSelect;
 export type InsertThreadMessage = z.infer<typeof insertThreadMessageSchema>;
 
-// === SIGNAL CHAT (CRISIS SUPPORT) SCHEMA ===
-export const signalChats = pgTable("signal_chats", {
-  id: serial("id").primaryKey(),
-  sessionId: text("session_id").notNull(),
-  role: text("role").notNull(),
-  content: text("content").notNull(),
+// === TRUST LAYER SSO & SIGNAL CHAT SCHEMA ===
+export const chatUsers = pgTable("chat_users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  displayName: text("display_name").notNull(),
+  avatarColor: text("avatar_color").notNull().default("#06b6d4"),
+  role: text("role").notNull().default("member"),
+  trustLayerId: text("trust_layer_id").unique(),
+  isOnline: boolean("is_online").default(false),
+  lastSeen: timestamp("last_seen").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertSignalChatSchema = createInsertSchema(signalChats).omit({
+export const insertChatUserSchema = createInsertSchema(chatUsers).omit({
   id: true,
+  avatarColor: true,
+  role: true,
+  trustLayerId: true,
+  isOnline: true,
+  lastSeen: true,
   createdAt: true,
 });
 
-export type SignalChat = typeof signalChats.$inferSelect;
-export type InsertSignalChat = z.infer<typeof insertSignalChatSchema>;
+export type ChatUser = typeof chatUsers.$inferSelect;
+export type InsertChatUser = z.infer<typeof insertChatUserSchema>;
+
+export const chatChannels = pgTable("chat_channels", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  category: text("category").notNull().default("ecosystem"),
+  isDefault: boolean("is_default").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type ChatChannel = typeof chatChannels.$inferSelect;
+
+export const chatMessages = pgTable("chat_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  channelId: varchar("channel_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  content: text("content").notNull(),
+  replyToId: varchar("reply_to_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type ChatMessage = typeof chatMessages.$inferSelect;
 
 // === API REQUEST/RESPONSE TYPES ===
 export const createVentRequestSchema = z.object({

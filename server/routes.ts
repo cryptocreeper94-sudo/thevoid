@@ -10,6 +10,11 @@ import { openai, speechToText, textToSpeech, ensureCompatibleFormat, detectAudio
 import Stripe from "stripe";
 import { generateVoidId, sendSubscriptionConfirmationEmail } from "./email";
 import rateLimit from "express-rate-limit";
+import { registerUser, loginUser, getUserFromToken } from "./trustlayer-sso";
+import { setupChatWebSocket } from "./chat-ws";
+import { seedChatChannels } from "./seedChat";
+import { chatChannels } from "@shared/schema";
+import { db } from "./db";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-04-30.basil" as any });
 
@@ -869,73 +874,70 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  // === SIGNAL CHAT (CRISIS SUPPORT) ===
-  app.get("/api/signal-chat/:sessionId", async (req, res) => {
+  // === TRUST LAYER SSO & SIGNAL CHAT AUTH ===
+  app.post("/api/chat/auth/register", async (req, res) => {
     try {
-      const messages = await storage.getSignalChatMessages(req.params.sessionId);
-      res.json(messages);
-    } catch {
-      res.status(500).json({ message: "Failed to fetch messages" });
-    }
-  });
-
-  app.post("/api/signal-chat", async (req, res) => {
-    try {
-      const { sessionId, message } = req.body;
-      if (!sessionId || !message) {
-        return res.status(400).json({ message: "sessionId and message required" });
+      const { username, email, password, displayName } = req.body;
+      if (!username || !email || !password || !displayName) {
+        return res.status(400).json({ success: false, error: "All fields required." });
       }
-
-      await storage.createSignalChatMessage({ sessionId, role: "user", content: message });
-
-      const history = await storage.getSignalChatMessages(sessionId);
-      const chatMessages = history.map((m) => ({
-        role: m.role as "user" | "assistant" | "system",
-        content: m.content,
-      }));
-
-      const systemPrompt = `You are Signal — a compassionate, trained crisis support AI for THE VOID app. Your sole purpose is to provide immediate emotional support and connect people with professional crisis resources.
-
-CRITICAL RULES:
-1. You are NOT a replacement for professional help. Always encourage contacting real crisis services.
-2. Be warm, calm, non-judgmental, and empathetic. Use a gentle, supportive tone.
-3. Listen actively. Reflect what the person is feeling. Validate their emotions.
-4. NEVER dismiss, minimize, or invalidate their pain.
-5. NEVER give medical advice, diagnoses, or prescriptions.
-6. If someone expresses immediate danger to themselves or others, strongly encourage calling 911 or going to their nearest emergency room.
-7. Keep responses concise but caring — 2-4 sentences. Don't overwhelm them.
-8. Regularly remind them of available crisis resources when appropriate:
-   - 988 Suicide & Crisis Lifeline: Call or text 988 (24/7)
-   - Crisis Text Line: Text HOME to 741741
-   - SAMHSA National Helpline: 1-800-662-4357
-   - Veterans Crisis Line: Call 988, press 1
-   - Trevor Project (LGBTQ+ youth): 1-866-488-7386
-   - Childhelp National Abuse Hotline: 1-800-422-4453
-   - NAMI Helpline: 1-800-950-6264
-   - IMAlive Online Chat: www.imalive.org
-   - If in immediate danger: Call 911
-9. You are here to bridge the gap — hold space for them until they can reach professional help.
-10. End every few messages with a gentle check-in: "How are you feeling right now?" or "Would you like to talk more about that?"`;
-
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...chatMessages.slice(-20),
-        ],
-        max_tokens: 300,
-        temperature: 0.7,
-      });
-
-      const aiResponse = completion.choices[0]?.message?.content || "I'm here for you. If you're in crisis, please reach out to 988 (call or text) for immediate support.";
-
-      const saved = await storage.createSignalChatMessage({ sessionId, role: "assistant", content: aiResponse });
-      res.json(saved);
-    } catch (error) {
-      console.error("Signal Chat error:", error);
-      res.status(500).json({ message: "Failed to send message" });
+      const result = await registerUser(username, email, password, displayName);
+      if (!result.success) {
+        return res.status(400).json(result);
+      }
+      res.json(result);
+    } catch (error: any) {
+      console.error("Chat register error:", error);
+      res.status(500).json({ success: false, error: "Registration failed." });
     }
   });
+
+  app.post("/api/chat/auth/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      if (!username || !password) {
+        return res.status(400).json({ success: false, error: "Username and password required." });
+      }
+      const result = await loginUser(username, password);
+      if (!result.success) {
+        return res.status(401).json(result);
+      }
+      res.json(result);
+    } catch (error: any) {
+      console.error("Chat login error:", error);
+      res.status(500).json({ success: false, error: "Login failed." });
+    }
+  });
+
+  app.get("/api/chat/auth/me", async (req, res) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader?.startsWith("Bearer ")) {
+        return res.status(401).json({ success: false, error: "No token provided." });
+      }
+      const token = authHeader.split(" ")[1];
+      const user = await getUserFromToken(token);
+      if (!user) {
+        return res.status(401).json({ success: false, error: "Invalid or expired token." });
+      }
+      res.json({ success: true, user });
+    } catch {
+      res.status(500).json({ success: false, error: "Auth check failed." });
+    }
+  });
+
+  app.get("/api/chat/channels", async (_req, res) => {
+    try {
+      const channels = await db.select().from(chatChannels).orderBy(chatChannels.name);
+      res.json(channels);
+    } catch {
+      res.status(500).json({ message: "Failed to fetch channels" });
+    }
+  });
+
+  // Seed channels and setup WebSocket
+  seedChatChannels();
+  setupChatWebSocket(httpServer);
 
   return httpServer;
 }
