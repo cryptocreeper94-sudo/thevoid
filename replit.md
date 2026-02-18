@@ -97,9 +97,44 @@ Voice-first venting application where users record frustrations and receive AI-g
 - **Refresh**: Auto-refreshes every 30 seconds
 - **UI**: Glassmorphism stat cards with animated bar charts, personality usage bars, subscription breakdown
 
+## Rate Limiting & Security
+- General API: 60 requests/minute per IP
+- Vent endpoint: 10 requests/minute per IP
+- Auth endpoint: 15 requests/15 minutes per IP
+- Implemented via express-rate-limit middleware in server/routes.ts
+
+## Custom Personality Tuning (Premium Feature)
+- **Sliders**: Sarcasm Level (0-100%), Empathy Dial (0-100%)
+- **Storage**: `userSettings` table (userId, sarcasmLevel, empathyLevel, responseLength)
+- **API**: GET /api/user-settings?userId=X, POST /api/user-settings
+- **Integration**: Tuning values injected into AI prompt generation for personality responses
+- **UI**: Settings page with locked/unlocked state based on subscription tier
+
+## Credit Pack System
+- **Purpose**: Allow free-tier users to buy extra vents beyond daily limit
+- **Packs**: 25 credits ($1.99), 50 credits ($2.99), 100 credits ($4.99)
+- **Tables**: `creditPacks` (packSize, price, credits, stripeProductId), `userCredits` (userId, balance)
+- **API**: GET /api/credits?userId=X, POST /api/credits/purchase
+- **Webhook**: checkout.session.completed adds credits via metadata
+- **UI**: Credit pack purchase options shown on RecordPage when daily limit reached, credit balance on Settings
+
+## AI Conversation Threads
+- **Purpose**: Full back-and-forth chat with AI personalities (beyond single vents)
+- **Tables**: `conversationThreads` (userId, title, personality, lastMessageAt), `threadMessages` (threadId, role, content, audioResponse)
+- **API**: GET/POST /api/threads, GET/POST /api/threads/:id/messages, PATCH/DELETE /api/threads/:id
+- **Features**: Named threads, personality per thread, text + voice input, AI audio responses, conversation history context
+- **UI**: Two-panel layout (thread list + active chat), mobile responsive, voice recording via MediaRecorder
+
+## Dark/Light Theme Toggle
+- **Provider**: useTheme hook in client/src/hooks/use-theme.ts
+- **Toggle**: Sun/Moon button in header, persisted in localStorage
+- **Implementation**: CSS class-based (.light class on documentElement), CSS variables for both modes
+- **Glass**: Glass components use CSS custom properties (--glass-bg, --glass-border, --glass-highlight) that adapt per theme
+
 ## Pages
 - `/` - Main recording page (3-column Bento grid: Vent Log, Record Stage, Personality Selector)
-- `/settings` - User preferences (default personality, audio, display settings)
+- `/conversations` - AI conversation threads (two-panel chat with personality selection)
+- `/settings` - User preferences (default personality, audio, display, personality tuning)
 - `/privacy` - Privacy Policy with full crisis resources
 - `/terms` - Terms of Service with disclaimers and crisis resources
 - `/contact` - Contact form (stored in DB, admin-viewable via x-master-key header)
@@ -118,6 +153,11 @@ Voice-first venting application where users record frustrations and receive AI-g
 - `contact_messages` table stores submissions, admin GET via x-master-key header
 
 ## Recent Changes
+- Feb 18, 2026: Added Dark/Light Theme Toggle — sun/moon button in header, CSS custom properties for glass components, persisted in localStorage
+- Feb 18, 2026: Added AI Conversation Threads page — two-panel chat with named threads, personality per thread, text + voice input, AI audio responses
+- Feb 18, 2026: Added Credit Pack System UI — purchase 25/50/100 vent credits on RecordPage when daily limit reached, credit balance on Settings
+- Feb 18, 2026: Added Custom Personality Tuning UI — sarcasm/empathy sliders on Settings (premium-gated), saves to user settings
+- Feb 18, 2026: Added Rate Limiting — express-rate-limit middleware (60/min general, 10/min vents, 15/15min auth)
 - Feb 18, 2026: Added Analytics Dashboard to Developer portal — real-time metrics (total vents, daily/weekly trends, personality usage, peak hours, subscription breakdown, user stats) with glassmorphism UI, animated bar charts, and live data from database
 - Feb 18, 2026: Added DWTL Premium UI System skill file (.local/skills/premium-ui/SKILL.md) — mandatory design standards for glassmorphism, Bento grids, responsive design, animations
 - Feb 18, 2026: Added voice preference setting — users can choose male, female, or default (personality-matched) voice for all AI responses

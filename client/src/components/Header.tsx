@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, Home, Settings, Code, Download, Share, Smartphone, Mail } from "lucide-react";
+import { Menu, Home, Settings, Code, Download, Share, Smartphone, Mail, MessageSquare, Sun, Moon } from "lucide-react";
+import { useTheme } from "@/hooks/use-theme";
 import {
   Sheet,
   SheetContent,
@@ -14,6 +15,7 @@ import { usePwaInstall } from "@/hooks/use-pwa-install";
 
 const navItems = [
   { href: "/", icon: Home, label: "Home" },
+  { href: "/conversations", icon: MessageSquare, label: "Conversations" },
   { href: "/settings", icon: Settings, label: "Settings" },
   { href: "/contact", icon: Mail, label: "Contact" },
   { href: "/developer", icon: Code, label: "Developer" },
@@ -24,6 +26,7 @@ export function Header() {
   const [open, setOpen] = useState(false);
   const [showIosGuide, setShowIosGuide] = useState(false);
   const { canInstall, isInstalled, showIosInstructions, install } = usePwaInstall();
+  const { theme, toggle: toggleTheme } = useTheme();
 
   const handleInstallClick = async () => {
     if (canInstall) {
@@ -45,16 +48,25 @@ export function Header() {
           </span>
         </Link>
 
-        <Sheet open={open} onOpenChange={(v) => { setOpen(v); if (!v) setShowIosGuide(false); }}>
-          <SheetTrigger asChild>
-            <Button
-              size="icon"
-              variant="ghost"
-              data-testid="button-menu"
-            >
-              <Menu className="w-4 h-4" />
-            </Button>
-          </SheetTrigger>
+        <div className="flex items-center gap-1">
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={toggleTheme}
+            data-testid="button-theme-toggle"
+          >
+            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </Button>
+          <Sheet open={open} onOpenChange={(v) => { setOpen(v); if (!v) setShowIosGuide(false); }}>
+            <SheetTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                data-testid="button-menu"
+              >
+                <Menu className="w-4 h-4" />
+              </Button>
+            </SheetTrigger>
           <SheetContent side="right" className="w-72 bg-background/95 backdrop-blur-xl border-white/5">
             <SheetHeader>
               <SheetTitle className="text-left text-foreground">
@@ -144,6 +156,7 @@ export function Header() {
             </div>
           </SheetContent>
         </Sheet>
+        </div>
       </div>
     </header>
   );

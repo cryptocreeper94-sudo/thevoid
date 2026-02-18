@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Settings, Sparkles, Brain, Zap, Heart, Flame, Volume2, Type, Crown, CreditCard, Mic } from "lucide-react";
+import { Settings, Sparkles, Brain, Zap, Heart, Flame, Volume2, Type, Crown, CreditCard, Mic, Sliders, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { usePinAuth } from "@/components/PinGate";
 import { useSubscription, createCheckoutSession, createPortalSession } from "@/hooks/use-subscription";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import smartassImg from "@/assets/images/personality-smartass.png";
 import calmingImg from "@/assets/images/personality-calming.png";
 import therapistImg from "@/assets/images/personality-therapist.png";
@@ -61,6 +63,51 @@ export default function SettingsPage() {
   const { visitorId, userName } = usePinAuth();
   const { data: subStatus } = useSubscription(visitorId);
   const [subLoading, setSubLoading] = useState(false);
+
+  const isPremium = subStatus?.tier === "premium";
+
+  const { data: tuningData } = useQuery({
+    queryKey: ["/api/user-settings", visitorId],
+    queryFn: async () => {
+      const res = await fetch(`/api/user-settings?userId=${visitorId}`);
+      return res.json();
+    },
+    enabled: !!visitorId && isPremium,
+  });
+
+  const [sarcasmLevel, setSarcasmLevel] = useState(50);
+  const [empathyLevel, setEmpathyLevel] = useState(50);
+
+  useEffect(() => {
+    if (tuningData) {
+      setSarcasmLevel(tuningData.sarcasmLevel ?? 50);
+      setEmpathyLevel(tuningData.empathyLevel ?? 50);
+    }
+  }, [tuningData]);
+
+  const saveTuningMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/user-settings", {
+        userId: visitorId,
+        sarcasmLevel,
+        empathyLevel,
+        responseLength: settings.responseLength,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user-settings", visitorId] });
+      toast({ title: "Tuning Saved", description: "Your personality tuning has been saved." });
+    },
+  });
+
+  const { data: creditData } = useQuery({
+    queryKey: ["/api/credits", visitorId],
+    queryFn: async () => {
+      const res = await fetch(`/api/credits?userId=${visitorId}`);
+      return res.json();
+    },
+    enabled: !!visitorId,
+  });
 
   const handleSubscriptionAction = async () => {
     if (!visitorId) return;
@@ -150,10 +197,14 @@ export default function SettingsPage() {
                   </div>
                 )}
                 {subStatus?.tier !== "premium" && (
-                  <div className="mt-4 pt-4 border-t border-white/5 grid grid-cols-3 gap-3 text-center">
+                  <div className="mt-4 pt-4 border-t border-white/5 grid grid-cols-4 gap-3 text-center">
                     <div>
                       <p className="text-lg font-bold text-foreground">1</p>
                       <p className="text-[10px] text-muted-foreground">Free vent/day</p>
+                    </div>
+                    <div>
+                      <p className="text-lg font-bold text-purple-400">{creditData?.balance || 0}</p>
+                      <p className="text-[10px] text-muted-foreground">Credits</p>
                     </div>
                     <div>
                       <p className="text-lg font-bold text-amber-400">&#8734;</p>
@@ -313,6 +364,80 @@ export default function SettingsPage() {
                         </SelectContent>
                       </Select>
                     </div>
+                  </div>
+                </GlassCard>
+              </motion.div>
+
+              <motion.div variants={fadeUp}>
+                <GlassCard className="overflow-hidden" hoverEffect>
+                  <div className="p-5">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2 rounded-lg bg-purple-500/10">
+                        <Sliders className="w-5 h-5 text-purple-400" />
+                      </div>
+                      <div>
+                        <h2 className="text-lg font-semibold text-foreground">Personality Tuning</h2>
+                        <p className="text-[10px] text-muted-foreground">
+                          {isPremium ? "Fine-tune how AI personalities respond" : "Premium feature"}
+                        </p>
+                      </div>
+                      {!isPremium && <Lock className="w-4 h-4 text-muted-foreground ml-auto" />}
+                    </div>
+                    <div className={`space-y-5 ${!isPremium ? "opacity-40 pointer-events-none" : ""}`}>
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <Label className="text-sm text-foreground">Sarcasm Level</Label>
+                          <span className="text-xs text-muted-foreground">{sarcasmLevel}%</span>
+                        </div>
+                        <Slider
+                          value={[sarcasmLevel]}
+                          onValueChange={([v]) => setSarcasmLevel(v)}
+                          min={0}
+                          max={100}
+                          step={5}
+                          data-testid="slider-sarcasm"
+                        />
+                        <div className="flex justify-between mt-1">
+                          <span className="text-[10px] text-muted-foreground/50">Gentle</span>
+                          <span className="text-[10px] text-muted-foreground/50">Savage</span>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <Label className="text-sm text-foreground">Empathy Dial</Label>
+                          <span className="text-xs text-muted-foreground">{empathyLevel}%</span>
+                        </div>
+                        <Slider
+                          value={[empathyLevel]}
+                          onValueChange={([v]) => setEmpathyLevel(v)}
+                          min={0}
+                          max={100}
+                          step={5}
+                          data-testid="slider-empathy"
+                        />
+                        <div className="flex justify-between mt-1">
+                          <span className="text-[10px] text-muted-foreground/50">Blunt</span>
+                          <span className="text-[10px] text-muted-foreground/50">Warm</span>
+                        </div>
+                      </div>
+                      {isPremium && (
+                        <div className="flex justify-end pt-2">
+                          <Button
+                            size="sm"
+                            onClick={() => saveTuningMutation.mutate()}
+                            disabled={saveTuningMutation.isPending}
+                            data-testid="button-save-tuning"
+                          >
+                            {saveTuningMutation.isPending ? "Saving..." : "Save Tuning"}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    {!isPremium && (
+                      <p className="text-[10px] text-center text-muted-foreground mt-3">
+                        Upgrade to Premium to unlock personality tuning
+                      </p>
+                    )}
                   </div>
                 </GlassCard>
               </motion.div>
