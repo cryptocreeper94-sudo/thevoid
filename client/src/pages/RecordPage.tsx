@@ -8,10 +8,12 @@ import { VentHistory } from "@/components/venting/VentHistory";
 import { useCreateVent } from "@/hooks/use-vents";
 import { useVoiceRecorder } from "../../replit_integrations/audio/useVoiceRecorder";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, Phone, Play, RefreshCw, MessageCircle, Info, X, ShieldCheck, Mic, MicOff, Volume2 } from "lucide-react";
+import { AlertCircle, Phone, Play, RefreshCw, MessageCircle, Info, X, ShieldCheck, Mic, MicOff, Volume2, Sparkles, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSessionHeroImage } from "@/lib/heroImages";
 import { usePinAuth } from "@/components/PinGate";
+import { useSubscription, createCheckoutSession } from "@/hooks/use-subscription";
+import { queryClient } from "@/lib/queryClient";
 
 type MicPermission = "prompt" | "granted" | "denied" | "unsupported" | "unknown";
 
@@ -67,8 +69,25 @@ export default function RecordPage() {
   const createVent = useCreateVent();
   const { toast } = useToast();
   const { permission: micPermission, requestPermission, isEmbedded } = useMicPermission();
-  const { visitorId } = usePinAuth();
+  const { visitorId, userName } = usePinAuth();
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const { data: subStatus } = useSubscription(visitorId);
+  const [upgradeLoading, setUpgradeLoading] = useState(false);
+
+  const isLimitReached = subStatus?.tier === "free" && subStatus?.ventsRemaining === 0;
+
+  const handleUpgrade = async () => {
+    if (!visitorId) return;
+    setUpgradeLoading(true);
+    try {
+      const url = await createCheckoutSession(visitorId, userName || undefined);
+      window.location.href = url;
+    } catch {
+      toast({ title: "Error", description: "Could not start checkout. Please try again.", variant: "destructive" });
+    } finally {
+      setUpgradeLoading(false);
+    }
+  };
 
   const playAudioResponse = useCallback((base64Audio: string) => {
     try {
@@ -99,6 +118,15 @@ export default function RecordPage() {
     }
   }, [recorder.error]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("subscription") === "success") {
+      toast({ title: "Welcome to Premium!", description: "You now have unlimited venting. Let it all out." });
+      queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
+      window.history.replaceState({}, "", "/");
+    }
+  }, []);
+
   const handleToggleRecording = async () => {
     if (recorder.state === "recording") {
       try {
@@ -116,6 +144,7 @@ export default function RecordPage() {
           {
             onSuccess: (data) => {
               setLastResponse(data);
+              queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
               toast({
                 title: "Vent Processed",
                 description: "The AI has analyzed your rage.",
@@ -128,6 +157,9 @@ export default function RecordPage() {
               }
             },
             onError: (err: any) => {
+              if (err?.message?.includes("Upgrade to Premium")) {
+                queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
+              }
               toast({
                 title: "Couldn't Process",
                 description: err?.message || "Failed to process your vent. Please try again.",
@@ -254,6 +286,33 @@ export default function RecordPage() {
                         </button>
                       )}
                     </div>
+                  </motion.div>
+                ) : isLimitReached ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className="flex flex-col items-center text-center px-4"
+                  >
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-500/20 to-primary/20 border border-amber-500/30 flex items-center justify-center mb-6">
+                      <Crown className="w-10 h-10 text-amber-400" />
+                    </div>
+                    <h3 className="text-lg font-bold text-white font-display mb-2">
+                      Daily Vent Used
+                    </h3>
+                    <p className="text-sm text-white/40 max-w-xs leading-relaxed mb-6">
+                      You've used your free vent for today. Upgrade to Premium for <span className="text-white/70 font-semibold">unlimited venting</span> — just $9.99/month.
+                    </p>
+                    <button
+                      onClick={handleUpgrade}
+                      disabled={upgradeLoading}
+                      className="px-8 py-3 rounded-full bg-gradient-to-r from-amber-500 to-primary text-white font-semibold shadow-lg shadow-primary/30 flex items-center gap-2 transition-all hover:shadow-xl hover:shadow-primary/40 disabled:opacity-50 text-sm"
+                      data-testid="button-upgrade-premium"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      {upgradeLoading ? "Loading..." : "Upgrade to Premium"}
+                    </button>
+                    <p className="text-[10px] text-white/20 mt-4">Come back tomorrow for another free vent</p>
                   </motion.div>
                 ) : micPermission === "denied" || micPermission === "unsupported" ? (
                   <motion.div

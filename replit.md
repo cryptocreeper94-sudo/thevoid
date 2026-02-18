@@ -69,7 +69,19 @@ Voice-first venting application where users record frustrations and receive AI-g
 - `whitelisted_users` table stores name + pin + pinChanged
 - API: POST /api/auth/pin (validate), POST /api/auth/change-pin (self-service, requires currentPin), GET/POST /api/whitelist, DELETE /api/whitelist/:id, PATCH /api/whitelist/:id/pin
 
+## Stripe Subscription System
+- **Product**: THE VOID - Premium (`prod_U03iMZln0CXr0m`)
+- **Price**: $9.99/month (`price_1T23bfRq977vVehdJ3Ho9j2R`)
+- **Webhook**: Auto-created programmatically via Stripe API (`we_1T23gSRq977vVehdHZWObESq`)
+- **Stripe Key**: Stored manually as STRIPE_SECRET_KEY secret (not via Replit integration)
+- **Free tier**: 1 vent/day, all personalities, TTS responses
+- **Premium tier**: Unlimited vents — $9.99/month
+- **Tables**: `subscriptions` (userId, stripeCustomerId, stripeSubscriptionId, status), `daily_vent_usage` (userId, date, ventCount)
+- **API**: POST /api/stripe/create-checkout, POST /api/stripe/create-portal, POST /api/stripe/webhook, GET /api/subscription/status
+- **Frontend**: Upgrade prompt on RecordPage when limit reached, subscription card on SettingsPage
+
 ## Recent Changes
+- Feb 18, 2026: Added Stripe subscription system — Free (1 vent/day) + Premium ($9.99/mo unlimited), webhook auto-created, checkout/portal/usage tracking
 - Feb 18, 2026: Added TTS voice responses — AI speaks back using OpenAI TTS with personality-specific voices (onyx, nova, alloy, echo, fable)
 - Feb 18, 2026: Fixed vent isolation — each user's vents are now tied to their PIN userId, users only see their own vents
 - Feb 18, 2026: Made vent history expandable — click any vent to see full transcript and response (no more truncation)

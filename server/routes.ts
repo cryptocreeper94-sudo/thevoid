@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
@@ -7,15 +7,222 @@ import { createVentRequestSchema, insertRoadmapItemSchema, insertWhitelistedUser
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
 import { openai, speechToText, textToSpeech, ensureCompatibleFormat, detectAudioFormat } from "./replit_integrations/audio/client";
+import Stripe from "stripe";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-04-30.basil" as any });
+
+const VOID_PRICE_ID = "price_1T23bfRq977vVehdJ3Ho9j2R";
+const VOID_PRODUCT_ID = "prod_U03iMZln0CXr0m";
+const FREE_DAILY_VENT_LIMIT = 1;
+
+function getTodayDate(): string {
+  return new Date().toISOString().split("T")[0];
+}
+
+let webhookSigningSecret: string | null = process.env.STRIPE_WEBHOOK_SECRET || null;
+
+async function ensureWebhookEndpoint() {
+  try {
+    const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || process.env.REPLIT_DEV_DOMAIN;
+    if (!domain) {
+      console.log("[Stripe] No domain found, skipping webhook setup");
+      return;
+    }
+    const webhookUrl = `https://${domain}/api/stripe/webhook`;
+    const existingWebhooks = await stripe.webhookEndpoints.list({ limit: 100 });
+    const existing = existingWebhooks.data.find((wh) => wh.url === webhookUrl && wh.status === "enabled");
+    if (existing) {
+      console.log(`[Stripe] Webhook already exists: ${existing.id}`);
+      return;
+    }
+    const webhook = await stripe.webhookEndpoints.create({
+      url: webhookUrl,
+      enabled_events: [
+        "checkout.session.completed",
+        "customer.subscription.updated",
+        "customer.subscription.deleted",
+        "invoice.payment_succeeded",
+        "invoice.payment_failed",
+      ],
+    });
+    if (webhook.secret) {
+      webhookSigningSecret = webhook.secret;
+      console.log(`[Stripe] Webhook secret captured for signature verification`);
+    }
+    console.log(`[Stripe] Webhook created: ${webhook.id} -> ${webhookUrl}`);
+  } catch (err: any) {
+    console.error("[Stripe] Webhook setup error:", err?.message);
+  }
+}
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
-  // Set up Auth first
   await setupAuth(app);
   registerAuthRoutes(app);
-
-  // Use the chat routes from the integration for general chat
-  // Note: registerChatRoutes takes app: Express
   registerChatRoutes(app);
+
+  ensureWebhookEndpoint();
+
+  app.post("/api/stripe/webhook", async (req: Request, res: Response) => {
+    try {
+      let event: Stripe.Event;
+
+      if (webhookSigningSecret) {
+        const sig = req.headers["stripe-signature"] as string;
+        if (!sig) {
+          return res.status(400).json({ error: "Missing Stripe signature" });
+        }
+        event = stripe.webhooks.constructEvent(
+          req.rawBody as Buffer,
+          sig,
+          webhookSigningSecret
+        );
+      } else {
+        console.warn("[Stripe Webhook] No signing secret available — accepting unverified event (development only)");
+        event = req.body as Stripe.Event;
+      }
+
+      console.log(`[Stripe Webhook] ${event.type}`);
+
+      switch (event.type) {
+        case "checkout.session.completed": {
+          const session = event.data.object as Stripe.Checkout.Session;
+          const userId = parseInt(session.metadata?.userId || "0");
+          if (userId && session.customer && session.subscription) {
+            await storage.upsertSubscription(userId, {
+              stripeCustomerId: session.customer as string,
+              stripeSubscriptionId: session.subscription as string,
+              stripePriceId: VOID_PRICE_ID,
+              status: "active",
+            });
+            console.log(`[Stripe] Subscription activated for user ${userId}`);
+          }
+          break;
+        }
+        case "customer.subscription.updated": {
+          const sub = event.data.object as Stripe.Subscription;
+          const existing = await storage.getSubscriptionByStripeSubscriptionId(sub.id);
+          if (existing) {
+            await storage.upsertSubscription(existing.userId, {
+              status: sub.status === "active" ? "active" : sub.status === "trialing" ? "active" : sub.status,
+              currentPeriodEnd: new Date((sub as any).current_period_end * 1000),
+            });
+          }
+          break;
+        }
+        case "customer.subscription.deleted": {
+          const sub = event.data.object as Stripe.Subscription;
+          const existing = await storage.getSubscriptionByStripeSubscriptionId(sub.id);
+          if (existing) {
+            await storage.upsertSubscription(existing.userId, {
+              status: "canceled",
+            });
+            console.log(`[Stripe] Subscription canceled for user ${existing.userId}`);
+          }
+          break;
+        }
+        case "invoice.payment_failed": {
+          const invoice = event.data.object as Stripe.Invoice;
+          if (invoice.customer) {
+            const existing = await storage.getSubscriptionByStripeCustomerId(invoice.customer as string);
+            if (existing) {
+              await storage.upsertSubscription(existing.userId, { status: "past_due" });
+            }
+          }
+          break;
+        }
+      }
+
+      res.json({ received: true });
+    } catch (err: any) {
+      console.error("[Stripe Webhook] Error:", err?.message);
+      res.status(400).json({ error: err?.message });
+    }
+  });
+
+  app.post("/api/stripe/create-checkout", async (req, res) => {
+    try {
+      const { userId, userName } = z.object({
+        userId: z.number(),
+        userName: z.string().optional(),
+      }).parse(req.body);
+
+      const existingSub = await storage.getSubscription(userId);
+      let customerId = existingSub?.stripeCustomerId;
+
+      if (!customerId) {
+        const customer = await stripe.customers.create({
+          name: userName || `Void User ${userId}`,
+          metadata: { voidUserId: String(userId) },
+        });
+        customerId = customer.id;
+        await storage.upsertSubscription(userId, { stripeCustomerId: customerId });
+      }
+
+      const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || process.env.REPLIT_DEV_DOMAIN;
+      const baseUrl = `https://${domain}`;
+
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        mode: "subscription",
+        line_items: [{ price: VOID_PRICE_ID, quantity: 1 }],
+        success_url: `${baseUrl}/?subscription=success`,
+        cancel_url: `${baseUrl}/?subscription=canceled`,
+        metadata: { userId: String(userId) },
+      });
+
+      res.json({ url: session.url });
+    } catch (err: any) {
+      console.error("[Stripe] Checkout error:", err?.message);
+      res.status(500).json({ message: "Failed to create checkout session" });
+    }
+  });
+
+  app.post("/api/stripe/create-portal", async (req, res) => {
+    try {
+      const { userId } = z.object({ userId: z.number() }).parse(req.body);
+      const sub = await storage.getSubscription(userId);
+      if (!sub?.stripeCustomerId) {
+        return res.status(400).json({ message: "No subscription found" });
+      }
+
+      const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || process.env.REPLIT_DEV_DOMAIN;
+      const session = await stripe.billingPortal.sessions.create({
+        customer: sub.stripeCustomerId,
+        return_url: `https://${domain}/settings`,
+      });
+
+      res.json({ url: session.url });
+    } catch (err: any) {
+      console.error("[Stripe] Portal error:", err?.message);
+      res.status(500).json({ message: "Failed to create portal session" });
+    }
+  });
+
+  app.get("/api/subscription/status", async (req, res) => {
+    try {
+      const userId = parseInt(req.query.userId as string);
+      if (!userId) return res.json({ tier: "free", ventsUsedToday: 0, ventsRemaining: FREE_DAILY_VENT_LIMIT });
+
+      const sub = await storage.getSubscription(userId);
+      const today = getTodayDate();
+      const usage = await storage.getDailyVentUsage(userId, today);
+      const ventsUsedToday = usage?.ventCount || 0;
+
+      const isPremium = sub?.status === "active";
+      const tier = isPremium ? "premium" : "free";
+      const ventsRemaining = isPremium ? -1 : Math.max(0, FREE_DAILY_VENT_LIMIT - ventsUsedToday);
+
+      res.json({
+        tier,
+        ventsUsedToday,
+        ventsRemaining,
+        status: sub?.status || "free",
+        currentPeriodEnd: sub?.currentPeriodEnd,
+      });
+    } catch (err: any) {
+      res.status(500).json({ message: "Failed to get subscription status" });
+    }
+  });
 
   app.get("/api/vents", async (req, res) => {
     try {
@@ -31,6 +238,25 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post("/api/vents", async (req, res) => {
     try {
       const { audio, personality, mimeType, extension, userId } = createVentRequestSchema.parse(req.body);
+
+      // Check daily vent limit for free users
+      if (userId) {
+        const numericUserId = parseInt(userId);
+        if (numericUserId) {
+          const sub = await storage.getSubscription(numericUserId);
+          const isPremium = sub?.status === "active";
+          if (!isPremium) {
+            const today = getTodayDate();
+            const usage = await storage.getDailyVentUsage(numericUserId, today);
+            if (usage && usage.ventCount >= FREE_DAILY_VENT_LIMIT) {
+              return res.status(403).json({
+                message: "You've used your free vent for today. Upgrade to Premium for unlimited venting.",
+                limitReached: true,
+              });
+            }
+          }
+        }
+      }
 
       // 1. Transcribe Audio (STT)
       const transcript = await transcribeAudio(audio, mimeType || "audio/webm", extension || "webm");
@@ -69,7 +295,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         console.error("TTS generation failed:", ttsErr?.message);
       }
       
-      // 4. Save to DB
+      // 4. Save to DB & increment usage
       const vent = await storage.createVent({
         transcript,
         response: responseText,
@@ -77,6 +303,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         audioUrl: null,
         userId: userId || null,
       });
+
+      if (userId) {
+        const numericUserId = parseInt(userId);
+        if (numericUserId) {
+          await storage.incrementDailyVentUsage(numericUserId, getTodayDate());
+        }
+      }
 
       res.status(200).json({
         transcript,
