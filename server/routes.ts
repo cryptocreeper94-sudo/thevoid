@@ -530,6 +530,67 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  app.get("/api/analytics", async (req, res) => {
+    const masterKey = req.headers["x-master-key"];
+    if (masterKey !== "0424") {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+    try {
+      const { pool } = await import("./db");
+
+      const q = async (text: string, params?: any[]) => {
+        const result = await pool.query(text, params);
+        return result.rows;
+      };
+
+      const today = getTodayDate();
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      const [{ count: totalVents }] = await q("SELECT COUNT(*) as count FROM vents");
+      const [{ count: ventsToday }] = await q("SELECT COUNT(*) as count FROM vents WHERE DATE(created_at) = $1", [today]);
+      const [{ count: ventsThisWeek }] = await q("SELECT COUNT(*) as count FROM vents WHERE created_at >= $1", [sevenDaysAgo]);
+
+      const personalityBreakdown = (await q("SELECT personality, COUNT(*) as count FROM vents GROUP BY personality ORDER BY count DESC"))
+        .map((r: any) => ({ personality: r.personality, count: Number(r.count) }));
+
+      const peakHours = (await q("SELECT EXTRACT(HOUR FROM created_at) as hour, COUNT(*) as count FROM vents GROUP BY hour ORDER BY hour"))
+        .map((r: any) => ({ hour: Number(r.hour), count: Number(r.count) }));
+
+      const dailyTrend = (await q("SELECT DATE(created_at) as date, COUNT(*) as count FROM vents WHERE created_at >= $1 GROUP BY DATE(created_at) ORDER BY date", [sevenDaysAgo]))
+        .map((r: any) => ({ date: r.date, count: Number(r.count) }));
+
+      const [{ count: uniqueUsers }] = await q("SELECT COUNT(DISTINCT user_id) as count FROM vents WHERE user_id IS NOT NULL");
+      const [{ count: totalWhitelistedUsers }] = await q("SELECT COUNT(*) as count FROM whitelisted_users");
+
+      const subscriptionBreakdown = (await q("SELECT status, COUNT(*) as count FROM subscriptions GROUP BY status"))
+        .map((r: any) => ({ status: r.status, count: Number(r.count) }));
+
+      const [{ count: premiumUsers }] = await q("SELECT COUNT(*) as count FROM subscriptions WHERE status = 'active'");
+      const avgRow = await q("SELECT ROUND(AVG(vent_count)::numeric, 1) as avg FROM daily_vent_usage");
+      const avgVentsPerDay = Number(avgRow[0]?.avg || 0);
+      const [{ count: totalContactMessages }] = await q("SELECT COUNT(*) as count FROM contact_messages");
+
+      res.json({
+        totalVents: Number(totalVents),
+        ventsToday: Number(ventsToday),
+        ventsThisWeek: Number(ventsThisWeek),
+        personalityBreakdown,
+        peakHours,
+        dailyTrend,
+        uniqueUsers: Number(uniqueUsers),
+        totalWhitelistedUsers: Number(totalWhitelistedUsers),
+        subscriptionBreakdown,
+        premiumUsers: Number(premiumUsers),
+        avgVentsPerDay: Number(avgVentsPerDay),
+        totalContactMessages: Number(totalContactMessages),
+      });
+    } catch (error) {
+      console.error("Analytics error:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
   return httpServer;
 }
 
