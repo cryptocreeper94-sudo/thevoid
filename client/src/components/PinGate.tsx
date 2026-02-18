@@ -1,8 +1,9 @@
 import { useState, createContext, useContext } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Lock, Shield, KeyRound, Check, Eye, EyeOff } from "lucide-react";
+import { Lock, Check, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
+import voidPortalImg from "@/assets/images/void-portal.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { apiRequest } from "@/lib/queryClient";
@@ -138,8 +139,8 @@ export function PinGate({ children }: { children: React.ReactNode }) {
           >
             <GlassCard className="p-8" hoverEffect>
               <div className="text-center mb-6">
-                <div className="inline-flex p-4 rounded-2xl bg-primary/10 mb-4">
-                  <KeyRound className="w-10 h-10 text-primary" />
+                <div className="inline-flex rounded-full overflow-hidden mb-4 shadow-lg shadow-primary/20">
+                  <img src={voidPortalImg} alt="THE VOID" className="w-20 h-20 object-cover" />
                 </div>
                 <h1 className="text-2xl font-bold text-foreground font-display mb-1">
                   Welcome, {userName}
@@ -241,8 +242,8 @@ export function PinGate({ children }: { children: React.ReactNode }) {
         >
           <GlassCard className="p-8" hoverEffect>
             <div className="text-center mb-6">
-              <div className="inline-flex p-4 rounded-2xl bg-primary/10 mb-4">
-                <Shield className="w-10 h-10 text-primary" />
+              <div className="inline-flex rounded-full overflow-hidden mb-4 shadow-lg shadow-primary/20">
+                <img src={voidPortalImg} alt="THE VOID" className="w-20 h-20 object-cover" />
               </div>
               <h1 className="text-2xl font-bold text-foreground font-display mb-1">THE VOID</h1>
               <p className="text-xs text-muted-foreground">Enter your PIN to access</p>
