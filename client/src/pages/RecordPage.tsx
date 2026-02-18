@@ -15,6 +15,7 @@ import { getSessionHeroImage } from "@/lib/heroImages";
 import { usePinAuth } from "@/components/PinGate";
 import { useSubscription, createCheckoutSession } from "@/hooks/use-subscription";
 import { queryClient } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
 
 type MicPermission = "prompt" | "granted" | "denied" | "unsupported" | "unknown";
 
@@ -64,6 +65,7 @@ function useMicPermission() {
 
 export default function RecordPage() {
   useDocumentTitle("Vent Now");
+  const { data: pricingInfo } = useQuery<any>({ queryKey: ["/api/pricing/info"] });
   const [personality, setPersonality] = useState('smart-ass');
   const [lastResponse, setLastResponse] = useState<{ transcript: string; response: string; audioResponse?: string } | null>(null);
   const [showCrisisInfo, setShowCrisisInfo] = useState(false);
@@ -382,7 +384,7 @@ export default function RecordPage() {
                       data-testid="button-upgrade-premium"
                     >
                       <Sparkles className="w-4 h-4" />
-                      {upgradeLoading ? "Loading..." : "Unlimited — $9.99/mo"}
+                      {upgradeLoading ? "Loading..." : `Unlimited — $${pricingInfo?.isFoundersPricing ? "9.99" : "14.99"}/mo`}
                     </button>
                     <div className="flex items-center gap-2 mb-3">
                       <div className="h-px flex-1 bg-white/10" />
