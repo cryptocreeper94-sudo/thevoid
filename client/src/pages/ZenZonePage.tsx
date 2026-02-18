@@ -94,7 +94,7 @@ type Tab = "breathe" | "ambient" | "timer";
 
 export default function ZenZonePage() {
   useDocumentTitle("Zen Zone — Meditation & Calm");
-  useMeta({ description: "Guided breathing exercises, ambient sounds, and meditation timers to find your calm. Box breathing, 4-7-8 method, and more.", ogTitle: "Zen Zone — Find Your Calm", ogDescription: "Breathing exercises, ambient sounds, and guided meditation." });
+  useMeta({ description: "Guided breathing exercises, ambient sounds, and meditation timers to find your calm. Box breathing, 4-7-8 method, and more.", ogTitle: "Zen Zone — Find Your Calm", ogDescription: "Breathing exercises, ambient sounds, and guided meditation.", canonicalPath: "/zen" });
   const [activeTab, setActiveTab] = useState<Tab>("breathe");
   const [selectedPattern, setSelectedPattern] = useState(0);
   const [isBreathing, setIsBreathing] = useState(false);

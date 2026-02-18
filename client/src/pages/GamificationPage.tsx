@@ -41,7 +41,7 @@ type Tab = "streak" | "achievements" | "mood" | "prompt";
 
 export default function GamificationPage() {
   useDocumentTitle("Your Progress");
-  useMeta({ description: "Track your venting streak, unlock achievements, monitor mood trends, and get daily prompts.", ogTitle: "Your Progress — THE VOID", ogDescription: "Streaks, achievements, and mood tracking for your emotional journey." });
+  useMeta({ description: "Track your venting streak, unlock achievements, monitor mood trends, and get daily prompts.", ogTitle: "Your Progress — THE VOID", ogDescription: "Streaks, achievements, and mood tracking for your emotional journey.", canonicalPath: "/progress" });
   const { visitorId: userId } = usePinAuth();
   const [activeTab, setActiveTab] = useState<Tab>("streak");
   const [carouselIdx, setCarouselIdx] = useState(0);

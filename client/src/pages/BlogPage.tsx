@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useMeta } from "@/hooks/use-meta";
@@ -36,12 +36,11 @@ function readTime(content: string): string {
 }
 
 export default function BlogPage() {
-  useDocumentTitle("Blog — Mental Wellness Insights");
-  useMeta({ description: "AI-curated articles on emotional health, stress management, breathing techniques, and mental wellness from THE VOID.", ogTitle: "Void Blog — Mental Wellness Insights", ogDescription: "Expert insights on venting, stress relief, and emotional intelligence.", ogType: "blog" });
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const pageSize = 6;
 
+  // Fetch queries
   const { data: posts, isLoading } = useQuery<any[]>({ queryKey: ["/api/blog"] });
   const allPosts = posts || [];
   const totalPages = Math.max(1, Math.ceil(allPosts.length / pageSize));
@@ -52,6 +51,67 @@ export default function BlogPage() {
     queryFn: async () => { const res = await fetch(`/api/blog/${selectedSlug}`); if (!res.ok) return null; return res.json(); },
     enabled: !!selectedSlug,
   });
+
+  useMeta({
+    description: selectedSlug && selectedPost
+      ? (selectedPost.excerpt || selectedPost.content?.substring(0, 160))
+      : "AI-curated articles on emotional health, stress management, breathing techniques, and mental wellness from THE VOID.",
+    ogTitle: selectedSlug && selectedPost
+      ? `${selectedPost.title} — THE VOID Blog`
+      : "Void Blog — Mental Wellness Insights",
+    ogDescription: selectedSlug && selectedPost
+      ? (selectedPost.excerpt || selectedPost.content?.substring(0, 160))
+      : "Expert insights on venting, stress relief, and emotional intelligence.",
+    ogType: selectedSlug && selectedPost ? "article" : "blog",
+    canonicalPath: selectedSlug && selectedPost ? `/blog/${selectedSlug}` : "/blog",
+  });
+
+  // Set document title based on view
+  useDocumentTitle(selectedSlug && selectedPost ? `${selectedPost.title} — The Void` : "Blog — Mental Wellness Insights");
+
+  // Inject Article JSON-LD structured data for SEO
+  useEffect(() => {
+    if (!selectedPost) return;
+
+    const BASE_URL = "https://thevoid.replit.app";
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": selectedPost.title,
+      "description": selectedPost.excerpt || selectedPost.content?.substring(0, 160),
+      "author": {
+        "@type": "Organization",
+        "name": "DarkWave Studios",
+        "url": "https://DarkwaveStudios.io"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "DarkWave Studios"
+      },
+      "datePublished": selectedPost.createdAt,
+      "dateModified": selectedPost.updatedAt || selectedPost.createdAt,
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": `${BASE_URL}/blog/${selectedPost.slug}`
+      },
+      "articleSection": selectedPost.category,
+      "url": `${BASE_URL}/blog/${selectedPost.slug}`
+    };
+
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.id = "blog-article-jsonld";
+    script.textContent = JSON.stringify(jsonLd);
+
+    const existing = document.getElementById("blog-article-jsonld");
+    if (existing) existing.remove();
+    document.head.appendChild(script);
+
+    return () => {
+      const el = document.getElementById("blog-article-jsonld");
+      if (el) el.remove();
+    };
+  }, [selectedPost]);
 
   if (selectedSlug && selectedPost) {
     return (

@@ -83,6 +83,55 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   ensureWebhookEndpoint();
 
+  // === SEO ROUTES ===
+
+  app.get("/sitemap.xml", async (_req: Request, res: Response) => {
+    const BASE_URL = "https://thevoid.replit.app";
+    
+    const staticRoutes = [
+      { loc: "/", changefreq: "weekly", priority: "1.0" },
+      { loc: "/mission", changefreq: "monthly", priority: "0.8" },
+      { loc: "/blog", changefreq: "weekly", priority: "0.8" },
+      { loc: "/zen", changefreq: "monthly", priority: "0.7" },
+      { loc: "/signal", changefreq: "monthly", priority: "0.7" },
+      { loc: "/contact", changefreq: "monthly", priority: "0.6" },
+      { loc: "/privacy", changefreq: "yearly", priority: "0.4" },
+      { loc: "/terms", changefreq: "yearly", priority: "0.4" },
+    ];
+
+    let blogEntries = "";
+    try {
+      const posts = await db.select({ slug: blogPosts.slug, createdAt: blogPosts.createdAt }).from(blogPosts);
+      for (const post of posts) {
+        const lastmod = post.createdAt ? new Date(post.createdAt).toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
+        blogEntries += `
+  <url>
+    <loc>${BASE_URL}/blog/${post.slug}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>`;
+      }
+    } catch (e) {
+      console.error("Sitemap blog fetch error:", e);
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${staticRoutes.map(r => `  <url>
+    <loc>${BASE_URL}${r.loc}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>${r.changefreq}</changefreq>
+    <priority>${r.priority}</priority>
+  </url>`).join("\n")}
+${blogEntries}
+</urlset>`;
+
+    res.set("Content-Type", "application/xml");
+    res.send(xml);
+  });
+
   const generalLimiter = rateLimit({
     windowMs: 60 * 1000,
     max: 60,

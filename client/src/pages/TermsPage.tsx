@@ -2,6 +2,7 @@ import { Layout } from "@/components/ui/Layout";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { FileText, AlertTriangle, Scale, Ban, Phone, MessageCircle, ExternalLink, ShieldCheck, Globe } from "lucide-react";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useMeta } from "@/hooks/use-meta";
 import { motion } from "framer-motion";
 import disclaimerImg from "@/assets/images/terms-disclaimer.png";
 import liabilityImg from "@/assets/images/terms-liability.png";
@@ -92,6 +93,7 @@ const termsSections = [
 
 export default function TermsPage() {
   useDocumentTitle("Terms of Service");
+  useMeta({ description: "Terms of Service for THE VOID by DarkWave Studios. Entertainment disclaimer, liability, and usage guidelines.", ogTitle: "Terms of Service — THE VOID", ogDescription: "Read the terms and conditions for using THE VOID.", canonicalPath: "/terms" });
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8 max-w-5xl">

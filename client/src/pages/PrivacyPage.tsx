@@ -2,6 +2,7 @@ import { Layout } from "@/components/ui/Layout";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Shield, Phone, MessageCircle, ExternalLink, Lock, Eye, Trash2, UserX, FileText } from "lucide-react";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useMeta } from "@/hooks/use-meta";
 import { motion } from "framer-motion";
 import collectionImg from "@/assets/images/privacy-collection.png";
 import usageImg from "@/assets/images/privacy-usage.png";
@@ -82,6 +83,7 @@ const crisisResources = [
 
 export default function PrivacyPage() {
   useDocumentTitle("Privacy Policy");
+  useMeta({ description: "How THE VOID collects, uses, and safeguards your information. Privacy policy by DarkWave Studios.", ogTitle: "Privacy Policy — THE VOID", ogDescription: "Your privacy matters. Learn how we protect your data.", canonicalPath: "/privacy" });
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8 max-w-5xl">

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Layout } from "@/components/ui/Layout";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useMeta } from "@/hooks/use-meta";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { RecordButton } from "@/components/venting/RecordButton";
 import { PersonalitySelector } from "@/components/venting/PersonalitySelector";
@@ -65,6 +66,7 @@ function useMicPermission() {
 
 export default function RecordPage() {
   useDocumentTitle("Vent Now");
+  useMeta({ description: "Scream, rant, or whisper into THE VOID — a voice-first AI venting platform with five unique personalities.", ogTitle: "THE VOID — Vent Now", ogDescription: "Voice-first AI venting. Let it all out.", canonicalPath: "/" });
   const { data: pricingInfo } = useQuery<any>({ queryKey: ["/api/pricing/info"] });
   const [personality, setPersonality] = useState('smart-ass');
   const [lastResponse, setLastResponse] = useState<{ transcript: string; response: string; audioResponse?: string } | null>(null);
