@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Layout } from "@/components/ui/Layout";
 import { useDocumentTitle } from "@/hooks/use-document-title";
@@ -71,7 +71,16 @@ export default function RecordPage() {
     const saved = JSON.parse(localStorage.getItem("void-settings") || "{}");
     return saved.voicePreference || "default";
   });
-  const recorder = useVoiceRecorder();
+  const autoStopRef = useRef(false);
+  const autoSubmitFnRef = useRef<() => void>(() => {});
+  const recorder = useVoiceRecorder({
+    onSilenceDetected: () => {
+      if (autoStopRef.current) {
+        autoStopRef.current = false;
+        autoSubmitFnRef.current();
+      }
+    },
+  });
   const createVent = useCreateVent();
   const { toast } = useToast();
   const { permission: micPermission, requestPermission, isEmbedded } = useMicPermission();
@@ -142,53 +151,68 @@ export default function RecordPage() {
     }
   }, []);
 
+  const submitRecording = useCallback(async () => {
+    try {
+      const { blob, mimeType, extension } = await recorder.stopRecording();
+      if (blob.size === 0) {
+        toast({
+          title: "No Audio Captured",
+          description: "The recording was empty. Please try speaking louder or check your microphone.",
+          variant: "destructive",
+        });
+        return;
+      }
+      const savedSettings = JSON.parse(localStorage.getItem("void-settings") || "{}");
+      const voicePreference = savedSettings.voicePreference || 'default';
+      createVent.mutate(
+        { audioBlob: blob, personality, mimeType, extension, userId: visitorId ? String(visitorId) : undefined, voicePreference },
+        {
+          onSuccess: (data) => {
+            setLastResponse(data);
+            queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
+            toast({
+              title: "Vent Processed",
+              description: "The AI has analyzed your rage.",
+            });
+            if (data.audioResponse) {
+              if (savedSettings.autoPlayResponse !== false) {
+                playAudioResponse(data.audioResponse);
+              }
+            }
+          },
+          onError: (err: any) => {
+            if (err?.message?.includes("Upgrade to Premium")) {
+              queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
+            }
+            toast({
+              title: "Couldn't Process",
+              description: err?.message || "Failed to process your vent. Please try again.",
+              variant: "destructive",
+            });
+          }
+        }
+      );
+    } catch (err) {
+      console.error("Failed to stop recording:", err);
+    }
+  }, [recorder, personality, visitorId, createVent, toast, playAudioResponse]);
+
+  const handleAutoSubmit = useCallback(() => {
+    toast({ title: "Silence Detected", description: "Auto-submitting your vent..." });
+    submitRecording();
+  }, [submitRecording, toast]);
+
+  autoSubmitFnRef.current = handleAutoSubmit;
+
   const handleToggleRecording = async () => {
     if (recorder.state === "recording") {
-      try {
-        const { blob, mimeType, extension } = await recorder.stopRecording();
-        if (blob.size === 0) {
-          toast({
-            title: "No Audio Captured",
-            description: "The recording was empty. Please try speaking louder or check your microphone.",
-            variant: "destructive",
-          });
-          return;
-        }
-        const savedSettings = JSON.parse(localStorage.getItem("void-settings") || "{}");
-        const voicePreference = savedSettings.voicePreference || 'default';
-        createVent.mutate(
-          { audioBlob: blob, personality, mimeType, extension, userId: visitorId ? String(visitorId) : undefined, voicePreference },
-          {
-            onSuccess: (data) => {
-              setLastResponse(data);
-              queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
-              toast({
-                title: "Vent Processed",
-                description: "The AI has analyzed your rage.",
-              });
-              if (data.audioResponse) {
-                if (savedSettings.autoPlayResponse !== false) {
-                  playAudioResponse(data.audioResponse);
-                }
-              }
-            },
-            onError: (err: any) => {
-              if (err?.message?.includes("Upgrade to Premium")) {
-                queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
-              }
-              toast({
-                title: "Couldn't Process",
-                description: err?.message || "Failed to process your vent. Please try again.",
-                variant: "destructive",
-              });
-            }
-          }
-        );
-      } catch (err) {
-        console.error("Failed to stop recording:", err);
-      }
+      autoStopRef.current = false;
+      await submitRecording();
     } else {
-      await recorder.startRecording();
+      const savedSettings = JSON.parse(localStorage.getItem("void-settings") || "{}");
+      const useAutoSubmit = savedSettings.autoSubmitOnSilence === true;
+      autoStopRef.current = useAutoSubmit;
+      await recorder.startRecording(useAutoSubmit);
       setLastResponse(null);
     }
   };

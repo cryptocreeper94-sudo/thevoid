@@ -46,6 +46,7 @@ function loadSettings() {
     defaultPersonality: "smart-ass",
     responseLength: "medium",
     autoPlayResponse: true,
+    autoSubmitOnSilence: false,
     voicePreference: "default",
     hapticFeedback: true,
     showTranscript: true,
@@ -250,6 +251,17 @@ export default function SettingsPage() {
                         checked={settings.autoPlayResponse}
                         onCheckedChange={(v) => update("autoPlayResponse", v)}
                         data-testid="switch-autoplay"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <Label className="text-sm text-foreground">Auto-Submit on Silence</Label>
+                        <p className="text-xs text-muted-foreground mt-0.5">Automatically analyze your vent when you stop speaking</p>
+                      </div>
+                      <Switch
+                        checked={settings.autoSubmitOnSilence}
+                        onCheckedChange={(v) => update("autoSubmitOnSilence", v)}
+                        data-testid="switch-auto-submit"
                       />
                     </div>
                     <div>
