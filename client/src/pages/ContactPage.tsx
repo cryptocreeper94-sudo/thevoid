@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useMeta } from "@/hooks/use-meta";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Mail, Send, MessageSquare, Clock, Shield } from "lucide-react";
 import { motion } from "framer-motion";
@@ -26,6 +27,7 @@ const fadeUp = {
 
 export default function ContactPage() {
   useDocumentTitle("Contact Us");
+  useMeta({ description: "Get in touch with DarkWave Studios — questions, feedback, bug reports, or billing inquiries for THE VOID.", ogTitle: "Contact Us — THE VOID", ogDescription: "Questions, feedback, or just want to say hi — reach out to the team.", canonicalPath: "/contact" });
   const { toast } = useToast();
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);

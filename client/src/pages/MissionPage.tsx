@@ -27,7 +27,7 @@ const values = [
 
 export default function MissionPage() {
   useDocumentTitle("From the Void — Our Mission");
-  useMeta({ description: "THE VOID by DarkWave Studios — a voice-first venting platform built for catharsis, connection, and emotional wellness.", ogTitle: "From the Void — Our Mission", ogDescription: "We built a place to scream. Learn about the mission behind THE VOID." });
+  useMeta({ description: "THE VOID by DarkWave Studios — a voice-first venting platform built for catharsis, connection, and emotional wellness.", ogTitle: "From the Void — Our Mission", ogDescription: "We built a place to scream. Learn about the mission behind THE VOID.", canonicalPath: "/mission" });
 
   return (
     <Layout>

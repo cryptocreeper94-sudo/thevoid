@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useMeta } from "@/hooks/use-meta";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Settings, Sparkles, Brain, Zap, Heart, Flame, Volume2, Type, Crown, CreditCard, Mic, Sliders, Lock, Copy, Check, Link2, Shield, Hash, Users, Gift, Star } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -221,6 +222,7 @@ function HallmarkCard({ voidId, userId }: { voidId: string; userId: number | nul
 
 export default function SettingsPage() {
   useDocumentTitle("Settings");
+  useMeta({ description: "Customize your experience in THE VOID — personality, audio, display preferences, and subscription management.", ogTitle: "Settings — THE VOID", ogDescription: "Manage your VOID preferences and subscription.", canonicalPath: "/settings" });
   const [settings, setSettings] = useState(loadSettings);
   const { toast } = useToast();
   const { visitorId, userName } = usePinAuth();

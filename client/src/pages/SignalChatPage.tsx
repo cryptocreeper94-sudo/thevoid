@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Layout } from "@/components/ui/Layout";
+import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useMeta } from "@/hooks/use-meta";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -471,6 +473,8 @@ function ChannelSidebar({
 }
 
 export default function SignalChatPage() {
+  useDocumentTitle("Signal Chat");
+  useMeta({ description: "Signal Chat — community chat and crisis support powered by Trust Layer SSO. Connect with the DarkWave ecosystem.", ogTitle: "Signal Chat — THE VOID", ogDescription: "Community chat and crisis support in THE VOID.", canonicalPath: "/signal" });
   const [user, setUser] = useState<ChatUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [channels, setChannels] = useState<ChatChannel[]>([]);

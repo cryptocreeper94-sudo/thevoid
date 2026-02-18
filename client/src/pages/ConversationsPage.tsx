@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useMeta } from "@/hooks/use-meta";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -88,6 +89,7 @@ interface ThreadWithMessages {
 
 export default function ConversationsPage() {
   useDocumentTitle("Conversations");
+  useMeta({ description: "Continue your AI conversations in THE VOID — threaded chats with five unique personalities.", ogTitle: "Conversations — THE VOID", ogDescription: "Threaded AI conversations with personality.", canonicalPath: "/conversations" });
   const { visitorId } = usePinAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
