@@ -224,6 +224,36 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  app.post("/api/contact", async (req, res) => {
+    try {
+      const { name, email, subject, message } = z.object({
+        name: z.string().min(1),
+        email: z.string().email(),
+        subject: z.string().default("general"),
+        message: z.string().min(1),
+      }).parse(req.body);
+
+      await storage.createContactMessage({ name, email, subject, message });
+      res.json({ success: true });
+    } catch (err: any) {
+      console.error("[Contact] Error:", err?.message);
+      res.status(400).json({ message: "Invalid contact form data" });
+    }
+  });
+
+  app.get("/api/contact", async (req, res) => {
+    try {
+      const masterKey = req.headers["x-master-key"];
+      if (masterKey !== "0424") {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      const messages = await storage.getContactMessages();
+      res.json(messages);
+    } catch (err: any) {
+      res.status(500).json({ message: "Failed to fetch contact messages" });
+    }
+  });
+
   app.get("/api/vents", async (req, res) => {
     try {
       const userId = req.query.userId as string | undefined;

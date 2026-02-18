@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Layout } from "@/components/ui/Layout";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Settings, Sparkles, Brain, Zap, Heart, Flame, Volume2, Type, Crown, CreditCard } from "lucide-react";
 import { motion } from "framer-motion";
@@ -52,6 +53,7 @@ function loadSettings() {
 }
 
 export default function SettingsPage() {
+  useDocumentTitle("Settings");
   const [settings, setSettings] = useState(loadSettings);
   const { toast } = useToast();
   const { visitorId, userName } = usePinAuth();

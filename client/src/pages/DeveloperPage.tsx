@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { Layout } from "@/components/ui/Layout";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Code, Lock, Activity, Settings, Trash2, Map, Plus, ChevronLeft, ChevronRight, Check, X, Zap, Star, ArrowRight, Clock, CheckCircle2, Circle, Flame, Users, UserPlus, KeyRound } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -896,6 +897,7 @@ function AdminDashboard() {
 }
 
 export default function DeveloperPage() {
+  useDocumentTitle("Developer Portal");
   const [authenticated, setAuthenticated] = useState(false);
 
   return (

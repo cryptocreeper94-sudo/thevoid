@@ -17,13 +17,6 @@ Voice-first venting application where users record frustrations and receive AI-g
 - **Auth**: PIN-based whitelist system (master key: 0424, first-login PIN change) + Replit Auth (OIDC)
 - **Design**: Glassmorphism, Bento grid, Space Grotesk + Outfit fonts
 
-## Pages
-- `/` - Main recording page (3-column Bento grid: Vent Log, Record Stage, Personality Selector)
-- `/settings` - User preferences (default personality, audio, display settings)
-- `/privacy` - Privacy Policy with full crisis resources
-- `/terms` - Terms of Service with disclaimers and crisis resources
-- `/developer` - Admin dashboard (PIN: 0424)
-
 ## Key Architecture
 - Layout component wraps all pages with header, footer, animated background orbs
 - Header: Slim sticky bar, "THE VOID" left, hamburger menu right (Sheet component)
@@ -80,7 +73,28 @@ Voice-first venting application where users record frustrations and receive AI-g
 - **API**: POST /api/stripe/create-checkout, POST /api/stripe/create-portal, POST /api/stripe/webhook, GET /api/subscription/status
 - **Frontend**: Upgrade prompt on RecordPage when limit reached, subscription card on SettingsPage
 
+## Pages
+- `/` - Main recording page (3-column Bento grid: Vent Log, Record Stage, Personality Selector)
+- `/settings` - User preferences (default personality, audio, display settings)
+- `/privacy` - Privacy Policy with full crisis resources
+- `/terms` - Terms of Service with disclaimers and crisis resources
+- `/contact` - Contact form (stored in DB, admin-viewable via x-master-key header)
+- `/developer` - Admin dashboard (PIN: 0424)
+
+## SEO & Legitimacy
+- `robots.txt` — Allows indexing, blocks /developer and /api/
+- `sitemap.xml` — Lists all public pages
+- Open Graph tags (Facebook/LinkedIn) + Twitter Card tags
+- `<title>` tag with brand + description
+- Canonical URL tag
+- JSON-LD structured data (SoftwareApplication schema with pricing)
+- Meta author, meta robots
+- Only 2 Google Fonts loaded (Space Grotesk + Outfit) — trimmed from 20+
+- Contact page with form + direct email (team@dwsc.io)
+- `contact_messages` table stores submissions, admin GET via x-master-key header
+
 ## Recent Changes
+- Feb 18, 2026: Added SEO legitimacy package — robots.txt, sitemap.xml, Twitter cards, JSON-LD structured data, canonical URLs, trimmed fonts, Contact page
 - Feb 18, 2026: Added Stripe subscription system — Free (1 vent/day) + Premium ($9.99/mo unlimited), webhook auto-created, checkout/portal/usage tracking
 - Feb 18, 2026: Added TTS voice responses — AI speaks back using OpenAI TTS with personality-specific voices (onyx, nova, alloy, echo, fable)
 - Feb 18, 2026: Fixed vent isolation — each user's vents are now tied to their PIN userId, users only see their own vents
