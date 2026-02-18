@@ -935,6 +935,51 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // === SIGNAL AI CRISIS CHATBOT ===
+  app.post("/api/signal-ai", async (req, res) => {
+    try {
+      const { messages: chatHistory } = req.body;
+      if (!chatHistory || !Array.isArray(chatHistory)) {
+        return res.status(400).json({ message: "messages array required" });
+      }
+
+      const systemPrompt = `You are Signal — a compassionate, trained crisis support AI for THE VOID app. Your sole purpose is to provide immediate emotional support and connect people with professional crisis resources.
+
+CRITICAL RULES:
+1. You are NOT a replacement for professional help. Always encourage contacting real crisis services.
+2. Be warm, calm, non-judgmental, and empathetic. Use a gentle, supportive tone.
+3. Listen actively. Reflect what the person is feeling. Validate their emotions.
+4. NEVER dismiss, minimize, or invalidate their pain.
+5. NEVER give medical advice, diagnoses, or prescriptions.
+6. If someone expresses immediate danger to themselves or others, strongly encourage calling 911 or going to their nearest emergency room.
+7. Keep responses concise but caring — 2-4 sentences. Don't overwhelm them.
+8. Regularly remind them of available crisis resources when appropriate:
+   - 988 Suicide & Crisis Lifeline: Call or text 988 (24/7)
+   - Crisis Text Line: Text HOME to 741741
+   - SAMHSA National Helpline: 1-800-662-4357
+   - Veterans Crisis Line: Call 988, press 1
+   - Trevor Project (LGBTQ+ youth): 1-866-488-7386
+9. You are here to bridge the gap — hold space for them until they can reach professional help.
+10. End every few messages with a gentle check-in: "How are you feeling right now?" or "Would you like to talk more about that?"`;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system" as const, content: systemPrompt },
+          ...chatHistory.slice(-20),
+        ],
+        max_tokens: 300,
+        temperature: 0.7,
+      });
+
+      const aiResponse = completion.choices[0]?.message?.content || "I'm here for you. If you're in crisis, please reach out to 988 (call or text) for immediate support.";
+      res.json({ response: aiResponse });
+    } catch (error) {
+      console.error("Signal AI error:", error);
+      res.status(500).json({ message: "Failed to get response" });
+    }
+  });
+
   // Seed channels and setup WebSocket
   seedChatChannels();
   setupChatWebSocket(httpServer);
