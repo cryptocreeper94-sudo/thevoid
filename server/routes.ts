@@ -13,8 +13,10 @@ import rateLimit from "express-rate-limit";
 import { registerUser, loginUser, getUserFromToken } from "./trustlayer-sso";
 import { setupChatWebSocket } from "./chat-ws";
 import { seedChatChannels } from "./seedChat";
-import { chatChannels } from "@shared/schema";
+import { chatChannels, referrals, voidStamps, chatUsers, subscriptions } from "@shared/schema";
 import { db } from "./db";
+import { mintVoidStamp, verifyVoidStamp, getStampStats } from "./blockchain-hallmark";
+import { eq, and, count as dbCount } from "drizzle-orm";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-04-30.basil" as any });
 
@@ -159,6 +161,28 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
               }
             }
             console.log(`[Stripe] Subscription activated for user ${userId}, Void ID: ${finalVoidId}`);
+
+            try {
+              const stampResult = await mintVoidStamp(finalVoidId, userId);
+              if (stampResult.success) {
+                console.log(`[Blockchain] Hallmark minted for ${finalVoidId}, Block #${stampResult.stamp?.blockNumber}, Hash: ${stampResult.stamp?.stampHash?.substring(0, 16)}...`);
+              }
+            } catch (stampErr: any) {
+              console.error("[Blockchain] Stamp minting failed (non-critical):", stampErr?.message);
+            }
+
+            const pendingReferrals = await db.select().from(referrals)
+              .where(and(
+                eq(referrals.referredUserId, userId),
+                eq(referrals.status, "pending")
+              ));
+            if (pendingReferrals.length > 0 && !pendingReferrals[0].rewardCredited) {
+              await db.update(referrals)
+                .set({ status: "converted", rewardCredited: true })
+                .where(eq(referrals.id, pendingReferrals[0].id));
+              await storage.addCredits(pendingReferrals[0].referrerUserId, 5);
+              console.log(`[Affiliate] Referral converted! Rewarded user ${pendingReferrals[0].referrerUserId} with 5 credits`);
+            }
 
             try {
               const customer = await stripe.customers.retrieve(session.customer as string) as Stripe.Customer;
@@ -311,6 +335,164 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       });
     } catch (err: any) {
       res.status(500).json({ message: "Failed to get subscription status" });
+    }
+  });
+
+  // === BLOCKCHAIN HALLMARK / VOID STAMP ROUTES ===
+
+  app.get("/api/stamp/verify/:voidId", async (req, res) => {
+    try {
+      const { voidId } = req.params;
+      if (!voidId || !voidId.startsWith("V-")) {
+        return res.status(400).json({ valid: false, error: "Invalid Void ID format" });
+      }
+      const result = await verifyVoidStamp(voidId);
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ valid: false, error: "Verification failed" });
+    }
+  });
+
+  app.get("/api/stamp/stats", async (_req, res) => {
+    try {
+      const stats = await getStampStats();
+      res.json(stats);
+    } catch (err: any) {
+      res.status(500).json({ error: "Failed to get stamp stats" });
+    }
+  });
+
+  app.get("/api/stamp/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (!userId) return res.status(400).json({ error: "Invalid user ID" });
+      const [stamp] = await db.select().from(voidStamps).where(eq(voidStamps.userId, userId));
+      res.json({ stamp: stamp || null });
+    } catch (err: any) {
+      res.status(500).json({ error: "Failed to get stamp" });
+    }
+  });
+
+  // === AFFILIATE REFERRAL ROUTES ===
+
+  app.post("/api/referral/apply", async (req, res) => {
+    try {
+      const { referralCode, userId } = z.object({
+        referralCode: z.string().min(1),
+        userId: z.number(),
+      }).parse(req.body);
+
+      const referrerSub = await db.select().from(subscriptions).where(eq(subscriptions.voidId, referralCode));
+      if (referrerSub.length === 0) {
+        return res.status(404).json({ error: "Invalid referral code. Void ID not found." });
+      }
+
+      if (referrerSub[0].userId === userId) {
+        return res.status(400).json({ error: "You cannot refer yourself." });
+      }
+
+      const existingReferral = await db.select().from(referrals)
+        .where(eq(referrals.referredUserId, userId));
+      if (existingReferral.length > 0) {
+        return res.status(400).json({ error: "You've already been referred." });
+      }
+
+      const [referral] = await db.insert(referrals).values({
+        referrerVoidId: referralCode,
+        referrerUserId: referrerSub[0].userId,
+        referredUserId: userId,
+        status: "pending",
+      }).returning();
+
+      res.json({ success: true, referral });
+    } catch (err: any) {
+      res.status(500).json({ error: err?.message || "Failed to apply referral" });
+    }
+  });
+
+  app.get("/api/referral/stats/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (!userId) return res.status(400).json({ error: "Invalid user ID" });
+
+      const sub = await storage.getSubscription(userId);
+      if (!sub?.voidId) return res.json({ voidId: null, referralCount: 0, convertedCount: 0, rewardsEarned: 0 });
+
+      const allReferrals = await db.select().from(referrals)
+        .where(eq(referrals.referrerVoidId, sub.voidId));
+
+      const converted = allReferrals.filter(r => r.status === "converted");
+      const rewardsEarned = allReferrals.filter(r => r.rewardCredited).length;
+
+      res.json({
+        voidId: sub.voidId,
+        referralCount: allReferrals.length,
+        convertedCount: converted.length,
+        rewardsEarned,
+        referrals: allReferrals.map(r => ({
+          id: r.id,
+          referredUserId: r.referredUserId,
+          status: r.status,
+          rewardCredited: r.rewardCredited,
+          createdAt: r.createdAt,
+        })),
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: "Failed to get referral stats" });
+    }
+  });
+
+  // === TRUST LAYER BRIDGE: LINK VOID ID TO CHAT ACCOUNT ===
+
+  app.post("/api/bridge/link-void", async (req, res) => {
+    try {
+      const { chatUserId, userId } = z.object({
+        chatUserId: z.string(),
+        userId: z.number(),
+      }).parse(req.body);
+
+      const sub = await storage.getSubscription(userId);
+      if (!sub?.voidId) {
+        return res.status(400).json({ error: "No Void ID found. Premium subscription required." });
+      }
+
+      await db.update(chatUsers)
+        .set({ voidId: sub.voidId })
+        .where(eq(chatUsers.id, chatUserId));
+
+      res.json({
+        success: true,
+        voidId: sub.voidId,
+        message: "Void ID linked to Trust Layer account. You are now recognized as a Void premium member across the DarkWave ecosystem.",
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err?.message || "Failed to link Void ID" });
+    }
+  });
+
+  app.get("/api/bridge/status/:chatUserId", async (req, res) => {
+    try {
+      const [user] = await db.select().from(chatUsers).where(eq(chatUsers.id, req.params.chatUserId));
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      const isLinked = !!user.voidId;
+      let stampVerified = false;
+      if (user.voidId) {
+        const verification = await verifyVoidStamp(user.voidId);
+        stampVerified = verification.valid;
+      }
+
+      res.json({
+        chatUserId: user.id,
+        trustLayerId: user.trustLayerId,
+        voidId: user.voidId || null,
+        isLinked,
+        stampVerified,
+        displayName: user.displayName,
+        role: user.role,
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: "Failed to get bridge status" });
     }
   });
 

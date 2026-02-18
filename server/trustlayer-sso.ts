@@ -21,19 +21,17 @@ function generateAvatarColor(): string {
   return colors[Math.floor(Math.random() * colors.length)];
 }
 
-export function signToken(userId: string, trustLayerId: string): string {
-  return jwt.sign(
-    { userId, trustLayerId, iss: "trust-layer-sso" },
-    JWT_SECRET,
-    { expiresIn: TOKEN_EXPIRY }
-  );
+export function signToken(userId: string, trustLayerId: string, voidId?: string | null): string {
+  const payload: any = { userId, trustLayerId, iss: "trust-layer-sso" };
+  if (voidId) payload.voidId = voidId;
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
 }
 
-export function verifyToken(token: string): { userId: string; trustLayerId: string } | null {
+export function verifyToken(token: string): { userId: string; trustLayerId: string; voidId?: string } | null {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as any;
     if (decoded.iss !== "trust-layer-sso") return null;
-    return { userId: decoded.userId, trustLayerId: decoded.trustLayerId };
+    return { userId: decoded.userId, trustLayerId: decoded.trustLayerId, voidId: decoded.voidId || undefined };
   } catch {
     return null;
   }
@@ -78,7 +76,7 @@ export async function registerUser(username: string, email: string, password: st
     trustLayerId,
   }).returning();
 
-  const token = signToken(user.id, trustLayerId);
+  const token = signToken(user.id, trustLayerId, user.voidId);
 
   return {
     success: true,
@@ -90,6 +88,7 @@ export async function registerUser(username: string, email: string, password: st
       avatarColor: user.avatarColor,
       role: user.role,
       trustLayerId: user.trustLayerId,
+      voidId: user.voidId || null,
     },
     token,
   };
@@ -108,7 +107,7 @@ export async function loginUser(username: string, password: string) {
 
   await db.update(chatUsers).set({ isOnline: true, lastSeen: new Date() }).where(eq(chatUsers.id, user.id));
 
-  const token = signToken(user.id, user.trustLayerId || "");
+  const token = signToken(user.id, user.trustLayerId || "", user.voidId);
 
   return {
     success: true,
@@ -120,6 +119,7 @@ export async function loginUser(username: string, password: string) {
       avatarColor: user.avatarColor,
       role: user.role,
       trustLayerId: user.trustLayerId,
+      voidId: user.voidId || null,
     },
     token,
   };
@@ -140,5 +140,6 @@ export async function getUserFromToken(token: string) {
     avatarColor: user.avatarColor,
     role: user.role,
     trustLayerId: user.trustLayerId,
+    voidId: user.voidId || null,
   };
 }

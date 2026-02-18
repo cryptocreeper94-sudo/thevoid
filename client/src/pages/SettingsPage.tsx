@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Settings, Sparkles, Brain, Zap, Heart, Flame, Volume2, Type, Crown, CreditCard, Mic, Sliders, Lock } from "lucide-react";
+import { Settings, Sparkles, Brain, Zap, Heart, Flame, Volume2, Type, Crown, CreditCard, Mic, Sliders, Lock, Copy, Check, Link2, Shield, Hash, Users, Gift } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -54,6 +55,168 @@ function loadSettings() {
     showTranscript: true,
     fontSize: 16,
   };
+}
+
+function AffiliateCard({ voidId, userId }: { voidId: string; userId: number | null }) {
+  const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
+
+  const { data: stats } = useQuery({
+    queryKey: ["/api/referral/stats", userId],
+    queryFn: async () => {
+      const res = await fetch(`/api/referral/stats/${userId}`);
+      return res.json();
+    },
+    enabled: !!userId,
+  });
+
+  const copyReferralCode = () => {
+    navigator.clipboard.writeText(voidId);
+    setCopied(true);
+    toast({ title: "Copied!", description: "Your referral code has been copied to clipboard." });
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const copyReferralLink = () => {
+    const domain = window.location.origin;
+    navigator.clipboard.writeText(`${domain}?ref=${voidId}`);
+    setCopied(true);
+    toast({ title: "Link Copied!", description: "Your referral link has been copied." });
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <GlassCard className="overflow-hidden" hoverEffect>
+      <div className="p-5">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 rounded-lg bg-emerald-500/10">
+            <Users className="w-5 h-5 text-emerald-400" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-foreground">Affiliate Program</h2>
+            <p className="text-[10px] text-muted-foreground">Share your Void ID, earn rewards</p>
+          </div>
+        </div>
+        <div className="space-y-4">
+          <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+            <p className="text-[10px] uppercase tracking-widest text-emerald-400/60 mb-1">Your Referral Code</p>
+            <div className="flex items-center gap-2">
+              <p className="font-mono text-lg font-bold text-emerald-400 tracking-wider flex-1" data-testid="text-referral-code">{voidId}</p>
+              <Button size="icon" variant="ghost" onClick={copyReferralCode} data-testid="button-copy-referral">
+                {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+              </Button>
+            </div>
+          </div>
+          <Button variant="outline" className="w-full" onClick={copyReferralLink} data-testid="button-copy-referral-link">
+            <Link2 className="w-4 h-4 mr-2" />
+            Copy Referral Link
+          </Button>
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div className="p-2 rounded-lg bg-white/5">
+              <p className="text-lg font-bold text-foreground">{stats?.referralCount || 0}</p>
+              <p className="text-[10px] text-muted-foreground">Referred</p>
+            </div>
+            <div className="p-2 rounded-lg bg-white/5">
+              <p className="text-lg font-bold text-emerald-400">{stats?.convertedCount || 0}</p>
+              <p className="text-[10px] text-muted-foreground">Converted</p>
+            </div>
+            <div className="p-2 rounded-lg bg-white/5">
+              <p className="text-lg font-bold text-amber-400">{stats?.rewardsEarned || 0}</p>
+              <p className="text-[10px] text-muted-foreground">Rewards</p>
+            </div>
+          </div>
+          <p className="text-[10px] text-muted-foreground text-center">
+            Earn 5 bonus credits for each referral that converts to Premium
+          </p>
+        </div>
+      </div>
+    </GlassCard>
+  );
+}
+
+function HallmarkCard({ voidId, userId }: { voidId: string; userId: number | null }) {
+  const { data: stampData } = useQuery({
+    queryKey: ["/api/stamp", userId],
+    queryFn: async () => {
+      const res = await fetch(`/api/stamp/${userId}`);
+      return res.json();
+    },
+    enabled: !!userId,
+  });
+
+  const { data: verification } = useQuery({
+    queryKey: ["/api/stamp/verify", voidId],
+    queryFn: async () => {
+      const res = await fetch(`/api/stamp/verify/${voidId}`);
+      return res.json();
+    },
+    enabled: !!voidId,
+  });
+
+  const stamp = stampData?.stamp;
+
+  return (
+    <GlassCard className="overflow-hidden" hoverEffect>
+      <div className="p-5">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 rounded-lg bg-purple-500/10">
+            <Shield className="w-5 h-5 text-purple-400" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-foreground">Blockchain Hallmark</h2>
+            <p className="text-[10px] text-muted-foreground">Digital certificate of authenticity</p>
+          </div>
+          {verification?.valid && (
+            <div className="ml-auto px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30">
+              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Verified</span>
+            </div>
+          )}
+        </div>
+        {stamp ? (
+          <div className="space-y-3">
+            <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+              <p className="text-[10px] uppercase tracking-widest text-purple-400/60 mb-1">Stamp Hash</p>
+              <p className="font-mono text-[11px] text-purple-300 break-all leading-relaxed" data-testid="text-stamp-hash">
+                {stamp.stampHash}
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-2 rounded-lg bg-white/5 text-center">
+                <Hash className="w-4 h-4 text-purple-400 mx-auto mb-1" />
+                <p className="text-sm font-bold text-foreground">#{stamp.blockNumber}</p>
+                <p className="text-[10px] text-muted-foreground">Block</p>
+              </div>
+              <div className="p-2 rounded-lg bg-white/5 text-center">
+                <Shield className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
+                <p className="text-sm font-bold text-foreground">{verification?.valid ? "Valid" : "Pending"}</p>
+                <p className="text-[10px] text-muted-foreground">Status</p>
+              </div>
+            </div>
+            <div className="p-2 rounded-lg bg-white/5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-muted-foreground">Network</span>
+                <span className="text-[10px] text-purple-400">Trust Layer v1</span>
+              </div>
+              <div className="flex items-center justify-between mt-1">
+                <span className="text-[10px] text-muted-foreground">Standard</span>
+                <span className="text-[10px] text-purple-400">DW-STAMP-1.0</span>
+              </div>
+              <div className="flex items-center justify-between mt-1">
+                <span className="text-[10px] text-muted-foreground">Issuer</span>
+                <span className="text-[10px] text-purple-400">DarkWave Studios</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-6">
+            <Hash className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">Hallmark pending...</p>
+            <p className="text-[10px] text-muted-foreground/50 mt-1">Your stamp will be minted automatically</p>
+          </div>
+        )}
+      </div>
+    </GlassCard>
+  );
 }
 
 export default function SettingsPage() {
@@ -219,6 +382,17 @@ export default function SettingsPage() {
               </div>
             </GlassCard>
           </motion.div>
+
+          {isPremium && subStatus?.voidId && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <motion.div variants={fadeUp}>
+                <AffiliateCard voidId={subStatus.voidId} userId={visitorId} />
+              </motion.div>
+              <motion.div variants={fadeUp}>
+                <HallmarkCard voidId={subStatus.voidId} userId={visitorId} />
+              </motion.div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
