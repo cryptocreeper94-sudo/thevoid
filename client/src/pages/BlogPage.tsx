@@ -73,7 +73,7 @@ export default function BlogPage() {
   useEffect(() => {
     if (!selectedPost) return;
 
-    const BASE_URL = "https://thevoid.replit.app";
+    const BASE_URL = "https://intothevoid.app";
     const jsonLd = {
       "@context": "https://schema.org",
       "@type": "Article",

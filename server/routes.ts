@@ -86,7 +86,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // === SEO ROUTES ===
 
   app.get("/sitemap.xml", async (_req: Request, res: Response) => {
-    const BASE_URL = "https://thevoid.replit.app";
+    const BASE_URL = "https://intothevoid.app";
     
     const staticRoutes = [
       { loc: "/", changefreq: "weekly", priority: "1.0" },
