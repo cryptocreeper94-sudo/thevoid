@@ -188,7 +188,7 @@ export default function LandingPage() {
               className="bg-gradient-to-r from-cyan-500 to-purple-600 border-0 text-white px-8 min-h-12 text-base font-semibold shadow-lg shadow-cyan-500/20"
               data-testid="button-enter-void"
             >
-              Enter the Void
+              Into the Void
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
             <a
@@ -423,7 +423,7 @@ export default function LandingPage() {
             className="bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 border-0 text-white px-10 min-h-14 text-lg font-bold shadow-2xl shadow-purple-500/30"
             data-testid="button-enter-final"
           >
-            Enter the Void
+            Into the Void
             <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
           <p className="text-[10px] text-white/20 mt-6 tracking-[0.3em] uppercase">DarkWave Studios</p>
