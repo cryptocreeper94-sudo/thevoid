@@ -36,6 +36,15 @@ The application is built with a React + Vite frontend utilizing Tailwind CSS, Fr
 - **Zen Zone**: Meditation page at `/zen` with guided breathing exercises (Box Breathing, 4-7-8, Calming Breath), ambient sound selector (Rain, Ocean, Forest, Fire), and customizable meditation timer (2-20 minutes).
 - **PWA / Google Play Ready**: Full Progressive Web App setup with manifest.json (categories, shortcuts, maskable icons), service worker with offline fallback, branded offline.html page. Ready for TWA (Trusted Web Activity) packaging via Bubblewrap for Google Play Store distribution.
 
+## Mobile App Packaging (Capacitor)
+- **Capacitor** wraps the existing web app for native Android and iOS distribution
+- App ID: `app.intothevoid.void`
+- Web assets directory: `dist/public` (Vite build output)
+- Native project directories: `android/` and `ios/`
+- Installed plugins: `@capacitor/splash-screen`, `@capacitor/status-bar`, `@capacitor/haptics`, `@capacitor/app`
+- Build workflow: `npm run build` → `npx cap sync` → build native project in Android Studio / Xcode
+- The web app continues to run independently via the existing Express + Vite setup — Capacitor is purely additive
+
 ## External Dependencies
 - **AI Services**: OpenAI (GPT-5.2, gpt-4o-mini-transcribe for transcription)
 - **Database**: PostgreSQL
