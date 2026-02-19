@@ -246,7 +246,7 @@ export default function RecordPage() {
       await submitRecording();
     } else {
       const savedSettings = JSON.parse(localStorage.getItem("void-settings") || "{}");
-      const useAutoSubmit = savedSettings.autoSubmitOnSilence === true;
+      const useAutoSubmit = savedSettings.autoSubmitOnSilence !== false;
       autoStopRef.current = useAutoSubmit;
       await recorder.startRecording(useAutoSubmit);
       setLastResponse(null);
