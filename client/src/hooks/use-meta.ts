@@ -36,7 +36,7 @@ export function useMeta(options: MetaOptions) {
     if (options.ogType) setMeta("og:type", options.ogType, true);
 
     if (options.canonicalPath) {
-      const base = "https://thevoid.replit.app";
+      const base = "https://intothevoid.app";
       const fullUrl = `${base}${options.canonicalPath}`;
       setMeta("og:url", fullUrl, true);
 

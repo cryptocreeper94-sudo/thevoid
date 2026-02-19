@@ -3,4 +3,4 @@ Allow: /
 Disallow: /developer
 Disallow: /api/
 
-Sitemap: https://thevoid.replit.app/sitemap.xml
+Sitemap: https://intothevoid.app/sitemap.xml

@@ -5,7 +5,7 @@ import { db } from "./db";
 import { blogPosts } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
-const BASE_URL = "https://thevoid.replit.app";
+const BASE_URL = "https://intothevoid.app";
 
 const ROUTE_META: Record<string, { title: string; description: string; ogTitle: string; ogDescription: string }> = {
   "/": {
