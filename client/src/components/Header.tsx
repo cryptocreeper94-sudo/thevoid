@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, Home, Settings, Code, Download, Share, Smartphone, Mail, MessageSquare, Sun, Moon, Heart, Sparkles, Trophy, BookOpen, Wind, PenLine, BarChart3, Library, Quote, ShieldAlert, Flame, CloudMoon } from "lucide-react";
+import { Menu, Home, Settings, Code, Download, Share, Smartphone, Mail, MessageSquare, Sun, Moon, Heart, Sparkles, Trophy, BookOpen, Wind, PenLine, BarChart3, Library, Quote, ShieldAlert, Flame, CloudMoon, Mic, Fingerprint, Palette, Timer, Crosshair, Gamepad2 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
+import { useAppMode } from "@/hooks/use-app-mode";
 import {
   Sheet,
   SheetContent,
@@ -13,24 +14,63 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { usePwaInstall } from "@/hooks/use-pwa-install";
 
-const navItems = [
-  { href: "/home", icon: Home, label: "Home" },
-  { href: "/conversations", icon: MessageSquare, label: "Conversations" },
-  { href: "/journal", icon: PenLine, label: "Journal" },
-  { href: "/vent-library", icon: Library, label: "Vent Library" },
-  { href: "/mood-analytics", icon: BarChart3, label: "Mood Analytics" },
-  { href: "/affirmations", icon: Quote, label: "Affirmations" },
-  { href: "/progress", icon: Trophy, label: "Progress" },
-  { href: "/zen", icon: Wind, label: "Zen Zone" },
-  { href: "/sleep-sounds", icon: CloudMoon, label: "Sleep Sounds" },
-  { href: "/rage-room", icon: Flame, label: "Rage Room" },
-  { href: "/crisis", icon: ShieldAlert, label: "Crisis Toolkit" },
-  { href: "/signal", icon: Heart, label: "Signal Chat" },
-  { href: "/blog", icon: BookOpen, label: "Blog" },
-  { href: "/mission", icon: Sparkles, label: "From the Void" },
-  { href: "/settings", icon: Settings, label: "Settings" },
-  { href: "/contact", icon: Mail, label: "Contact" },
-  { href: "/developer", icon: Code, label: "Developer" },
+interface NavCategory {
+  label: string;
+  items: { href: string; icon: any; label: string }[];
+}
+
+const navCategories: NavCategory[] = [
+  {
+    label: "Vent",
+    items: [
+      { href: "/home", icon: Home, label: "Command Center" },
+      { href: "/conversations", icon: MessageSquare, label: "Conversations" },
+      { href: "/vent-library", icon: Library, label: "Vent Library" },
+      { href: "/voice-fingerprint", icon: Fingerprint, label: "Voice Fingerprint" },
+    ],
+  },
+  {
+    label: "Reflect",
+    items: [
+      { href: "/journal", icon: PenLine, label: "Written Journal" },
+      { href: "/voice-journal", icon: Mic, label: "Voice Journal" },
+      { href: "/mood-analytics", icon: BarChart3, label: "Mood Analytics" },
+      { href: "/mood-portrait", icon: Palette, label: "Mood Portrait" },
+      { href: "/affirmations", icon: Quote, label: "Affirmations" },
+      { href: "/progress", icon: Trophy, label: "Progress" },
+    ],
+  },
+  {
+    label: "Relax",
+    items: [
+      { href: "/zen", icon: Wind, label: "Zen Zone" },
+      { href: "/sleep-sounds", icon: CloudMoon, label: "Sleep Sounds" },
+      { href: "/rage-room", icon: Flame, label: "Rage Room" },
+    ],
+  },
+  {
+    label: "Connect",
+    items: [
+      { href: "/void-echo", icon: Timer, label: "Void Echo" },
+      { href: "/signal", icon: Heart, label: "Signal Chat" },
+    ],
+  },
+  {
+    label: "Safety",
+    items: [
+      { href: "/crisis", icon: ShieldAlert, label: "Crisis Toolkit" },
+    ],
+  },
+  {
+    label: "More",
+    items: [
+      { href: "/blog", icon: BookOpen, label: "Blog" },
+      { href: "/mission", icon: Sparkles, label: "From the Void" },
+      { href: "/settings", icon: Settings, label: "Settings" },
+      { href: "/contact", icon: Mail, label: "Contact" },
+      { href: "/developer", icon: Code, label: "Developer" },
+    ],
+  },
 ];
 
 export function Header() {
@@ -39,6 +79,7 @@ export function Header() {
   const [showIosGuide, setShowIosGuide] = useState(false);
   const { canInstall, isInstalled, showIosInstructions, install } = usePwaInstall();
   const { theme, toggle: toggleTheme } = useTheme();
+  const { mode, toggle: toggleMode, isPlayMode } = useAppMode();
 
   const handleInstallClick = async () => {
     if (canInstall) {
@@ -64,6 +105,16 @@ export function Header() {
           <Button
             size="icon"
             variant="ghost"
+            onClick={toggleMode}
+            className={`toggle-elevate ${isPlayMode ? "toggle-elevated" : ""}`}
+            data-testid="button-mode-toggle"
+            title={isPlayMode ? "Play Mode — data not tracked" : "Focus Mode — tracking active"}
+          >
+            {isPlayMode ? <Gamepad2 className="w-4 h-4 text-amber-400" /> : <Crosshair className="w-4 h-4 text-cyan-400" />}
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
             onClick={toggleTheme}
             data-testid="button-theme-toggle"
           >
@@ -79,7 +130,7 @@ export function Header() {
                 <Menu className="w-4 h-4" />
               </Button>
             </SheetTrigger>
-          <SheetContent side="right" className="w-72 bg-background/95 backdrop-blur-xl border-white/5">
+          <SheetContent side="right" className="w-72 bg-background/95 backdrop-blur-xl border-white/5 overflow-y-auto">
             <SheetHeader>
               <SheetTitle className="text-left text-foreground">
                 THE VOID
@@ -88,25 +139,44 @@ export function Header() {
                 by DarkWave Studios
               </p>
             </SheetHeader>
-            <nav className="flex flex-col gap-1 mt-6">
-              {navItems.map((item) => {
-                const isActive = location === item.href;
-                return (
-                  <Link key={item.href} href={item.href} onClick={() => setOpen(false)}>
-                    <div
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors ${
-                        isActive
-                          ? "bg-primary/10 text-primary font-medium"
-                          : "text-muted-foreground hover-elevate"
-                      }`}
-                      data-testid={`link-nav-${item.label.toLowerCase()}`}
-                    >
-                      <item.icon className="w-4 h-4" />
-                      <span>{item.label}</span>
-                    </div>
-                  </Link>
-                );
-              })}
+
+            {isPlayMode && (
+              <div className="mt-3 mx-1 px-3 py-2 rounded-md bg-amber-500/10 border border-amber-500/20">
+                <div className="flex items-center gap-2">
+                  <Gamepad2 className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="text-xs font-medium text-amber-400">Play Mode Active</span>
+                </div>
+                <p className="text-[10px] text-amber-400/60 mt-0.5">Sessions won't affect your analytics</p>
+              </div>
+            )}
+
+            <nav className="flex flex-col gap-0.5 mt-4">
+              {navCategories.map((category, catIdx) => (
+                <div key={category.label}>
+                  {catIdx > 0 && <Separator className="my-2 bg-white/5" />}
+                  <p className="text-[10px] text-muted-foreground/50 uppercase tracking-[0.2em] px-3 mb-1 font-medium">
+                    {category.label}
+                  </p>
+                  {category.items.map((item) => {
+                    const isActive = location === item.href;
+                    return (
+                      <Link key={item.href} href={item.href} onClick={() => setOpen(false)}>
+                        <div
+                          className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                            isActive
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-muted-foreground hover-elevate"
+                          }`}
+                          data-testid={`link-nav-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+                        >
+                          <item.icon className="w-4 h-4" />
+                          <span>{item.label}</span>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              ))}
             </nav>
 
             {showInstallOption && (

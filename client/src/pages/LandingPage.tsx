@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { Mic, Brain, Shield, Flame, Moon, PenLine, BarChart3, Sparkles, ChevronDown, ArrowRight, Zap, Lock, Volume2 } from "lucide-react";
+import { Mic, Brain, Shield, Flame, Moon, PenLine, BarChart3, Sparkles, ChevronDown, ArrowRight, Zap, Lock, Volume2, Fingerprint, Palette, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/GlassCard";
 import landingPortal from "@/assets/images/landing-void-portal.png";
@@ -22,11 +22,14 @@ const features = [
   { icon: Sparkles, title: "Daily Affirmations", desc: "AI-generated words of power tailored to your journey.", color: "text-pink-400", bg: "bg-pink-500/10" },
   { icon: Flame, title: "Rage Room", desc: "Smash virtual objects. Feel better. No cleanup.", color: "text-red-400", bg: "bg-red-500/10" },
   { icon: Shield, title: "Crisis Toolkit", desc: "Breathing, grounding, hotlines. Always there for you.", color: "text-emerald-400", bg: "bg-emerald-500/10" },
+  { icon: Fingerprint, title: "Voice Fingerprint", desc: "AI reads your emotional biomarkers through vocal analysis.", color: "text-violet-400", bg: "bg-violet-500/10" },
+  { icon: Palette, title: "Mood Portrait", desc: "AI generates evolving abstract art from your emotions.", color: "text-fuchsia-400", bg: "bg-fuchsia-500/10" },
+  { icon: Timer, title: "Void Echo", desc: "Time capsule messages to your future self.", color: "text-amber-400", bg: "bg-amber-500/10" },
 ];
 
 const stats = [
   { value: "5", label: "AI Personalities" },
-  { value: "15+", label: "Wellness Tools" },
+  { value: "20+", label: "Wellness Tools" },
   { value: "$9.99", label: "Founders Rate" },
   { value: "24/7", label: "Always Available" },
 ];
@@ -191,6 +194,15 @@ export default function LandingPage() {
               Into the Void
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/onboarding")}
+              className="text-sm text-white/50"
+              data-testid="button-how-it-works"
+            >
+              How it Works
+              <ArrowRight className="w-4 h-4 ml-1" />
+            </Button>
             <a
               href="#features"
               className="text-sm text-white/50 flex items-center gap-1.5 transition-colors"
@@ -250,7 +262,7 @@ export default function LandingPage() {
           >
             <p className="text-xs text-cyan-400 tracking-[0.3em] uppercase mb-3">Everything you need</p>
             <h2 className="text-3xl sm:text-4xl font-bold text-white font-display mb-4" data-testid="text-features-title">
-              One app. Fifteen tools. Zero BS.
+              One app. Twenty tools. Zero BS.
             </h2>
             <p className="text-sm text-white/40 max-w-lg mx-auto">
               Meditation, AI therapy, mood tracking, venting, journaling, sleep sounds, and more.

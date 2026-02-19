@@ -1617,6 +1617,252 @@ CRITICAL RULES:
     } catch (e) { res.status(500).json({ message: "Failed to fetch vent library" }); }
   });
 
+  // === VOICE JOURNAL ROUTES ===
+  app.get("/api/voice-journal", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.query.userId as string);
+      if (!userId) return res.json([]);
+      const entries = await storage.getVoiceJournalEntries(userId);
+      res.json(entries);
+    } catch (e) { res.status(500).json({ message: "Failed to fetch voice journal" }); }
+  });
+
+  app.post("/api/voice-journal", async (req: Request, res: Response) => {
+    try {
+      const data = z.object({
+        userId: z.number(),
+        audio: z.string(),
+        mimeType: z.string().optional().default("audio/webm"),
+        extension: z.string().optional().default("webm"),
+        cleanUp: z.boolean().optional().default(false),
+        isPlayMode: z.boolean().optional().default(false),
+      }).parse(req.body);
+
+      const transcript = await transcribeAudio(data.audio, data.mimeType, data.extension);
+      if (!transcript) return res.status(400).json({ message: "Could not transcribe audio" });
+
+      let cleanedTranscript: string | undefined;
+      if (data.cleanUp) {
+        const cleanResponse = await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: "Clean up this voice journal transcript. Fix grammar, remove filler words (um, uh, like), organize thoughts into clear paragraphs, but preserve the original meaning and voice exactly. Do NOT add new content or change what was said." },
+            { role: "user", content: transcript },
+          ],
+          max_tokens: 2000,
+        });
+        cleanedTranscript = cleanResponse.choices[0]?.message?.content || undefined;
+      }
+
+      const entry = await storage.createVoiceJournalEntry({
+        userId: data.userId,
+        rawTranscript: transcript,
+        cleanedTranscript,
+        audioData: data.audio.substring(0, 500000),
+        isPlayMode: data.isPlayMode,
+      });
+      res.json(entry);
+    } catch (e: any) {
+      console.error("Voice journal error:", e);
+      res.status(500).json({ message: "Failed to save voice journal entry" });
+    }
+  });
+
+  app.delete("/api/voice-journal/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id as string);
+      const deleted = await storage.deleteVoiceJournalEntry(id);
+      if (!deleted) return res.status(404).json({ message: "Entry not found" });
+      res.json({ success: true });
+    } catch (e) { res.status(500).json({ message: "Failed to delete voice journal entry" }); }
+  });
+
+  // === VOICE FINGERPRINT ROUTES ===
+  app.get("/api/voice-fingerprint", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.query.userId as string);
+      if (!userId) return res.json([]);
+      const fingerprints = await storage.getVoiceFingerprints(userId);
+      res.json(fingerprints);
+    } catch (e) { res.status(500).json({ message: "Failed to fetch voice fingerprints" }); }
+  });
+
+  app.post("/api/voice-fingerprint/analyze", async (req: Request, res: Response) => {
+    try {
+      const data = z.object({
+        userId: z.number(),
+        transcript: z.string().min(1),
+        ventId: z.number().optional(),
+        isPlayMode: z.boolean().optional().default(false),
+      }).parse(req.body);
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: `You are an emotional voice analysis AI. Analyze the emotional content of this transcript and return a JSON object with these fields:
+- energy (0-100): How energetic/activated the speaker sounds
+- tension (0-100): Level of stress/tension detected
+- pace (0-100): How rushed/fast the speech patterns suggest
+- warmth (0-100): Emotional warmth and positivity
+- stability (0-100): Emotional steadiness and composure
+- dominantEmotion: One of: "joy", "anger", "sadness", "fear", "surprise", "disgust", "neutral", "anxious", "frustrated", "hopeful", "exhausted"
+- emotionConfidence (0-100): How confident you are in the dominant emotion
+- summary: A 1-2 sentence insight about the speaker's emotional state, written directly to them (e.g. "You sound like you're carrying a lot of tension today, but there's resilience underneath.")
+Return ONLY valid JSON.`,
+          },
+          { role: "user", content: data.transcript },
+        ],
+        max_tokens: 500,
+        response_format: { type: "json_object" },
+      });
+
+      const analysis = JSON.parse(response.choices[0]?.message?.content || "{}");
+      const fingerprint = await storage.createVoiceFingerprint({
+        userId: data.userId,
+        ventId: data.ventId,
+        energy: Math.min(100, Math.max(0, analysis.energy || 50)),
+        tension: Math.min(100, Math.max(0, analysis.tension || 50)),
+        pace: Math.min(100, Math.max(0, analysis.pace || 50)),
+        warmth: Math.min(100, Math.max(0, analysis.warmth || 50)),
+        stability: Math.min(100, Math.max(0, analysis.stability || 50)),
+        dominantEmotion: analysis.dominantEmotion || "neutral",
+        emotionConfidence: Math.min(100, Math.max(0, analysis.emotionConfidence || 50)),
+        summary: analysis.summary || null,
+        isPlayMode: data.isPlayMode,
+      });
+      res.json(fingerprint);
+    } catch (e: any) {
+      console.error("Voice fingerprint error:", e);
+      res.status(500).json({ message: "Failed to analyze voice fingerprint" });
+    }
+  });
+
+  // === MOOD PORTRAIT ROUTES ===
+  app.get("/api/mood-portraits", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.query.userId as string);
+      if (!userId) return res.json([]);
+      const portraits = await storage.getMoodPortraits(userId);
+      res.json(portraits);
+    } catch (e) { res.status(500).json({ message: "Failed to fetch mood portraits" }); }
+  });
+
+  app.post("/api/mood-portraits/generate", async (req: Request, res: Response) => {
+    try {
+      const data = z.object({ userId: z.number() }).parse(req.body);
+      const fingerprints = await storage.getVoiceFingerprints(data.userId, 20);
+      const recentMoods = await storage.getMoodChecks(data.userId);
+
+      const emotionData = fingerprints.length > 0
+        ? fingerprints.map(f => ({ emotion: f.dominantEmotion, energy: f.energy, tension: f.tension, warmth: f.warmth }))
+        : [{ emotion: "neutral", energy: 50, tension: 30, warmth: 60 }];
+
+      const moodData = recentMoods.slice(0, 10).map(m => ({ before: m.moodBefore, after: m.moodAfter }));
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: `You generate abstract SVG art from emotional data. Create a unique, beautiful abstract SVG (300x300 viewBox) that represents the user's emotional landscape. Use organic shapes (circles, ellipses, paths with curves), gradients, and colors that map to emotions:
+- Joy/warmth: warm golds, oranges, soft pinks
+- Sadness: deep blues, muted purples
+- Anger/tension: reds, sharp angles
+- Calm/stability: greens, smooth curves
+- Fear/anxiety: dark grays, scattered shapes
+- Hope: light cyan, upward curves
+Blend emotions together like watercolors. Make it beautiful and unique. Return ONLY the SVG markup (no json wrapping, just raw SVG starting with <svg>). Keep it under 3000 characters.`,
+          },
+          {
+            role: "user",
+            content: `Emotional data: ${JSON.stringify(emotionData)}. Mood trends: ${JSON.stringify(moodData)}`,
+          },
+        ],
+        max_tokens: 1500,
+      });
+
+      let svgData = response.choices[0]?.message?.content || "";
+      const svgMatch = svgData.match(/<svg[\s\S]*<\/svg>/);
+      if (svgMatch) svgData = svgMatch[0];
+
+      const dominantEmotion = emotionData[0]?.emotion || "neutral";
+      const portrait = await storage.createMoodPortrait({
+        userId: data.userId,
+        svgData,
+        dominantMood: dominantEmotion,
+        colorPalette: emotionData.slice(0, 5).map(e => e.emotion),
+        dataPoints: fingerprints.length + recentMoods.length,
+      });
+      res.json(portrait);
+    } catch (e: any) {
+      console.error("Mood portrait error:", e);
+      res.status(500).json({ message: "Failed to generate mood portrait" });
+    }
+  });
+
+  // === VOID ECHO (TIME CAPSULE) ROUTES ===
+  app.get("/api/void-echoes", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.query.userId as string);
+      if (!userId) return res.json([]);
+      const echoes = await storage.getVoidEchoes(userId);
+      res.json(echoes);
+    } catch (e) { res.status(500).json({ message: "Failed to fetch void echoes" }); }
+  });
+
+  app.get("/api/void-echoes/pending", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.query.userId as string);
+      if (!userId) return res.json([]);
+      const pending = await storage.getPendingVoidEchoes(userId);
+      const now = new Date();
+      const ready = pending.filter(e => e.deliverAt && new Date(e.deliverAt) <= now);
+      for (const echo of ready) {
+        await storage.deliverVoidEcho(echo.id);
+      }
+      res.json(ready);
+    } catch (e) { res.status(500).json({ message: "Failed to check pending echoes" }); }
+  });
+
+  app.post("/api/void-echoes", async (req: Request, res: Response) => {
+    try {
+      const data = z.object({
+        userId: z.number(),
+        audio: z.string().optional(),
+        transcript: z.string().min(1),
+        deliverAt: z.string().optional(),
+        deliverTrigger: z.string().optional().default("date"),
+      }).parse(req.body);
+
+      const aiResponse = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are the Void Echo keeper. The user is recording a message to their future self. Write a brief, warm note (1-2 sentences) that will accompany this message when it's delivered. Something encouraging and reflective, like a gentle reminder of their past wisdom.",
+          },
+          { role: "user", content: data.transcript },
+        ],
+        max_tokens: 150,
+      });
+
+      const echo = await storage.createVoidEcho({
+        userId: data.userId,
+        audioData: data.audio?.substring(0, 500000),
+        transcript: data.transcript,
+        deliverAt: data.deliverAt ? new Date(data.deliverAt) : null,
+        deliverTrigger: data.deliverTrigger,
+        aiNote: aiResponse.choices[0]?.message?.content || null,
+      });
+      res.json(echo);
+    } catch (e: any) {
+      console.error("Void echo error:", e);
+      res.status(500).json({ message: "Failed to create void echo" });
+    }
+  });
+
   return httpServer;
 }
 
