@@ -19,6 +19,13 @@ import MissionPage from "@/pages/MissionPage";
 import GamificationPage from "@/pages/GamificationPage";
 import BlogPage from "@/pages/BlogPage";
 import ZenZonePage from "@/pages/ZenZonePage";
+import CrisisToolkitPage from "@/pages/CrisisToolkitPage";
+import SleepSoundsPage from "@/pages/SleepSoundsPage";
+import JournalPage from "@/pages/JournalPage";
+import MoodAnalyticsPage from "@/pages/MoodAnalyticsPage";
+import VentLibraryPage from "@/pages/VentLibraryPage";
+import AffirmationsPage from "@/pages/AffirmationsPage";
+import RageRoomPage from "@/pages/RageRoomPage";
 
 function ProtectedRoutes() {
   return (
@@ -28,6 +35,11 @@ function ProtectedRoutes() {
         <Route path="/settings" component={SettingsPage} />
         <Route path="/conversations" component={ConversationsPage} />
         <Route path="/progress" component={GamificationPage} />
+        <Route path="/journal" component={JournalPage} />
+        <Route path="/mood-analytics" component={MoodAnalyticsPage} />
+        <Route path="/vent-library" component={VentLibraryPage} />
+        <Route path="/affirmations" component={AffirmationsPage} />
+        <Route path="/rage-room" component={RageRoomPage} />
         <Route component={NotFound} />
       </Switch>
     </PinGate>
@@ -45,6 +57,8 @@ function Router() {
       <Route path="/mission" component={MissionPage} />
       <Route path="/blog" component={BlogPage} />
       <Route path="/zen" component={ZenZonePage} />
+      <Route path="/crisis" component={CrisisToolkitPage} />
+      <Route path="/sleep-sounds" component={SleepSoundsPage} />
       <Route>
         <ProtectedRoutes />
       </Route>
