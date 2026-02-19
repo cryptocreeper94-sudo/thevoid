@@ -1,10 +1,39 @@
 import { Link } from "wouter";
-import { Shield, ExternalLink } from "lucide-react";
+import { Shield, ExternalLink, Smartphone } from "lucide-react";
+import { SiGoogleplay, SiApple } from "react-icons/si";
+import { Badge } from "@/components/ui/badge";
 
 export function Footer() {
   return (
     <footer className="w-full border-t border-white/5 bg-background/80 backdrop-blur-xl py-6 px-4">
       <div className="max-w-5xl mx-auto">
+        <div className="flex items-center justify-center gap-3 mb-5">
+          <Smartphone className="w-4 h-4 text-muted-foreground" />
+          <span className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">Get the App</span>
+        </div>
+        <div className="flex items-center justify-center gap-3 mb-6 flex-wrap">
+          <div
+            className="flex items-center gap-2.5 px-4 py-2.5 rounded-md bg-white/[0.04] border border-white/10 backdrop-blur-md"
+            data-testid="badge-google-play"
+          >
+            <SiGoogleplay className="w-5 h-5 text-emerald-400" />
+            <div className="flex flex-col">
+              <span className="text-[10px] text-muted-foreground leading-none">Google Play</span>
+              <span className="text-xs font-semibold text-foreground leading-tight">Coming Soon</span>
+            </div>
+          </div>
+          <div
+            className="flex items-center gap-2.5 px-4 py-2.5 rounded-md bg-white/[0.04] border border-white/10 backdrop-blur-md"
+            data-testid="badge-app-store"
+          >
+            <SiApple className="w-5 h-5 text-white/80" />
+            <div className="flex flex-col">
+              <span className="text-[10px] text-muted-foreground leading-none">App Store</span>
+              <span className="text-xs font-semibold text-foreground leading-tight">Coming Soon</span>
+            </div>
+          </div>
+        </div>
+
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex flex-col items-center md:items-start gap-1">
             <p className="text-xs text-muted-foreground">
