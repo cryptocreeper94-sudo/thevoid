@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, Home, Settings, Code, Download, Share, Smartphone, Mail, MessageSquare, Sun, Moon, Heart, Sparkles, Trophy, BookOpen, Wind } from "lucide-react";
+import { Menu, Home, Settings, Code, Download, Share, Smartphone, Mail, MessageSquare, Sun, Moon, Heart, Sparkles, Trophy, BookOpen, Wind, PenLine, BarChart3, Library, Quote, ShieldAlert, Flame, CloudMoon } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import {
   Sheet,
@@ -16,8 +16,15 @@ import { usePwaInstall } from "@/hooks/use-pwa-install";
 const navItems = [
   { href: "/", icon: Home, label: "Home" },
   { href: "/conversations", icon: MessageSquare, label: "Conversations" },
+  { href: "/journal", icon: PenLine, label: "Journal" },
+  { href: "/vent-library", icon: Library, label: "Vent Library" },
+  { href: "/mood-analytics", icon: BarChart3, label: "Mood Analytics" },
+  { href: "/affirmations", icon: Quote, label: "Affirmations" },
   { href: "/progress", icon: Trophy, label: "Progress" },
   { href: "/zen", icon: Wind, label: "Zen Zone" },
+  { href: "/sleep-sounds", icon: CloudMoon, label: "Sleep Sounds" },
+  { href: "/rage-room", icon: Flame, label: "Rage Room" },
+  { href: "/crisis", icon: ShieldAlert, label: "Crisis Toolkit" },
   { href: "/signal", icon: Heart, label: "Signal Chat" },
   { href: "/blog", icon: BookOpen, label: "Blog" },
   { href: "/mission", icon: Sparkles, label: "From the Void" },

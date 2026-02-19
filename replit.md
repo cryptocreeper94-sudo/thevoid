@@ -34,6 +34,13 @@ The application is built with a React + Vite frontend utilizing Tailwind CSS, Fr
 - **Gamification System**: Streak tracking (daily venting streaks), achievements (10 unlockable badges), daily prompts (rotated by day of week), and mood check-ins (before/after venting). Protected page at `/progress`. Backend routes under `/api/gamification/*`.
 - **AI Blog**: SEO-optimized blog at `/blog` with 4 seed articles on mental wellness. Markdown-like content rendering, category badges, read time estimates. Backend routes at `/api/blog` and `/api/blog/:slug`. Meta descriptions and Open Graph tags for SEO.
 - **Zen Zone**: Meditation page at `/zen` with guided breathing exercises (Box Breathing, 4-7-8, Calming Breath), ambient sound selector (Rain, Ocean, Forest, Fire), and customizable meditation timer (2-20 minutes).
+- **Written Journal**: Full journaling experience at `/journal` with mood tagging (8 moods), optional AI personality responses on entries. Carousel-based entry history. Backend CRUD at `/api/journal`.
+- **Mood Analytics**: Data visualization dashboard at `/mood-analytics` with custom SVG line charts (before/after mood), stat cards, and recent check-in carousel. Backend at `/api/mood/analytics`.
+- **Vent Library**: Searchable/filterable archive at `/vent-library` of past venting sessions with personality filter, audio playback, full transcript/response modal view. Backend at `/api/vent-library`.
+- **Daily Affirmations**: AI-generated personalized affirmations at `/affirmations` displayed as premium quote cards in carousel. Generate-on-demand via `/api/affirmations/generate`.
+- **Crisis Toolkit**: Comprehensive safety page at `/crisis` with quick panic breathing animation, 5-4-3-2-1 grounding exercise, crisis hotlines (988, 741741, SAMHSA, 911), and editable safety plan (warning signals, coping strategies, support contacts, reasons). Backend at `/api/safety-plan`.
+- **Virtual Rage Room**: Interactive stress-relief page at `/rage-room` with clickable destructible glass objects, Framer Motion smash animations with fragments, session stats, streak tracking. Client-side only.
+- **Sleep Sounds**: Ambient soundscape mixer at `/sleep-sounds` using Web Audio API (Rain, Ocean, Crickets, Thunder, Wind, Fireplace), sleep timer with volume fade, and 4-7-8 breathing guide. Client-side audio generation.
 - **PWA / Google Play Ready**: Full Progressive Web App setup with manifest.json (categories, shortcuts, maskable icons), service worker with offline fallback, branded offline.html page. Ready for TWA (Trusted Web Activity) packaging via Bubblewrap for Google Play Store distribution.
 
 ## Mobile App Packaging (Capacitor)
