@@ -1,7 +1,6 @@
 import { Link } from "wouter";
 import { Shield, ExternalLink, Smartphone } from "lucide-react";
 import { SiGoogleplay, SiApple } from "react-icons/si";
-import { Badge } from "@/components/ui/badge";
 
 export function Footer() {
   return (
