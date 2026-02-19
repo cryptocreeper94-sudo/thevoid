@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PinGate } from "@/components/PinGate";
 import { SplashScreen } from "@/components/SplashScreen";
+import { useAppModeProvider } from "@/hooks/use-app-mode";
 import NotFound from "@/pages/not-found";
 import RecordPage from "@/pages/RecordPage";
 import SettingsPage from "@/pages/SettingsPage";
@@ -27,6 +28,11 @@ import VentLibraryPage from "@/pages/VentLibraryPage";
 import AffirmationsPage from "@/pages/AffirmationsPage";
 import RageRoomPage from "@/pages/RageRoomPage";
 import LandingPage from "@/pages/LandingPage";
+import VoiceJournalPage from "@/pages/VoiceJournalPage";
+import VoiceFingerprintPage from "@/pages/VoiceFingerprintPage";
+import MoodPortraitPage from "@/pages/MoodPortraitPage";
+import VoidEchoPage from "@/pages/VoidEchoPage";
+import OnboardingPage from "@/pages/OnboardingPage";
 
 function ProtectedRoutes() {
   return (
@@ -37,10 +43,14 @@ function ProtectedRoutes() {
         <Route path="/conversations" component={ConversationsPage} />
         <Route path="/progress" component={GamificationPage} />
         <Route path="/journal" component={JournalPage} />
+        <Route path="/voice-journal" component={VoiceJournalPage} />
         <Route path="/mood-analytics" component={MoodAnalyticsPage} />
         <Route path="/vent-library" component={VentLibraryPage} />
         <Route path="/affirmations" component={AffirmationsPage} />
         <Route path="/rage-room" component={RageRoomPage} />
+        <Route path="/voice-fingerprint" component={VoiceFingerprintPage} />
+        <Route path="/mood-portrait" component={MoodPortraitPage} />
+        <Route path="/void-echo" component={VoidEchoPage} />
         <Route component={NotFound} />
       </Switch>
     </PinGate>
@@ -51,6 +61,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={LandingPage} />
+      <Route path="/onboarding" component={OnboardingPage} />
       <Route path="/privacy" component={PrivacyPage} />
       <Route path="/terms" component={TermsPage} />
       <Route path="/developer" component={DeveloperPage} />
@@ -71,13 +82,16 @@ function Router() {
 function App() {
   const [showSplash, setShowSplash] = useState(true);
   const handleSplashComplete = useCallback(() => setShowSplash(false), []);
+  const { mode, setMode, toggle, isPlayMode, Provider } = useAppModeProvider();
 
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
-        <Router />
-        <Toaster />
+        <Provider value={{ mode, setMode, toggle, isPlayMode }}>
+          {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
+          <Router />
+          <Toaster />
+        </Provider>
       </TooltipProvider>
     </QueryClientProvider>
   );

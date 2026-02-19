@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { vents, roadmapItems, whitelistedUsers, subscriptions, dailyVentUsage, contactMessages, userSettings, userCredits, conversationThreads, threadMessages, journalEntries, affirmations, weeklyInsights, safetyPlans, moodChecks, type InsertVent, type Vent, type InsertRoadmapItem, type RoadmapItem, type InsertWhitelistedUser, type WhitelistedUser, type Subscription, type DailyVentUsage, type ContactMessage, type UserSettings, type UserCredit, type ConversationThread, type ThreadMessage, type InsertConversationThread, type InsertThreadMessage, type JournalEntry, type InsertJournalEntry, type Affirmation, type WeeklyInsight, type SafetyPlan, type InsertSafetyPlan, type MoodCheck } from "@shared/schema";
+import { vents, roadmapItems, whitelistedUsers, subscriptions, dailyVentUsage, contactMessages, userSettings, userCredits, conversationThreads, threadMessages, journalEntries, affirmations, weeklyInsights, safetyPlans, moodChecks, voiceJournalEntries, voiceFingerprints, moodPortraits, voidEchoes, type InsertVent, type Vent, type InsertRoadmapItem, type RoadmapItem, type InsertWhitelistedUser, type WhitelistedUser, type Subscription, type DailyVentUsage, type ContactMessage, type UserSettings, type UserCredit, type ConversationThread, type ThreadMessage, type InsertConversationThread, type InsertThreadMessage, type JournalEntry, type InsertJournalEntry, type Affirmation, type WeeklyInsight, type SafetyPlan, type InsertSafetyPlan, type MoodCheck, type VoiceJournalEntry, type InsertVoiceJournalEntry, type VoiceFingerprint, type MoodPortrait, type VoidEcho, type InsertVoidEcho } from "@shared/schema";
 import { eq, desc, and, gte, lte, sql } from "drizzle-orm";
 
 export interface IStorage {
@@ -46,6 +46,17 @@ export interface IStorage {
   getSafetyPlan(userId: number): Promise<SafetyPlan | undefined>;
   upsertSafetyPlan(userId: number, data: Partial<SafetyPlan>): Promise<SafetyPlan>;
   getMoodChecks(userId: number, startDate?: string, endDate?: string): Promise<MoodCheck[]>;
+  getVoiceJournalEntries(userId: number): Promise<VoiceJournalEntry[]>;
+  createVoiceJournalEntry(data: InsertVoiceJournalEntry): Promise<VoiceJournalEntry>;
+  deleteVoiceJournalEntry(id: number): Promise<boolean>;
+  getVoiceFingerprints(userId: number, limit?: number): Promise<VoiceFingerprint[]>;
+  createVoiceFingerprint(data: Partial<VoiceFingerprint> & { userId: number }): Promise<VoiceFingerprint>;
+  getMoodPortraits(userId: number): Promise<MoodPortrait[]>;
+  createMoodPortrait(data: Partial<MoodPortrait> & { userId: number; svgData: string }): Promise<MoodPortrait>;
+  getVoidEchoes(userId: number): Promise<VoidEcho[]>;
+  getPendingVoidEchoes(userId: number): Promise<VoidEcho[]>;
+  createVoidEcho(data: InsertVoidEcho): Promise<VoidEcho>;
+  deliverVoidEcho(id: number): Promise<VoidEcho | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -342,6 +353,73 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(moodChecks)
       .where(eq(moodChecks.userId, userId))
       .orderBy(desc(moodChecks.createdAt));
+  }
+
+  async getVoiceJournalEntries(userId: number): Promise<VoiceJournalEntry[]> {
+    return await db.select().from(voiceJournalEntries)
+      .where(eq(voiceJournalEntries.userId, userId))
+      .orderBy(desc(voiceJournalEntries.createdAt));
+  }
+
+  async createVoiceJournalEntry(data: InsertVoiceJournalEntry): Promise<VoiceJournalEntry> {
+    const [created] = await db.insert(voiceJournalEntries).values(data).returning();
+    return created;
+  }
+
+  async deleteVoiceJournalEntry(id: number): Promise<boolean> {
+    const result = await db.delete(voiceJournalEntries).where(eq(voiceJournalEntries.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getVoiceFingerprints(userId: number, limit = 50): Promise<VoiceFingerprint[]> {
+    return await db.select().from(voiceFingerprints)
+      .where(eq(voiceFingerprints.userId, userId))
+      .orderBy(desc(voiceFingerprints.createdAt))
+      .limit(limit);
+  }
+
+  async createVoiceFingerprint(data: Partial<VoiceFingerprint> & { userId: number }): Promise<VoiceFingerprint> {
+    const [created] = await db.insert(voiceFingerprints).values(data as any).returning();
+    return created;
+  }
+
+  async getMoodPortraits(userId: number): Promise<MoodPortrait[]> {
+    return await db.select().from(moodPortraits)
+      .where(eq(moodPortraits.userId, userId))
+      .orderBy(desc(moodPortraits.createdAt));
+  }
+
+  async createMoodPortrait(data: Partial<MoodPortrait> & { userId: number; svgData: string }): Promise<MoodPortrait> {
+    const [created] = await db.insert(moodPortraits).values(data as any).returning();
+    return created;
+  }
+
+  async getVoidEchoes(userId: number): Promise<VoidEcho[]> {
+    return await db.select().from(voidEchoes)
+      .where(eq(voidEchoes.userId, userId))
+      .orderBy(desc(voidEchoes.createdAt));
+  }
+
+  async getPendingVoidEchoes(userId: number): Promise<VoidEcho[]> {
+    return await db.select().from(voidEchoes)
+      .where(and(
+        eq(voidEchoes.userId, userId),
+        eq(voidEchoes.isDelivered, false)
+      ))
+      .orderBy(voidEchoes.deliverAt);
+  }
+
+  async createVoidEcho(data: InsertVoidEcho): Promise<VoidEcho> {
+    const [created] = await db.insert(voidEchoes).values(data).returning();
+    return created;
+  }
+
+  async deliverVoidEcho(id: number): Promise<VoidEcho | undefined> {
+    const [updated] = await db.update(voidEchoes)
+      .set({ isDelivered: true, deliveredAt: new Date() })
+      .where(eq(voidEchoes.id, id))
+      .returning();
+    return updated;
   }
 }
 

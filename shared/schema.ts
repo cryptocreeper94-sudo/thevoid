@@ -425,6 +425,81 @@ export const insertSafetyPlanSchema = createInsertSchema(safetyPlans).omit({
 export type SafetyPlan = typeof safetyPlans.$inferSelect;
 export type InsertSafetyPlan = z.infer<typeof insertSafetyPlanSchema>;
 
+// === VOICE JOURNAL SCHEMA ===
+export const voiceJournalEntries = pgTable("voice_journal_entries", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  audioData: text("audio_data"),
+  rawTranscript: text("raw_transcript").notNull(),
+  cleanedTranscript: text("cleaned_transcript"),
+  isPlayMode: boolean("is_play_mode").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertVoiceJournalEntrySchema = createInsertSchema(voiceJournalEntries).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type VoiceJournalEntry = typeof voiceJournalEntries.$inferSelect;
+export type InsertVoiceJournalEntry = z.infer<typeof insertVoiceJournalEntrySchema>;
+
+// === VOICE FINGERPRINT SCHEMA ===
+export const voiceFingerprints = pgTable("voice_fingerprints", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  ventId: integer("vent_id"),
+  energy: integer("energy").notNull().default(50),
+  tension: integer("tension").notNull().default(50),
+  pace: integer("pace").notNull().default(50),
+  warmth: integer("warmth").notNull().default(50),
+  stability: integer("stability").notNull().default(50),
+  dominantEmotion: text("dominant_emotion").notNull().default("neutral"),
+  emotionConfidence: integer("emotion_confidence").notNull().default(50),
+  summary: text("summary"),
+  isPlayMode: boolean("is_play_mode").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type VoiceFingerprint = typeof voiceFingerprints.$inferSelect;
+
+// === MOOD PORTRAIT SCHEMA ===
+export const moodPortraits = pgTable("mood_portraits", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  svgData: text("svg_data").notNull(),
+  dominantMood: text("dominant_mood").notNull().default("neutral"),
+  colorPalette: jsonb("color_palette"),
+  dataPoints: integer("data_points").notNull().default(1),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type MoodPortrait = typeof moodPortraits.$inferSelect;
+
+// === VOID ECHO (TIME CAPSULE) SCHEMA ===
+export const voidEchoes = pgTable("void_echoes", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  audioData: text("audio_data"),
+  transcript: text("transcript").notNull(),
+  deliverAt: timestamp("deliver_at"),
+  deliverTrigger: text("deliver_trigger").default("date"),
+  isDelivered: boolean("is_delivered").default(false),
+  deliveredAt: timestamp("delivered_at"),
+  aiNote: text("ai_note"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertVoidEchoSchema = createInsertSchema(voidEchoes).omit({
+  id: true,
+  isDelivered: true,
+  deliveredAt: true,
+  createdAt: true,
+});
+
+export type VoidEcho = typeof voidEchoes.$inferSelect;
+export type InsertVoidEcho = z.infer<typeof insertVoidEchoSchema>;
+
 // === API REQUEST/RESPONSE TYPES ===
 export const createVentRequestSchema = z.object({
   audio: z.string(),
