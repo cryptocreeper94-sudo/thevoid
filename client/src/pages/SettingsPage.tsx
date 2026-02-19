@@ -50,7 +50,7 @@ function loadSettings() {
     defaultPersonality: "smart-ass",
     responseLength: "medium",
     autoPlayResponse: true,
-    autoSubmitOnSilence: false,
+    autoSubmitOnSilence: true,
     voicePreference: "default",
     hapticFeedback: true,
     showTranscript: true,
