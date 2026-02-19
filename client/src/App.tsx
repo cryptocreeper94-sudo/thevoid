@@ -26,12 +26,13 @@ import MoodAnalyticsPage from "@/pages/MoodAnalyticsPage";
 import VentLibraryPage from "@/pages/VentLibraryPage";
 import AffirmationsPage from "@/pages/AffirmationsPage";
 import RageRoomPage from "@/pages/RageRoomPage";
+import LandingPage from "@/pages/LandingPage";
 
 function ProtectedRoutes() {
   return (
     <PinGate>
       <Switch>
-        <Route path="/" component={RecordPage} />
+        <Route path="/home" component={RecordPage} />
         <Route path="/settings" component={SettingsPage} />
         <Route path="/conversations" component={ConversationsPage} />
         <Route path="/progress" component={GamificationPage} />
@@ -49,6 +50,7 @@ function ProtectedRoutes() {
 function Router() {
   return (
     <Switch>
+      <Route path="/" component={LandingPage} />
       <Route path="/privacy" component={PrivacyPage} />
       <Route path="/terms" component={TermsPage} />
       <Route path="/developer" component={DeveloperPage} />

@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { usePwaInstall } from "@/hooks/use-pwa-install";
 
 const navItems = [
-  { href: "/", icon: Home, label: "Home" },
+  { href: "/home", icon: Home, label: "Home" },
   { href: "/conversations", icon: MessageSquare, label: "Conversations" },
   { href: "/journal", icon: PenLine, label: "Journal" },
   { href: "/vent-library", icon: Library, label: "Vent Library" },
@@ -54,7 +54,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-xl">
       <div className="flex items-center justify-between px-4 py-1">
-        <Link href="/" data-testid="link-home">
+        <Link href="/home" data-testid="link-home">
           <span className="text-sm font-bold tracking-tight font-display text-foreground">
             THE VOID
           </span>
