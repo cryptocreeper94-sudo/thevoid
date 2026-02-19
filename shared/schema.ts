@@ -357,6 +357,74 @@ export const blogPosts = pgTable("blog_posts", {
 
 export type BlogPost = typeof blogPosts.$inferSelect;
 
+// === JOURNAL ENTRIES SCHEMA ===
+export const journalEntries = pgTable("journal_entries", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  content: text("content").notNull(),
+  moodTag: text("mood_tag"),
+  personality: text("personality"),
+  aiResponse: text("ai_response"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertJournalEntrySchema = createInsertSchema(journalEntries).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type JournalEntry = typeof journalEntries.$inferSelect;
+export type InsertJournalEntry = z.infer<typeof insertJournalEntrySchema>;
+
+// === DAILY AFFIRMATIONS SCHEMA ===
+export const affirmations = pgTable("affirmations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  content: text("content").notNull(),
+  context: text("context"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type Affirmation = typeof affirmations.$inferSelect;
+
+// === WEEKLY INSIGHTS SCHEMA ===
+export const weeklyInsights = pgTable("weekly_insights", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  weekStart: text("week_start").notNull(),
+  summary: text("summary").notNull(),
+  triggers: jsonb("triggers"),
+  growthNotes: text("growth_notes"),
+  moodTrend: text("mood_trend"),
+  ventCount: integer("vent_count").notNull().default(0),
+  avgMoodBefore: integer("avg_mood_before"),
+  avgMoodAfter: integer("avg_mood_after"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type WeeklyInsight = typeof weeklyInsights.$inferSelect;
+
+// === CRISIS SAFETY PLAN SCHEMA ===
+export const safetyPlans = pgTable("safety_plans", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().unique(),
+  warningSignals: jsonb("warning_signals"),
+  copingStrategies: jsonb("coping_strategies"),
+  supportContacts: jsonb("support_contacts"),
+  professionalContacts: jsonb("professional_contacts"),
+  safeEnvironment: text("safe_environment"),
+  reasonsToLive: jsonb("reasons_to_live"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertSafetyPlanSchema = createInsertSchema(safetyPlans).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type SafetyPlan = typeof safetyPlans.$inferSelect;
+export type InsertSafetyPlan = z.infer<typeof insertSafetyPlanSchema>;
+
 // === API REQUEST/RESPONSE TYPES ===
 export const createVentRequestSchema = z.object({
   audio: z.string(),
