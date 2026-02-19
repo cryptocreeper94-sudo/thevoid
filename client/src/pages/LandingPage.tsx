@@ -13,18 +13,18 @@ import heroWhiteMale from "@/assets/images/hero-white-male.png";
 const heroImages = [heroAsianFemale, heroBlackMale, heroHispanicFemale, heroWhiteMale];
 
 const features = [
-  { icon: Mic, title: "Voice Venting", desc: "Scream, rant, or whisper. AI listens and responds.", color: "text-cyan-400", bg: "bg-cyan-500/10" },
+  { icon: Mic, title: "Voice Venting", desc: "The core. Scream, rant, or whisper — AI listens and responds.", color: "text-cyan-400", bg: "bg-cyan-500/10" },
   { icon: Brain, title: "5 AI Personalities", desc: "Smart-Ass, Calming, Therapist, Hype Man, Roast Master.", color: "text-purple-400", bg: "bg-purple-500/10" },
+  { icon: Fingerprint, title: "Voice Fingerprint", desc: "AI reads emotional biomarkers from your vent sessions.", color: "text-violet-400", bg: "bg-violet-500/10" },
   { icon: Volume2, title: "Voice Responses", desc: "Hear your AI talk back with personality-matched voices.", color: "text-blue-400", bg: "bg-blue-500/10" },
-  { icon: PenLine, title: "Written Journal", desc: "Tag moods, write freely, get AI insights on entries.", color: "text-indigo-400", bg: "bg-indigo-500/10" },
+  { icon: Palette, title: "Mood Portrait", desc: "Your vents become evolving abstract artwork.", color: "text-fuchsia-400", bg: "bg-fuchsia-500/10" },
+  { icon: PenLine, title: "Voice & Written Journal", desc: "Speak or type. Tag moods. Get AI insights.", color: "text-indigo-400", bg: "bg-indigo-500/10" },
   { icon: BarChart3, title: "Mood Analytics", desc: "Track emotional trends with visual charts over time.", color: "text-teal-400", bg: "bg-teal-500/10" },
+  { icon: Timer, title: "Void Echo", desc: "Time capsule messages to your future self.", color: "text-amber-400", bg: "bg-amber-500/10" },
+  { icon: Flame, title: "Rage Room", desc: "Smash virtual objects. Feel better. No cleanup.", color: "text-red-400", bg: "bg-red-500/10" },
   { icon: Moon, title: "Sleep Sounds", desc: "Ambient soundscapes to drift off. Timer included.", color: "text-sky-400", bg: "bg-sky-500/10" },
   { icon: Sparkles, title: "Daily Affirmations", desc: "AI-generated words of power tailored to your journey.", color: "text-pink-400", bg: "bg-pink-500/10" },
-  { icon: Flame, title: "Rage Room", desc: "Smash virtual objects. Feel better. No cleanup.", color: "text-red-400", bg: "bg-red-500/10" },
   { icon: Shield, title: "Crisis Toolkit", desc: "Breathing, grounding, hotlines. Always there for you.", color: "text-emerald-400", bg: "bg-emerald-500/10" },
-  { icon: Fingerprint, title: "Voice Fingerprint", desc: "AI reads your emotional biomarkers through vocal analysis.", color: "text-violet-400", bg: "bg-violet-500/10" },
-  { icon: Palette, title: "Mood Portrait", desc: "AI generates evolving abstract art from your emotions.", color: "text-fuchsia-400", bg: "bg-fuchsia-500/10" },
-  { icon: Timer, title: "Void Echo", desc: "Time capsule messages to your future self.", color: "text-amber-400", bg: "bg-amber-500/10" },
 ];
 
 const stats = [
@@ -175,9 +175,19 @@ export default function LandingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 1.3 }}
-            className="text-sm text-white/40 tracking-widest uppercase mb-10"
+            className="text-sm text-white/40 max-w-md leading-relaxed mb-2"
           >
-            Voice-first AI wellness platform
+            The first app built for venting, ranting, and letting it all out.
+            AI listens, responds, and helps you process — on your terms.
+          </motion.p>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 1.5 }}
+            className="text-[10px] text-white/25 tracking-[0.3em] uppercase mb-10"
+          >
+            Voice-powered emotional release + 20 wellness tools
           </motion.p>
 
           <motion.div
@@ -260,24 +270,24 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <p className="text-xs text-cyan-400 tracking-[0.3em] uppercase mb-3">Everything you need</p>
+            <p className="text-xs text-cyan-400 tracking-[0.3em] uppercase mb-3">Built around venting</p>
             <h2 className="text-3xl sm:text-4xl font-bold text-white font-display mb-4" data-testid="text-features-title">
-              One app. Twenty tools. Zero BS.
+              Let it out. Then level up.
             </h2>
             <p className="text-sm text-white/40 max-w-lg mx-auto">
-              Meditation, AI therapy, mood tracking, venting, journaling, sleep sounds, and more.
-              All bundled into one premium experience.
+              Start by venting — that's the core. Then explore 20+ tools designed to help you
+              process, reflect, and recover. All in one place.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {features.map((f, i) => (
               <motion.div
                 key={f.title}
                 data-feature-idx={i}
                 initial={{ opacity: 0, y: 30 }}
                 animate={visibleFeatures > i ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: (i % 3) * 0.1, duration: 0.5 }}
+                transition={{ delay: (i % 4) * 0.08, duration: 0.5 }}
               >
                 <GlassCard className="p-5 h-full" hoverEffect>
                   <div className="flex items-start gap-4">
@@ -307,12 +317,17 @@ export default function LandingPage() {
           >
             <p className="text-xs text-purple-400 tracking-[0.3em] uppercase mb-3">Why THE VOID</p>
             <h2 className="text-3xl sm:text-4xl font-bold text-white font-display mb-4">
-              3x the value. One subscription.
+              Vent first. Everything else follows.
             </h2>
+            <p className="text-sm text-white/40 max-w-md mx-auto mb-2">
+              No other app starts with what you actually need — to let it out. Then it wraps
+              meditation, therapy, and tracking around that release.
+            </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
+              { title: "Nothing like it", items: ["Voice Venting", "Voice Fingerprint", "Mood Portraits", "Void Echo"], icon: Mic, highlight: true },
               { title: "Calm / Headspace", items: ["Guided Breathing", "Sleep Sounds", "Zen Zone", "Meditation Timer"], icon: Moon },
               { title: "Woebot / Therapy", items: ["5 AI Personalities", "Voice Conversations", "Safety Plans", "Crisis Toolkit"], icon: Brain },
               { title: "Daylio / Tracking", items: ["Mood Analytics", "Journal", "Streaks & Badges", "Daily Affirmations"], icon: BarChart3 },
@@ -324,11 +339,11 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.15, duration: 0.5 }}
               >
-                <GlassCard className="p-6 h-full text-center">
-                  <div className="inline-flex p-3 rounded-xl bg-white/5 mb-4">
-                    <col.icon className="w-6 h-6 text-purple-400" />
+                <GlassCard className={`p-6 h-full text-center ${(col as any).highlight ? "border-cyan-500/30" : ""}`}>
+                  <div className={`inline-flex p-3 rounded-xl mb-4 ${(col as any).highlight ? "bg-cyan-500/10" : "bg-white/5"}`}>
+                    <col.icon className={`w-6 h-6 ${(col as any).highlight ? "text-cyan-400" : "text-purple-400"}`} />
                   </div>
-                  <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Replaces</p>
+                  <p className="text-xs text-white/40 uppercase tracking-wider mb-1">{(col as any).highlight ? "Only in THE VOID" : "Replaces"}</p>
                   <h3 className="text-base font-bold text-white mb-4 font-display" data-testid={`text-replaces-${i}`}>{col.title}</h3>
                   <ul className="space-y-2">
                     {col.items.map((item) => (
@@ -385,9 +400,9 @@ export default function LandingPage() {
                 {[
                   "Unlimited Venting",
                   "All 5 AI Personalities",
-                  "Voice Responses",
+                  "Voice Fingerprint",
                   "Journal & Analytics",
-                  "Sleep Sounds & Zen",
+                  "Mood Portraits",
                   "Founders Badge",
                 ].map((perk) => (
                   <div key={perk} className="flex items-center gap-2 text-xs text-white/60">
@@ -425,10 +440,10 @@ export default function LandingPage() {
           className="relative z-10 max-w-2xl mx-auto text-center"
         >
           <h2 className="text-3xl sm:text-5xl font-black text-white font-display mb-4 tracking-wide" data-testid="text-cta-title">
-            Ready to enter?
+            Ready to let it out?
           </h2>
           <p className="text-base text-white/50 mb-8 max-w-md mx-auto">
-            The void is waiting. Your AI companions are standing by.
+            The void is waiting. Say what you need to say. Your AI companions are standing by.
           </p>
           <Button
             onClick={handleEnter}
