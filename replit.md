@@ -34,6 +34,7 @@ The application is built with a React + Vite frontend utilizing Tailwind CSS, Fr
 - **Gamification System**: Streak tracking (daily venting streaks), achievements (10 unlockable badges), daily prompts (rotated by day of week), and mood check-ins (before/after venting). Protected page at `/progress`. Backend routes under `/api/gamification/*`.
 - **AI Blog**: SEO-optimized blog at `/blog` with 4 seed articles on mental wellness. Markdown-like content rendering, category badges, read time estimates. Backend routes at `/api/blog` and `/api/blog/:slug`. Meta descriptions and Open Graph tags for SEO.
 - **Zen Zone**: Meditation page at `/zen` with guided breathing exercises (Box Breathing, 4-7-8, Calming Breath), ambient sound selector (Rain, Ocean, Forest, Fire), and customizable meditation timer (2-20 minutes).
+- **PWA / Google Play Ready**: Full Progressive Web App setup with manifest.json (categories, shortcuts, maskable icons), service worker with offline fallback, branded offline.html page. Ready for TWA (Trusted Web Activity) packaging via Bubblewrap for Google Play Store distribution.
 
 ## External Dependencies
 - **AI Services**: OpenAI (GPT-5.2, gpt-4o-mini-transcribe for transcription)
