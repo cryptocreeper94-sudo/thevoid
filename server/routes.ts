@@ -1350,6 +1350,273 @@ CRITICAL RULES:
     } catch (e) { res.status(500).json({ message: "Failed to get blog post" }); }
   });
 
+  // === JOURNAL ROUTES ===
+  app.get("/api/journal", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.query.userId as string);
+      if (!userId) return res.json([]);
+      const entries = await storage.getJournalEntries(userId);
+      res.json(entries);
+    } catch (e) { res.status(500).json({ message: "Failed to fetch journal entries" }); }
+  });
+
+  app.post("/api/journal", async (req: Request, res: Response) => {
+    try {
+      const data = z.object({
+        userId: z.number(),
+        content: z.string().min(1),
+        moodTag: z.string().optional(),
+        personality: z.string().optional(),
+      }).parse(req.body);
+
+      let aiResponse: string | undefined;
+      if (data.personality) {
+        const personalityPrompts: Record<string, string> = {
+          "smart-ass": "You're a witty, sarcastic friend who responds to journal entries with clever observations and humor while still being supportive.",
+          "calming": "You're a calming, zen presence who responds to journal entries with soothing, peaceful wisdom.",
+          "therapist": "You're a compassionate therapist who responds to journal entries with professional insights and gentle guidance.",
+          "hype-man": "You're an enthusiastic hype man who responds to journal entries with energetic encouragement and positivity.",
+          "roast-master": "You're a roast master who responds to journal entries with playful roasts while still being empathetic at heart.",
+        };
+        const systemPrompt = personalityPrompts[data.personality] || personalityPrompts["calming"];
+        const response = await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: systemPrompt + " Keep response under 150 words." },
+            { role: "user", content: data.content },
+          ],
+          max_tokens: 300,
+        });
+        aiResponse = response.choices[0]?.message?.content || undefined;
+      }
+
+      const entry = await storage.createJournalEntry({
+        userId: data.userId,
+        content: data.content,
+        moodTag: data.moodTag,
+        personality: data.personality,
+        aiResponse,
+      });
+      res.json(entry);
+    } catch (e: any) {
+      console.error("Journal create error:", e);
+      res.status(500).json({ message: "Failed to create journal entry" });
+    }
+  });
+
+  app.delete("/api/journal/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id as string);
+      const deleted = await storage.deleteJournalEntry(id);
+      if (!deleted) return res.status(404).json({ message: "Entry not found" });
+      res.json({ success: true });
+    } catch (e) { res.status(500).json({ message: "Failed to delete journal entry" }); }
+  });
+
+  // === AFFIRMATIONS ROUTES ===
+  app.get("/api/affirmations", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.query.userId as string);
+      if (!userId) return res.json([]);
+      const items = await storage.getAffirmations(userId);
+      res.json(items);
+    } catch (e) { res.status(500).json({ message: "Failed to fetch affirmations" }); }
+  });
+
+  app.post("/api/affirmations/generate", async (req: Request, res: Response) => {
+    try {
+      const data = z.object({ userId: z.number() }).parse(req.body);
+      const recentVents = await storage.getVents(String(data.userId));
+      const ventContext = recentVents.slice(0, 5).map(v => v.transcript).join("\n");
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are a deeply empathetic affirmation generator for THE VOID app. Based on the user's recent venting topics, generate 3 personalized, powerful affirmations that directly address their struggles and reframe them positively. Each affirmation should be 1-2 sentences. Format as a JSON array of strings. Make them feel personal, not generic.",
+          },
+          {
+            role: "user",
+            content: ventContext || "The user is new and hasn't vented yet. Generate 3 universal but powerful affirmations about self-worth, resilience, and growth.",
+          },
+        ],
+        max_tokens: 500,
+        response_format: { type: "json_object" },
+      });
+
+      const parsed = JSON.parse(response.choices[0]?.message?.content || '{"affirmations":[]}');
+      const affirmationTexts: string[] = parsed.affirmations || parsed.items || Object.values(parsed).flat();
+
+      const created = [];
+      for (const text of affirmationTexts) {
+        if (typeof text === "string" && text.trim()) {
+          const aff = await storage.createAffirmation(data.userId, text.trim(), ventContext?.substring(0, 200));
+          created.push(aff);
+        }
+      }
+      res.json(created);
+    } catch (e: any) {
+      console.error("Affirmation generation error:", e);
+      res.status(500).json({ message: "Failed to generate affirmations" });
+    }
+  });
+
+  // === WEEKLY INSIGHTS ROUTES ===
+  app.get("/api/insights", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.query.userId as string);
+      if (!userId) return res.json([]);
+      const insights = await storage.getWeeklyInsights(userId);
+      res.json(insights);
+    } catch (e) { res.status(500).json({ message: "Failed to fetch insights" }); }
+  });
+
+  app.post("/api/insights/generate", async (req: Request, res: Response) => {
+    try {
+      const data = z.object({ userId: z.number() }).parse(req.body);
+      const now = new Date();
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const weekStart = weekAgo.toISOString().split("T")[0];
+
+      const recentVents = await storage.getVents(String(data.userId));
+      const weekVents = recentVents.filter(v => v.createdAt && new Date(v.createdAt) >= weekAgo);
+      const moods = await storage.getMoodChecks(data.userId);
+      const weekMoods = moods.filter(m => m.createdAt && new Date(m.createdAt) >= weekAgo);
+
+      const avgBefore = weekMoods.length > 0 ? Math.round(weekMoods.reduce((s, m) => s + m.moodBefore, 0) / weekMoods.length) : undefined;
+      const avgAfter = weekMoods.length > 0 ? Math.round(weekMoods.filter(m => m.moodAfter).reduce((s, m) => s + (m.moodAfter || 0), 0) / weekMoods.filter(m => m.moodAfter).length) : undefined;
+
+      const ventSummary = weekVents.slice(0, 10).map(v => `[${v.personality}] ${v.transcript?.substring(0, 100)}`).join("\n");
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are an insightful emotional wellness analyst for THE VOID app. Analyze the user's weekly venting data and provide a JSON response with: summary (2-3 sentence overview of their week), triggers (array of strings - key emotional triggers identified), growthNotes (1-2 sentences about positive growth or progress), moodTrend (one word: improving, stable, declining, or mixed).",
+          },
+          {
+            role: "user",
+            content: `This week: ${weekVents.length} vents. Average mood before venting: ${avgBefore || 'N/A'}/5, after: ${avgAfter || 'N/A'}/5.\n\nVent topics:\n${ventSummary || "No vents this week."}`,
+          },
+        ],
+        max_tokens: 500,
+        response_format: { type: "json_object" },
+      });
+
+      const parsed = JSON.parse(response.choices[0]?.message?.content || "{}");
+      const insight = await storage.createWeeklyInsight({
+        userId: data.userId,
+        weekStart,
+        summary: parsed.summary || "Your weekly insight is being prepared.",
+        triggers: parsed.triggers || [],
+        growthNotes: parsed.growthNotes,
+        moodTrend: parsed.moodTrend || "stable",
+        ventCount: weekVents.length,
+        avgMoodBefore: avgBefore,
+        avgMoodAfter: avgAfter,
+      });
+      res.json(insight);
+    } catch (e: any) {
+      console.error("Insight generation error:", e);
+      res.status(500).json({ message: "Failed to generate weekly insight" });
+    }
+  });
+
+  // === MOOD ANALYTICS ROUTES ===
+  app.get("/api/mood/analytics", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.query.userId as string);
+      if (!userId) return res.json({ moods: [], summary: {} });
+      const startDate = req.query.startDate as string;
+      const endDate = req.query.endDate as string;
+      const moods = await storage.getMoodChecks(userId, startDate, endDate);
+
+      const totalChecks = moods.length;
+      const avgBefore = totalChecks > 0 ? +(moods.reduce((s, m) => s + m.moodBefore, 0) / totalChecks).toFixed(1) : 0;
+      const withAfter = moods.filter(m => m.moodAfter !== null);
+      const avgAfter = withAfter.length > 0 ? +(withAfter.reduce((s, m) => s + (m.moodAfter || 0), 0) / withAfter.length).toFixed(1) : 0;
+      const avgImprovement = totalChecks > 0 && withAfter.length > 0 ? +(avgAfter - avgBefore).toFixed(1) : 0;
+
+      const dailyData: Record<string, { before: number[]; after: number[] }> = {};
+      moods.forEach(m => {
+        const day = m.createdAt ? new Date(m.createdAt).toISOString().split("T")[0] : "unknown";
+        if (!dailyData[day]) dailyData[day] = { before: [], after: [] };
+        dailyData[day].before.push(m.moodBefore);
+        if (m.moodAfter !== null) dailyData[day].after.push(m.moodAfter!);
+      });
+
+      const chartData = Object.entries(dailyData).map(([date, vals]) => ({
+        date,
+        avgBefore: +(vals.before.reduce((a, b) => a + b, 0) / vals.before.length).toFixed(1),
+        avgAfter: vals.after.length > 0 ? +(vals.after.reduce((a, b) => a + b, 0) / vals.after.length).toFixed(1) : null,
+      })).sort((a, b) => a.date.localeCompare(b.date));
+
+      res.json({
+        moods,
+        summary: { totalChecks, avgBefore, avgAfter, avgImprovement },
+        chartData,
+      });
+    } catch (e) { res.status(500).json({ message: "Failed to fetch mood analytics" }); }
+  });
+
+  // === SAFETY PLAN ROUTES ===
+  app.get("/api/safety-plan", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.query.userId as string);
+      if (!userId) return res.json(null);
+      const plan = await storage.getSafetyPlan(userId);
+      res.json(plan || null);
+    } catch (e) { res.status(500).json({ message: "Failed to fetch safety plan" }); }
+  });
+
+  app.post("/api/safety-plan", async (req: Request, res: Response) => {
+    try {
+      const data = z.object({
+        userId: z.number(),
+        warningSignals: z.array(z.string()).optional(),
+        copingStrategies: z.array(z.string()).optional(),
+        supportContacts: z.array(z.object({ name: z.string(), phone: z.string() })).optional(),
+        professionalContacts: z.array(z.object({ name: z.string(), phone: z.string() })).optional(),
+        safeEnvironment: z.string().optional(),
+        reasonsToLive: z.array(z.string()).optional(),
+      }).parse(req.body);
+      const plan = await storage.upsertSafetyPlan(data.userId, {
+        warningSignals: data.warningSignals,
+        copingStrategies: data.copingStrategies,
+        supportContacts: data.supportContacts,
+        professionalContacts: data.professionalContacts,
+        safeEnvironment: data.safeEnvironment,
+        reasonsToLive: data.reasonsToLive,
+      });
+      res.json(plan);
+    } catch (e: any) {
+      console.error("Safety plan error:", e);
+      res.status(500).json({ message: "Failed to save safety plan" });
+    }
+  });
+
+  // === VENT LIBRARY ROUTES ===
+  app.get("/api/vent-library", async (req: Request, res: Response) => {
+    try {
+      const userId = req.query.userId as string;
+      if (!userId) return res.json([]);
+      const allVents = await storage.getVents(userId);
+      const personality = req.query.personality as string;
+      const search = req.query.search as string;
+      let filtered = allVents;
+      if (personality && personality !== "all") {
+        filtered = filtered.filter(v => v.personality === personality);
+      }
+      if (search) {
+        const lower = search.toLowerCase();
+        filtered = filtered.filter(v => v.transcript?.toLowerCase().includes(lower) || v.response?.toLowerCase().includes(lower));
+      }
+      res.json(filtered);
+    } catch (e) { res.status(500).json({ message: "Failed to fetch vent library" }); }
+  });
+
   return httpServer;
 }
 

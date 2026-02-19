@@ -1,6 +1,6 @@
 import { db } from "./db";
-import { vents, roadmapItems, whitelistedUsers, subscriptions, dailyVentUsage, contactMessages, userSettings, userCredits, conversationThreads, threadMessages, type InsertVent, type Vent, type InsertRoadmapItem, type RoadmapItem, type InsertWhitelistedUser, type WhitelistedUser, type Subscription, type DailyVentUsage, type ContactMessage, type UserSettings, type UserCredit, type ConversationThread, type ThreadMessage, type InsertConversationThread, type InsertThreadMessage } from "@shared/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { vents, roadmapItems, whitelistedUsers, subscriptions, dailyVentUsage, contactMessages, userSettings, userCredits, conversationThreads, threadMessages, journalEntries, affirmations, weeklyInsights, safetyPlans, moodChecks, type InsertVent, type Vent, type InsertRoadmapItem, type RoadmapItem, type InsertWhitelistedUser, type WhitelistedUser, type Subscription, type DailyVentUsage, type ContactMessage, type UserSettings, type UserCredit, type ConversationThread, type ThreadMessage, type InsertConversationThread, type InsertThreadMessage, type JournalEntry, type InsertJournalEntry, type Affirmation, type WeeklyInsight, type SafetyPlan, type InsertSafetyPlan, type MoodCheck } from "@shared/schema";
+import { eq, desc, and, gte, lte, sql } from "drizzle-orm";
 
 export interface IStorage {
   createVent(vent: InsertVent): Promise<Vent>;
@@ -36,6 +36,16 @@ export interface IStorage {
   deleteConversationThread(id: number): Promise<boolean>;
   getThreadMessages(threadId: number): Promise<ThreadMessage[]>;
   createThreadMessage(data: InsertThreadMessage): Promise<ThreadMessage>;
+  getJournalEntries(userId: number): Promise<JournalEntry[]>;
+  createJournalEntry(data: InsertJournalEntry): Promise<JournalEntry>;
+  deleteJournalEntry(id: number): Promise<boolean>;
+  getAffirmations(userId: number, limit?: number): Promise<Affirmation[]>;
+  createAffirmation(userId: number, content: string, context?: string): Promise<Affirmation>;
+  getWeeklyInsights(userId: number): Promise<WeeklyInsight[]>;
+  createWeeklyInsight(data: Partial<WeeklyInsight> & { userId: number; weekStart: string; summary: string }): Promise<WeeklyInsight>;
+  getSafetyPlan(userId: number): Promise<SafetyPlan | undefined>;
+  upsertSafetyPlan(userId: number, data: Partial<SafetyPlan>): Promise<SafetyPlan>;
+  getMoodChecks(userId: number, startDate?: string, endDate?: string): Promise<MoodCheck[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -259,6 +269,79 @@ export class DatabaseStorage implements IStorage {
   async createThreadMessage(data: InsertThreadMessage): Promise<ThreadMessage> {
     const [created] = await db.insert(threadMessages).values(data).returning();
     return created;
+  }
+  async getJournalEntries(userId: number): Promise<JournalEntry[]> {
+    return await db.select().from(journalEntries)
+      .where(eq(journalEntries.userId, userId))
+      .orderBy(desc(journalEntries.createdAt));
+  }
+
+  async createJournalEntry(data: InsertJournalEntry): Promise<JournalEntry> {
+    const [created] = await db.insert(journalEntries).values(data).returning();
+    return created;
+  }
+
+  async deleteJournalEntry(id: number): Promise<boolean> {
+    const result = await db.delete(journalEntries).where(eq(journalEntries.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAffirmations(userId: number, limit = 10): Promise<Affirmation[]> {
+    return await db.select().from(affirmations)
+      .where(eq(affirmations.userId, userId))
+      .orderBy(desc(affirmations.createdAt))
+      .limit(limit);
+  }
+
+  async createAffirmation(userId: number, content: string, context?: string): Promise<Affirmation> {
+    const [created] = await db.insert(affirmations).values({ userId, content, context }).returning();
+    return created;
+  }
+
+  async getWeeklyInsights(userId: number): Promise<WeeklyInsight[]> {
+    return await db.select().from(weeklyInsights)
+      .where(eq(weeklyInsights.userId, userId))
+      .orderBy(desc(weeklyInsights.createdAt));
+  }
+
+  async createWeeklyInsight(data: Partial<WeeklyInsight> & { userId: number; weekStart: string; summary: string }): Promise<WeeklyInsight> {
+    const [created] = await db.insert(weeklyInsights).values(data as any).returning();
+    return created;
+  }
+
+  async getSafetyPlan(userId: number): Promise<SafetyPlan | undefined> {
+    const [plan] = await db.select().from(safetyPlans).where(eq(safetyPlans.userId, userId));
+    return plan;
+  }
+
+  async upsertSafetyPlan(userId: number, data: Partial<SafetyPlan>): Promise<SafetyPlan> {
+    const existing = await this.getSafetyPlan(userId);
+    if (existing) {
+      const [updated] = await db.update(safetyPlans)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(safetyPlans.userId, userId))
+        .returning();
+      return updated;
+    }
+    const [created] = await db.insert(safetyPlans)
+      .values({ userId, ...data } as any)
+      .returning();
+    return created;
+  }
+
+  async getMoodChecks(userId: number, startDate?: string, endDate?: string): Promise<MoodCheck[]> {
+    if (startDate && endDate) {
+      return await db.select().from(moodChecks)
+        .where(and(
+          eq(moodChecks.userId, userId),
+          gte(moodChecks.createdAt, new Date(startDate)),
+          lte(moodChecks.createdAt, new Date(endDate))
+        ))
+        .orderBy(desc(moodChecks.createdAt));
+    }
+    return await db.select().from(moodChecks)
+      .where(eq(moodChecks.userId, userId))
+      .orderBy(desc(moodChecks.createdAt));
   }
 }
 
