@@ -13,11 +13,12 @@ import rateLimit from "express-rate-limit";
 import { registerUser, loginUser, getUserFromToken } from "./trustlayer-sso";
 import { setupChatWebSocket } from "./chat-ws";
 import { seedChatChannels } from "./seedChat";
-import { chatChannels, referrals, voidStamps, chatUsers, subscriptions, achievements, userAchievements, ventStreaks, dailyPrompts, moodChecks, blogPosts } from "@shared/schema";
+import { chatChannels, referrals, voidStamps, chatUsers, subscriptions, achievements, userAchievements, ventStreaks, dailyPrompts, moodChecks, blogPosts, vents, voiceJournalEntries, voidEchoes, moodPortraits } from "@shared/schema";
 import { db } from "./db";
 import { mintVoidStamp, verifyVoidStamp, getStampStats } from "./blockchain-hallmark";
 import { eq, and, count as dbCount } from "drizzle-orm";
 import { uploadMedia, getMedia, deleteMedia, getUserMedia, isTrustVaultMediaId, healthCheck as tvHealthCheck } from "./trustvault";
+import crypto from "crypto";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-04-30.basil" as any });
 
@@ -2034,16 +2035,65 @@ Blend emotions together like watercolors. Make it beautiful and unique. Return O
 
   app.post("/api/trustvault/webhook", async (req: Request, res: Response) => {
     try {
+      const signature = req.headers["x-trustvault-signature"] as string;
+      const timestampHeader = req.headers["x-trustvault-timestamp"] as string;
+
+      if (!signature || !timestampHeader) {
+        console.warn("[TrustVault Webhook] Missing signature or timestamp headers");
+        return res.status(401).json({ error: "Missing signature headers" });
+      }
+
+      const apiSecret = process.env.TRUSTVAULT_API_KEY;
+      if (!apiSecret) {
+        console.error("[TrustVault Webhook] TRUSTVAULT_API_KEY not configured");
+        return res.status(500).json({ error: "Webhook verification not configured" });
+      }
+
+      const payload = JSON.stringify(req.body);
+      const signedPayload = `${timestampHeader}.${payload}`;
+      const expectedSignature = crypto
+        .createHmac("sha256", apiSecret)
+        .update(signedPayload)
+        .digest("hex");
+
+      if (!crypto.timingSafeEqual(
+        Buffer.from(signature, "hex"),
+        Buffer.from(expectedSignature, "hex")
+      )) {
+        console.warn("[TrustVault Webhook] Invalid signature — rejecting event");
+        return res.status(401).json({ error: "Invalid signature" });
+      }
+
+      const MAX_AGE_MS = 5 * 60 * 1000;
+      const eventAge = Date.now() - parseInt(timestampHeader, 10);
+      if (isNaN(eventAge) || eventAge > MAX_AGE_MS) {
+        console.warn("[TrustVault Webhook] Stale event rejected (age: " + eventAge + "ms)");
+        return res.status(401).json({ error: "Stale event" });
+      }
+
       const { event, mediaId, userId, timestamp } = req.body;
-      console.log(`[TrustVault Webhook] ${event} — mediaId: ${mediaId}, user: ${userId}, at: ${timestamp}`);
+      console.log(`[TrustVault Webhook] Verified ${event} — mediaId: ${mediaId}, user: ${userId}, at: ${timestamp}`);
+
       if (event === "media.deleted") {
-        console.log(`[TrustVault] Media ${mediaId} was deleted externally for user ${userId}`);
+        console.log(`[TrustVault] Media ${mediaId} deleted externally — clearing local references`);
+        await Promise.allSettled([
+          db.update(vents).set({ audioUrl: null }).where(eq(vents.audioUrl, mediaId)),
+          db.update(voiceJournalEntries).set({ audioData: null }).where(eq(voiceJournalEntries.audioData, mediaId)),
+          db.update(voidEchoes).set({ audioData: null }).where(eq(voidEchoes.audioData, mediaId)),
+        ]);
       }
+
       if (event === "media.flagged") {
-        console.log(`[TrustVault] Media ${mediaId} was flagged for user ${userId}`);
+        console.log(`[TrustVault] Media ${mediaId} flagged for user ${userId} — logged for review`);
       }
+
+      if (event === "service.quota_warning") {
+        console.warn(`[TrustVault] Storage quota warning for user ${userId}: approaching limit`);
+      }
+
       res.json({ received: true });
-    } catch (e) {
+    } catch (e: any) {
+      console.error("[TrustVault Webhook] Error processing event:", e?.message || e);
       res.status(200).json({ received: true });
     }
   });
