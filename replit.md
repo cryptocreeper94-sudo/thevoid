@@ -42,6 +42,7 @@ The application is built with a React + Vite frontend utilizing Tailwind CSS, Fr
 - **Virtual Rage Room**: Interactive stress-relief page at `/rage-room` with clickable destructible glass objects, Framer Motion smash animations with fragments, session stats, streak tracking. Client-side only.
 - **Sleep Sounds**: Ambient soundscape mixer at `/sleep-sounds` using Web Audio API (Rain, Ocean, Crickets, Thunder, Wind, Fireplace), sleep timer with volume fade, and 4-7-8 breathing guide. Client-side audio generation.
 - **PWA / Google Play Ready**: Full Progressive Web App setup with manifest.json (categories, shortcuts, maskable icons), service worker with offline fallback, branded offline.html page. Ready for TWA (Trusted Web Activity) packaging via Bubblewrap for Google Play Store distribution.
+- **TrustVault Integration**: Encrypted ecosystem-wide media storage via TrustVault (trustvault.replit.app). Premium users' vent audio, voice journals, void echoes, and mood portraits are automatically archived to TrustVault with encrypted storage. Service client at `server/trustvault.ts` with auth, token caching, upload/retrieve/delete/batch methods. API routes: `/api/trustvault/media/:mediaId` (retrieve), `/api/trustvault/library/:userId` (browse), `/api/trustvault/health` (status), `/api/trustvault/webhook` (event receiver). Non-blocking uploads — failures log but don't break core flows. Free users: audio transcribed then discarded.
 
 ## Mobile App Packaging (Capacitor)
 - **Capacitor** wraps the existing web app for native Android and iOS distribution
