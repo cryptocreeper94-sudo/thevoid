@@ -2049,25 +2049,32 @@ Blend emotions together like watercolors. Make it beautiful and unique. Return O
         return res.status(500).json({ error: "Webhook verification not configured" });
       }
 
-      const payload = JSON.stringify(req.body);
-      const signedPayload = `${timestampHeader}.${payload}`;
+      if (!/^[a-f0-9]{64}$/i.test(signature)) {
+        console.warn("[TrustVault Webhook] Malformed signature header");
+        return res.status(401).json({ error: "Malformed signature" });
+      }
+
+      const rawBody = req.rawBody as Buffer;
+      const rawPayload = rawBody ? rawBody.toString("utf8") : JSON.stringify(req.body);
+      const signedPayload = `${timestampHeader}.${rawPayload}`;
       const expectedSignature = crypto
         .createHmac("sha256", apiSecret)
         .update(signedPayload)
         .digest("hex");
 
-      if (!crypto.timingSafeEqual(
-        Buffer.from(signature, "hex"),
-        Buffer.from(expectedSignature, "hex")
-      )) {
+      const sigBuffer = Buffer.from(signature, "hex");
+      const expectedBuffer = Buffer.from(expectedSignature, "hex");
+      if (sigBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(sigBuffer, expectedBuffer)) {
         console.warn("[TrustVault Webhook] Invalid signature — rejecting event");
         return res.status(401).json({ error: "Invalid signature" });
       }
 
+      const tsValue = parseInt(timestampHeader, 10);
+      const tsMs = tsValue < 1e12 ? tsValue * 1000 : tsValue;
       const MAX_AGE_MS = 5 * 60 * 1000;
-      const eventAge = Date.now() - parseInt(timestampHeader, 10);
-      if (isNaN(eventAge) || eventAge > MAX_AGE_MS) {
-        console.warn("[TrustVault Webhook] Stale event rejected (age: " + eventAge + "ms)");
+      const eventAge = Date.now() - tsMs;
+      if (isNaN(eventAge) || eventAge < 0 || eventAge > MAX_AGE_MS) {
+        console.warn("[TrustVault Webhook] Stale or future event rejected (age: " + eventAge + "ms)");
         return res.status(401).json({ error: "Stale event" });
       }
 
@@ -2080,6 +2087,7 @@ Blend emotions together like watercolors. Make it beautiful and unique. Return O
           db.update(vents).set({ audioUrl: null }).where(eq(vents.audioUrl, mediaId)),
           db.update(voiceJournalEntries).set({ audioData: null }).where(eq(voiceJournalEntries.audioData, mediaId)),
           db.update(voidEchoes).set({ audioData: null }).where(eq(voidEchoes.audioData, mediaId)),
+          db.update(moodPortraits).set({ svgData: "" }).where(eq(moodPortraits.svgData, mediaId)),
         ]);
       }
 
@@ -2094,7 +2102,7 @@ Blend emotions together like watercolors. Make it beautiful and unique. Return O
       res.json({ received: true });
     } catch (e: any) {
       console.error("[TrustVault Webhook] Error processing event:", e?.message || e);
-      res.status(200).json({ received: true });
+      return res.status(500).json({ error: "Internal webhook error" });
     }
   });
 
