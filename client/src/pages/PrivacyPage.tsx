@@ -1,9 +1,11 @@
+import { useState, useRef } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Shield, Phone, MessageCircle, ExternalLink, Lock, Eye, Trash2, UserX, FileText } from "lucide-react";
+import { Shield, Phone, MessageCircle, ExternalLink, Lock, Eye, Trash2, UserX, FileText, ChevronLeft, ChevronRight } from "lucide-react";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useMeta } from "@/hooks/use-meta";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
 import collectionImg from "@/assets/images/privacy-collection.png";
 import usageImg from "@/assets/images/privacy-usage.png";
 import securityImg from "@/assets/images/privacy-security.png";
@@ -84,6 +86,22 @@ const crisisResources = [
 export default function PrivacyPage() {
   useDocumentTitle("Privacy Policy");
   useMeta({ description: "How THE VOID collects, uses, and safeguards your information. Privacy policy by DarkWave Studios.", ogTitle: "Privacy Policy — THE VOID", ogDescription: "Your privacy matters. Learn how we protect your data.", canonicalPath: "/privacy" });
+  const [sIdx, setSIdx] = useState(0);
+  const touchRef = useRef<{ x: number } | null>(null);
+  const pageSize = 2;
+  const totalPages = Math.ceil(sections.length / pageSize);
+  const currentSections = sections.slice(sIdx * pageSize, (sIdx + 1) * pageSize);
+
+  const prev = () => setSIdx((i) => Math.max(0, i - 1));
+  const next = () => setSIdx((i) => Math.min(totalPages - 1, i + 1));
+  const onTouchStart = (e: React.TouchEvent) => { touchRef.current = { x: e.touches[0].clientX }; };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (!touchRef.current) return;
+    const dx = e.changedTouches[0].clientX - touchRef.current.x;
+    if (Math.abs(dx) > 40) { dx < 0 ? next() : prev(); }
+    touchRef.current = null;
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8 max-w-5xl">
@@ -117,34 +135,56 @@ export default function PrivacyPage() {
             </GlassCard>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {sections.map((section) => (
-              <motion.div key={section.title} variants={fadeUp}>
-                <GlassCard className="h-full overflow-hidden" hoverEffect>
-                  <div className="relative h-32 overflow-hidden">
-                    <img src={section.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/90" />
-                    <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-white/10 backdrop-blur-sm">
-                        <section.icon className="w-5 h-5 text-white" />
+          <motion.div variants={fadeUp}>
+            <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={sIdx}
+                  initial={{ opacity: 0, x: 30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -30 }}
+                  transition={{ duration: 0.3 }}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                >
+                  {currentSections.map((section) => (
+                    <GlassCard key={section.title} className="h-full overflow-hidden" hoverEffect>
+                      <div className="relative h-32 overflow-hidden">
+                        <img src={section.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/90" />
+                        <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-white/10 backdrop-blur-sm">
+                            <section.icon className="w-5 h-5 text-white" />
+                          </div>
+                          <h2 className="text-lg font-semibold text-white font-display">{section.title}</h2>
+                        </div>
                       </div>
-                      <h2 className="text-lg font-semibold text-white font-display">{section.title}</h2>
-                    </div>
+                      <div className="p-5">
+                        <ul className="space-y-3">
+                          {section.items.map((item) => (
+                            <li key={item.label} className="text-sm">
+                              <span className="text-foreground font-medium">{item.label}:</span>{" "}
+                              <span className="text-muted-foreground">{item.text}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </GlassCard>
+                  ))}
+                </motion.div>
+              </AnimatePresence>
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-3 mt-4">
+                  <Button size="icon" variant="ghost" onClick={prev} disabled={sIdx === 0} data-testid="button-privacy-prev"><ChevronLeft className="w-4 h-4" /></Button>
+                  <div className="flex items-center gap-1.5">
+                    {Array.from({ length: totalPages }).map((_, i) => (
+                      <button key={i} onClick={() => setSIdx(i)} className={`w-2 h-2 rounded-full transition-all duration-300 ${i === sIdx ? "bg-primary w-6" : "bg-white/20 hover:bg-white/40"}`} data-testid={`button-privacy-dot-${i}`} />
+                    ))}
                   </div>
-                  <div className="p-5">
-                    <ul className="space-y-3">
-                      {section.items.map((item) => (
-                        <li key={item.label} className="text-sm">
-                          <span className="text-foreground font-medium">{item.label}:</span>{" "}
-                          <span className="text-muted-foreground">{item.text}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </GlassCard>
-              </motion.div>
-            ))}
-          </div>
+                  <Button size="icon" variant="ghost" onClick={next} disabled={sIdx >= totalPages - 1} data-testid="button-privacy-next"><ChevronRight className="w-4 h-4" /></Button>
+                </div>
+              )}
+            </div>
+          </motion.div>
 
           <motion.div variants={fadeUp}>
             <GlassCard className="p-6 md:p-8 border-red-500/20 bg-red-950/20">

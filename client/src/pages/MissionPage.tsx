@@ -1,9 +1,11 @@
+import { useState, useRef } from "react";
 import { Layout } from "@/components/ui/Layout";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useMeta } from "@/hooks/use-meta";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { motion } from "framer-motion";
-import { Zap, Shield, Heart, Users, Globe, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Zap, Shield, Heart, Users, Globe, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import originImg from "@/assets/images/mission-origin.png";
 import promiseImg from "@/assets/images/mission-promise.png";
 
@@ -24,6 +26,71 @@ const values = [
   { icon: Globe, title: "Accessible", desc: "Mental wellness shouldn't be gated. Our free tier ensures everyone can access the relief they need, when they need it." },
   { icon: Sparkles, title: "Evolving", desc: "We ship fast, listen harder, and iterate relentlessly. THE VOID grows with its community." },
 ];
+
+const COLORS = ["from-cyan-500/20 to-blue-500/20", "from-pink-500/20 to-rose-500/20", "from-amber-500/20 to-orange-500/20", "from-emerald-500/20 to-green-500/20", "from-purple-500/20 to-violet-500/20", "from-cyan-500/20 to-teal-500/20"];
+const ICON_COLORS = ["text-cyan-400", "text-pink-400", "text-amber-400", "text-emerald-400", "text-purple-400", "text-cyan-400"];
+
+function ValuesCarousel() {
+  const [idx, setIdx] = useState(0);
+  const touchRef = useRef<{ x: number } | null>(null);
+  const pageSize = 3;
+  const totalPages = Math.ceil(values.length / pageSize);
+  const currentValues = values.slice(idx * pageSize, (idx + 1) * pageSize);
+
+  const prev = () => setIdx((i) => Math.max(0, i - 1));
+  const next = () => setIdx((i) => Math.min(totalPages - 1, i + 1));
+  const onTouchStart = (e: React.TouchEvent) => { touchRef.current = { x: e.touches[0].clientX }; };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (!touchRef.current) return;
+    const dx = e.changedTouches[0].clientX - touchRef.current.x;
+    if (Math.abs(dx) > 40) { dx < 0 ? next() : prev(); }
+    touchRef.current = null;
+  };
+
+  return (
+    <motion.div variants={fadeUp}>
+      <h2 className="text-lg font-bold text-foreground font-display mb-4 text-center">What We Stand For</h2>
+      <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={idx}
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -30 }}
+            transition={{ duration: 0.3 }}
+            className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+          >
+            {currentValues.map((v, i) => {
+              const globalIdx = idx * pageSize + i;
+              return (
+                <GlassCard key={v.title} className="h-full overflow-hidden" hoverEffect>
+                  <div className={`p-5 space-y-3 bg-gradient-to-br ${COLORS[globalIdx]} rounded-2xl`}>
+                    <div className="p-2 rounded-lg bg-white/10 w-fit">
+                      <v.icon className={`w-4 h-4 ${ICON_COLORS[globalIdx]}`} />
+                    </div>
+                    <h3 className="text-sm font-semibold text-foreground">{v.title}</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{v.desc}</p>
+                  </div>
+                </GlassCard>
+              );
+            })}
+          </motion.div>
+        </AnimatePresence>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-3 mt-4">
+            <Button size="icon" variant="ghost" onClick={prev} disabled={idx === 0} data-testid="button-values-prev"><ChevronLeft className="w-4 h-4" /></Button>
+            <div className="flex items-center gap-1.5">
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <button key={i} onClick={() => setIdx(i)} className={`w-2 h-2 rounded-full transition-all duration-300 ${i === idx ? "bg-primary w-6" : "bg-white/20 hover:bg-white/40"}`} data-testid={`button-values-dot-${i}`} />
+              ))}
+            </div>
+            <Button size="icon" variant="ghost" onClick={next} disabled={idx >= totalPages - 1} data-testid="button-values-next"><ChevronRight className="w-4 h-4" /></Button>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
 
 export default function MissionPage() {
   useDocumentTitle("From the Void — Our Mission");
@@ -81,24 +148,7 @@ export default function MissionPage() {
           </GlassCard>
         </motion.div>
 
-        <motion.div variants={fadeUp}>
-          <h2 className="text-lg font-bold text-foreground font-display mb-4 text-center">What We Stand For</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {values.map((v, i) => (
-              <motion.div key={v.title} variants={fadeUp} custom={i}>
-                <GlassCard className="h-full overflow-hidden" hoverEffect>
-                  <div className="p-5 space-y-3">
-                    <div className="p-2 rounded-lg bg-primary/10 w-fit">
-                      <v.icon className="w-4 h-4 text-primary" />
-                    </div>
-                    <h3 className="text-sm font-semibold text-foreground">{v.title}</h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{v.desc}</p>
-                  </div>
-                </GlassCard>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+        <ValuesCarousel />
 
         <motion.div variants={fadeUp}>
           <GlassCard className="overflow-hidden">
