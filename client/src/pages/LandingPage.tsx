@@ -156,7 +156,7 @@ export default function LandingPage() {
           />
         </div>
 
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex gap-2">
+        <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-30 flex gap-2">
           {HERO_VIDEOS.map((v, idx) => (
             <button key={idx} onClick={() => {
               if (idx !== currentVideoIndex) {
@@ -199,7 +199,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.4 }}
-            className="text-5xl sm:text-7xl md:text-8xl font-black tracking-[0.15em] font-display mb-4"
+            className="text-5xl sm:text-7xl md:text-8xl font-black tracking-[0.15em] font-display mb-4 drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]"
             data-testid="text-landing-title"
           >
             THE VOID
@@ -216,7 +216,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 1 }}
-            className="text-lg sm:text-xl text-white/70 font-light max-w-xl leading-relaxed mb-3"
+            className="text-lg sm:text-xl text-white font-medium max-w-xl leading-relaxed mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]"
             data-testid="text-landing-tagline"
           >
             Scream into the abyss. The abyss talks back.
@@ -226,7 +226,7 @@ export default function LandingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 1.3 }}
-            className="text-sm text-white/40 max-w-md leading-relaxed mb-2"
+            className="text-sm text-white/80 font-medium max-w-md leading-relaxed mb-2 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]"
           >
             The first app built for venting, ranting, and letting it all out.
             AI listens, responds, and helps you process — on your terms.
@@ -236,7 +236,7 @@ export default function LandingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 1.5 }}
-            className="text-[10px] text-white/25 tracking-[0.3em] uppercase mb-10"
+            className="text-[10px] text-white/50 tracking-[0.3em] uppercase mb-10 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]"
           >
             Voice-powered emotional release + 20 wellness tools
           </motion.p>
@@ -258,7 +258,7 @@ export default function LandingPage() {
             <Button
               variant="ghost"
               onClick={() => navigate("/onboarding")}
-              className="text-sm text-white/50"
+              className="text-sm text-white/80 font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]"
               data-testid="button-how-it-works"
             >
               How it Works
@@ -266,7 +266,7 @@ export default function LandingPage() {
             </Button>
             <a
               href="#features"
-              className="text-sm text-white/50 flex items-center gap-1.5 transition-colors"
+              className="text-sm text-white/80 font-medium flex items-center gap-1.5 transition-colors drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]"
               data-testid="link-learn-more"
             >
               Learn more
