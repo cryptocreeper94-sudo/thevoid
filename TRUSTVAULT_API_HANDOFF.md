@@ -15,6 +15,51 @@ Both apps already share TrustLayer SSO (`tl-{id}` identity format) and Signal Ch
 
 ---
 
+## Subscription & Pricing Alignment
+
+### THE VOID's Pricing Model
+
+| Tier | Price | Who Gets It |
+|---|---|---|
+| Free | $0 | Everyone — 1 vent/day, no persistent media storage |
+| Premium (Founders) | $9.99/mo | First 1,000 subscribers — locked forever |
+| Premium (Standard) | $14.99/mo | All subscribers after Founders spots fill |
+
+TrustVault media storage is bundled into THE VOID's existing Premium subscription at no additional charge. It is a **Premium-only perk** that makes the $14.99/mo price compelling and rewards Founders with even more value at their locked $9.99 rate.
+
+### How This Maps to TrustVault's Plans
+
+TrustVault currently has 4 tiers: Free ($0), Personal ($5/mo), Pro ($10.83/mo), and Studio ($20.83/mo). **Ecosystem API access is Studio-tier only.**
+
+We are NOT asking individual VOID users to subscribe to TrustVault separately. Instead, we propose one of these models:
+
+**Option A: Ecosystem Partner Account (Preferred)**
+- THE VOID holds a single Studio-tier (or custom ecosystem partner) service account on TrustVault
+- All VOID Premium subscriber media is stored under this service account, scoped/partitioned by each user's TrustLayer ID
+- THE VOID pays TrustVault a flat ecosystem rate or rev-share arrangement (business discussion between DW apps)
+- Users never see TrustVault billing — it's invisible to them, bundled in their VOID subscription
+
+**Option B: Auto-Provisioned Personal Tier**
+- When a VOID user subscribes to Premium, THE VOID's backend calls TrustVault to auto-provision a Personal-tier account for that user (linked via TrustLayer SSO)
+- THE VOID covers the cost internally (absorbed into the $9.99/$14.99 subscription)
+- Users get their own TrustVault space they can also access directly at trustvault.replit.app
+
+**Recommendation:** Option A is simpler — one service account, one API key, no per-user provisioning. Option B is better for ecosystem engagement if you want users to discover TrustVault as its own product.
+
+### User Experience by Tier
+
+| Feature | VOID Free | VOID Premium |
+|---|---|---|
+| Vent audio | Transcribed then discarded | Archived to TrustVault, playback in Vent Library |
+| Voice Journal audio | Not available | Archived to TrustVault, persistent playback |
+| Void Echo recordings | Not available | Stored in TrustVault until delivery date |
+| Living Mood Portraits | Not available | SVG art saved to TrustVault gallery |
+| Direct TrustVault access | No | Optional (if Option B) |
+
+Free users see an upgrade prompt when they try to access features that require persistent media storage.
+
+---
+
 ## Required API Endpoints
 
 ### 1. Authentication / Handshake
