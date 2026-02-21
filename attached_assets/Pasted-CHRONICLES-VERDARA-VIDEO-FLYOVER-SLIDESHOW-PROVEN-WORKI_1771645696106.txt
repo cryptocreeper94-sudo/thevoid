@@ -1,0 +1,126 @@
+CHRONICLES/VERDARA VIDEO FLYOVER SLIDESHOW — PROVEN WORKING IMPLEMENTATION
+
+STEP 1 — VIDEO FILES
+Place your .mp4 video files inside client/src/assets/videos/ (or similar path inside src/). Videos should be H.264 Constrained Baseline profile, 640x360, under 500KB each for best mobile compatibility.
+
+STEP 2 — ES MODULE IMPORTS (CRITICAL — this is what makes it work)
+
+import flyoverVideo1 from "../assets/videos/flyover-1.mp4";
+import flyoverVideo2 from "../assets/videos/flyover-2.mp4";
+import flyoverVideo3 from "../assets/videos/flyover-3.mp4";
+// ... one import per video file
+const HERO_VIDEOS = [
+  { src: flyoverVideo1, label: "Scene 1" },
+  { src: flyoverVideo2, label: "Scene 2" },
+  { src: flyoverVideo3, label: "Scene 3" },
+];
+Do NOT use string paths like "/videos/foo.mp4" — they won't resolve properly in production. Vite ES module imports are the key.
+
+STEP 3 — STATE
+
+const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+const [nextVideoIndex, setNextVideoIndex] = useState(1);
+const [isVideoTransitioning, setIsVideoTransitioning] = useState(false);
+const [videoMuted, setVideoMuted] = useState(true);
+const currentVideoRef = useRef<HTMLVideoElement>(null);
+const nextVideoRef = useRef<HTMLVideoElement>(null);
+STEP 4 — THREE useEffect HOOKS (the engine)
+
+// Hook 1 — Listen for video end, trigger crossfade
+useEffect(() => {
+  const handleVideoEnd = () => {
+    setIsVideoTransitioning(true);
+    setTimeout(() => {
+      setCurrentVideoIndex(nextVideoIndex);
+      setNextVideoIndex((nextVideoIndex + 1) % HERO_VIDEOS.length);
+      setIsVideoTransitioning(false);
+    }, 400);
+  };
+  const video = currentVideoRef.current;
+  if (video) {
+    video.addEventListener('ended', handleVideoEnd);
+    return () => video.removeEventListener('ended', handleVideoEnd);
+  }
+}, [nextVideoIndex, videoMuted]);
+// Hook 2 — Preload the next video
+useEffect(() => {
+  if (nextVideoRef.current) {
+    nextVideoRef.current.load();
+  }
+}, [nextVideoIndex]);
+// Hook 3 — Play the current video when index changes
+useEffect(() => {
+  if (currentVideoRef.current && !isVideoTransitioning) {
+    const video = currentVideoRef.current;
+    video.volume = 0;
+    video.play().catch(() => {});
+  }
+}, [currentVideoIndex, isVideoTransitioning, videoMuted]);
+STEP 5 — THE JSX (two stacked video elements)
+
+<section className="relative h-screen overflow-hidden">
+  <div className="absolute inset-0 bg-black">
+    {/* CURRENT video - visible */}
+    <video
+      ref={currentVideoRef}
+      key={`current-${currentVideoIndex}`}
+      autoPlay
+      muted={videoMuted}
+      playsInline
+      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700
+        ${isVideoTransitioning ? 'opacity-0' : 'opacity-100'}`}
+    >
+      <source src={HERO_VIDEOS[currentVideoIndex].src} type="video/mp4" />
+    </video>
+    {/* NEXT video - hidden, preloading */}
+    <video
+      ref={nextVideoRef}
+      key={`next-${nextVideoIndex}`}
+      muted={videoMuted}
+      playsInline
+      preload="auto"
+      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700
+        ${isVideoTransitioning ? 'opacity-100' : 'opacity-0'}`}
+    >
+      <source src={HERO_VIDEOS[nextVideoIndex].src} type="video/mp4" />
+    </video>
+    <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black" />
+  </div>
+  {/* Dot indicators */}
+  <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex gap-2">
+    {HERO_VIDEOS.map((v, idx) => (
+      <button key={idx} onClick={() => {
+        if (idx !== currentVideoIndex) {
+          setNextVideoIndex(idx);
+          setIsVideoTransitioning(true);
+          setTimeout(() => {
+            setCurrentVideoIndex(idx);
+            setNextVideoIndex((idx + 1) % HERO_VIDEOS.length);
+            setIsVideoTransitioning(false);
+          }, 700);
+        }
+      }}
+        className={currentVideoIndex === idx
+          ? 'w-8 h-2 bg-white rounded-full'
+          : 'w-2 h-2 bg-white/40 rounded-full'}
+      />
+    ))}
+  </div>
+  {/* Your content goes here, overlaid on top */}
+  <div className="relative z-10">
+    {/* Hero text, buttons, etc */}
+  </div>
+</section>
+WHY IT WORKS:
+
+playsInline — mandatory for mobile, prevents fullscreen hijack
+muted={true} — browsers block autoplay of unmuted video
+key prop on each <video> — forces React to create a fresh element on swap
+ES module imports — Vite bundles the video with a hashed URL that resolves correctly in both dev and production builds
+Two stacked videos — one plays, one preloads, they swap via opacity (no black flash)
+.catch(() => {}) on .play() — silently handles autoplay blocks
+
+Scroll to latest
+
+Make, test, iterate…
+
