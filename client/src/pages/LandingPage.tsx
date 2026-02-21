@@ -46,9 +46,9 @@ export default function LandingPage() {
   const [videoMuted] = useState(true);
   const currentVideoRef = useRef<HTMLVideoElement>(null);
   const nextVideoRef = useRef<HTMLVideoElement>(null);
-  const [visibleFeatures, setVisibleFeatures] = useState(0);
+  const [featureIdx, setFeatureIdx] = useState(0);
+  const featureTouchRef = useRef<{ startX: number; startY: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const featuresRef = useRef<HTMLDivElement>(null);
 
   const { scrollYProgress } = useScroll({ target: containerRef });
   const heroOpacity = useTransform(scrollYProgress, [0, 0.25], [1, 0]);
@@ -85,21 +85,10 @@ export default function LandingPage() {
   }, [currentVideoIndex, isVideoTransitioning, videoMuted]);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const idx = parseInt(entry.target.getAttribute("data-feature-idx") || "0");
-            setVisibleFeatures((p) => Math.max(p, idx + 1));
-          }
-        });
-      },
-      { threshold: 0.2 }
-    );
-
-    const items = featuresRef.current?.querySelectorAll("[data-feature-idx]");
-    items?.forEach((item) => observer.observe(item));
-    return () => observer.disconnect();
+    const timer = setInterval(() => {
+      setFeatureIdx((p) => (p + 1) % features.length);
+    }, 4000);
+    return () => clearInterval(timer);
   }, []);
 
   const handleEnter = useCallback(() => {
@@ -298,14 +287,14 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="features" className="relative py-20 px-6" ref={featuresRef}>
+      <section id="features" className="relative py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-16"
+            className="text-center mb-12"
           >
             <p className="text-xs text-cyan-400 tracking-[0.3em] uppercase mb-3">Built around venting</p>
             <h2 className="text-3xl sm:text-4xl font-bold text-white font-display mb-4" data-testid="text-features-title">
@@ -317,28 +306,80 @@ export default function LandingPage() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {features.map((f, i) => (
+          <div
+            className="relative overflow-hidden"
+            onTouchStart={(e) => {
+              featureTouchRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY };
+            }}
+            onTouchEnd={(e) => {
+              if (!featureTouchRef.current) return;
+              const dx = e.changedTouches[0].clientX - featureTouchRef.current.startX;
+              const dy = e.changedTouches[0].clientY - featureTouchRef.current.startY;
+              if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+                if (dx < 0) setFeatureIdx((p) => (p + 1) % features.length);
+                else setFeatureIdx((p) => (p - 1 + features.length) % features.length);
+              }
+              featureTouchRef.current = null;
+            }}
+          >
+            <AnimatePresence mode="wait">
               <motion.div
-                key={f.title}
-                data-feature-idx={i}
-                initial={{ opacity: 0, y: 30 }}
-                animate={visibleFeatures > i ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: (i % 4) * 0.08, duration: 0.5 }}
+                key={featureIdx}
+                initial={{ opacity: 0, x: 80 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -80 }}
+                transition={{ duration: 0.35, ease: "easeInOut" }}
+                className="w-full"
               >
-                <GlassCard className="p-5 h-full" hoverEffect>
-                  <div className="flex items-start gap-4">
-                    <div className={`flex-shrink-0 p-2.5 rounded-xl ${f.bg}`}>
-                      <f.icon className={`w-5 h-5 ${f.color}`} />
+                {(() => {
+                  const f = features[featureIdx];
+                  const gradients = [
+                    "from-cyan-500/20 via-cyan-600/10 to-transparent",
+                    "from-purple-500/20 via-purple-600/10 to-transparent",
+                    "from-violet-500/20 via-violet-600/10 to-transparent",
+                    "from-blue-500/20 via-blue-600/10 to-transparent",
+                    "from-fuchsia-500/20 via-fuchsia-600/10 to-transparent",
+                    "from-indigo-500/20 via-indigo-600/10 to-transparent",
+                    "from-teal-500/20 via-teal-600/10 to-transparent",
+                    "from-amber-500/20 via-amber-600/10 to-transparent",
+                    "from-red-500/20 via-red-600/10 to-transparent",
+                    "from-sky-500/20 via-sky-600/10 to-transparent",
+                    "from-pink-500/20 via-pink-600/10 to-transparent",
+                    "from-emerald-500/20 via-emerald-600/10 to-transparent",
+                  ];
+                  return (
+                    <div
+                      className={`relative rounded-2xl border border-white/10 bg-gradient-to-br ${gradients[featureIdx % gradients.length]} backdrop-blur-xl p-8 sm:p-10 min-h-[200px] flex flex-col items-center justify-center text-center`}
+                      data-testid={`card-feature-${featureIdx}`}
+                    >
+                      <div className={`p-4 rounded-2xl ${f.bg} mb-5`}>
+                        <f.icon className={`w-8 h-8 ${f.color}`} />
+                      </div>
+                      <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 font-display" data-testid={`text-feature-title-${featureIdx}`}>
+                        {f.title}
+                      </h3>
+                      <p className="text-sm text-white/60 leading-relaxed max-w-sm">{f.desc}</p>
+                      <p className="text-[10px] text-white/20 mt-4 tracking-wider uppercase">
+                        {featureIdx + 1} / {features.length}
+                      </p>
                     </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-white mb-1" data-testid={`text-feature-title-${i}`}>{f.title}</h3>
-                      <p className="text-xs text-white/50 leading-relaxed">{f.desc}</p>
-                    </div>
-                  </div>
-                </GlassCard>
+                  );
+                })()}
               </motion.div>
-            ))}
+            </AnimatePresence>
+
+            <div className="flex justify-center gap-1.5 mt-6">
+              {features.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setFeatureIdx(idx)}
+                  className={`rounded-full transition-all duration-300 ${featureIdx === idx
+                    ? 'w-6 h-1.5 bg-cyan-400'
+                    : 'w-1.5 h-1.5 bg-white/20 hover:bg-white/40'}`}
+                  data-testid={`button-feature-dot-${idx}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
