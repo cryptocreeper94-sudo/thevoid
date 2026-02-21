@@ -253,7 +253,16 @@ export default function BlogPage() {
                 <Button size="icon" variant="ghost" onClick={() => setPage(Math.max(0, page - 1))} disabled={page === 0} data-testid="button-blog-prev">
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
-                <span className="text-xs text-muted-foreground">{page + 1} / {totalPages}</span>
+                <div className="flex items-center gap-1.5">
+                  {Array.from({ length: totalPages }).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setPage(i)}
+                      className={`w-2 h-2 rounded-full transition-all duration-300 ${i === page ? "bg-primary w-6" : "bg-white/20 hover:bg-white/40"}`}
+                      data-testid={`button-blog-dot-${i}`}
+                    />
+                  ))}
+                </div>
                 <Button size="icon" variant="ghost" onClick={() => setPage(Math.min(totalPages - 1, page + 1))} disabled={page >= totalPages - 1} data-testid="button-blog-next">
                   <ChevronRight className="w-4 h-4" />
                 </Button>

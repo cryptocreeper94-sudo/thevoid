@@ -1,11 +1,14 @@
+import { useState, useRef } from "react";
 import { useVents } from "@/hooks/use-vents";
 import { usePinAuth } from "@/components/PinGate";
 import { Layout } from "@/components/ui/Layout";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Loader2, Calendar, Mic, Sparkles } from "lucide-react";
+import { Calendar, Mic, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { Button } from "@/components/ui/button";
+import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import archiveImg from "@/assets/images/history-archive.png";
 
 interface Vent {
@@ -29,26 +32,29 @@ export default function HistoryPage() {
   useDocumentTitle("Vent History");
   const { visitorId } = usePinAuth();
   const { data: vents, isLoading, error } = useVents(visitorId);
+  const [carouselIdx, setCarouselIdx] = useState(0);
+  const touchRef = useRef<{ x: number; y: number } | null>(null);
+  const pageSize = 3;
 
-  if (isLoading) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="w-8 h-8 text-primary animate-spin" />
-        </div>
-      </Layout>
-    );
-  }
+  const ventList = (vents as Vent[]) || [];
+  const totalPages = Math.max(1, Math.ceil(ventList.length / pageSize));
+  const currentVents = ventList.slice(carouselIdx * pageSize, (carouselIdx + 1) * pageSize);
 
-  if (error) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-[60vh] text-destructive">
-          Error loading history.
-        </div>
-      </Layout>
-    );
-  }
+  const prev = () => setCarouselIdx((i) => Math.max(0, i - 1));
+  const next = () => setCarouselIdx((i) => Math.min(totalPages - 1, i + 1));
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (!touchRef.current) return;
+    const dx = e.changedTouches[0].clientX - touchRef.current.x;
+    if (Math.abs(dx) > 40) {
+      if (dx < 0) next();
+      else prev();
+    }
+    touchRef.current = null;
+  };
 
   return (
     <Layout>
@@ -80,63 +86,105 @@ export default function HistoryPage() {
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-white">Your Archive</h3>
-                  <p className="text-[10px] text-white/60">{vents?.length || 0} vents recorded</p>
+                  <p className="text-[10px] text-white/60">{ventList.length} vents recorded</p>
                 </div>
               </div>
             </div>
           </GlassCard>
         </motion.div>
 
-        {!vents || vents.length === 0 ? (
+        {isLoading ? (
+          <motion.div variants={fadeUp} className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <SkeletonCard key={i} hasImage={false} lines={4} />
+            ))}
+          </motion.div>
+        ) : error ? (
+          <motion.div variants={fadeUp}>
+            <GlassCard className="p-12 text-center">
+              <p className="text-destructive">Error loading history. Please try again.</p>
+            </GlassCard>
+          </motion.div>
+        ) : ventList.length === 0 ? (
           <motion.div variants={fadeUp}>
             <GlassCard className="p-12 text-center">
               <p className="text-muted-foreground">No vents recorded yet. Go scream at something.</p>
             </GlassCard>
           </motion.div>
         ) : (
-          <div className="space-y-4">
-            {(vents as Vent[]).map((vent: Vent, index: number) => (
-              <motion.div
-                key={vent.id}
-                variants={fadeUp}
-              >
-                <GlassCard className="overflow-hidden" hoverEffect>
-                  <div className="p-4 sm:p-5">
-                    <div className="flex items-center justify-between gap-2 mb-3 pb-3 border-b border-white/5 flex-wrap">
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary">
-                        {vent.personality}
-                      </span>
-                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                        <Calendar className="w-3 h-3" />
-                        {format(new Date(vent.createdAt), "MMM d, yyyy")}
-                        <span className="hidden sm:inline"> {format(new Date(vent.createdAt), "h:mm a")}</span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                          <Mic className="w-3 h-3" /> You Said
+          <motion.div variants={fadeUp}>
+            <div
+              onTouchStart={onTouchStart}
+              onTouchEnd={onTouchEnd}
+            >
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={carouselIdx}
+                  initial={{ opacity: 0, x: 30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -30 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-4"
+                >
+                  {currentVents.map((vent) => (
+                    <GlassCard key={vent.id} className="overflow-hidden" hoverEffect>
+                      <div className="p-4 sm:p-5">
+                        <div className="flex items-center justify-between gap-2 mb-3 pb-3 border-b border-white/5 flex-wrap">
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary">
+                            {vent.personality}
+                          </span>
+                          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                            <Calendar className="w-3 h-3" />
+                            {format(new Date(vent.createdAt), "MMM d, yyyy")}
+                            <span className="hidden sm:inline"> {format(new Date(vent.createdAt), "h:mm a")}</span>
+                          </div>
                         </div>
-                        <p className="text-sm text-muted-foreground italic leading-relaxed">
-                          "{vent.transcript}"
-                        </p>
-                      </div>
-
-                      <div>
-                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary uppercase tracking-wider mb-2">
-                          <Sparkles className="w-3 h-3" /> Response
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                              <Mic className="w-3 h-3" /> You Said
+                            </div>
+                            <p className="text-sm text-muted-foreground italic leading-relaxed">
+                              "{vent.transcript}"
+                            </p>
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary uppercase tracking-wider mb-2">
+                              <Sparkles className="w-3 h-3" /> Response
+                            </div>
+                            <p className="text-sm text-foreground leading-relaxed">
+                              {vent.response}
+                            </p>
+                          </div>
                         </div>
-                        <p className="text-sm text-foreground leading-relaxed">
-                          {vent.response}
-                        </p>
                       </div>
-                    </div>
+                    </GlassCard>
+                  ))}
+                </motion.div>
+              </AnimatePresence>
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-3 mt-4">
+                  <Button size="icon" variant="ghost" onClick={prev} disabled={carouselIdx === 0} data-testid="button-history-prev">
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <div className="flex items-center gap-1.5">
+                    {Array.from({ length: totalPages }).map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCarouselIdx(i)}
+                        className={`w-2 h-2 rounded-full transition-all duration-300 ${i === carouselIdx ? "bg-primary w-6" : "bg-white/20 hover:bg-white/40"}`}
+                        data-testid={`button-history-dot-${i}`}
+                      />
+                    ))}
                   </div>
-                </GlassCard>
-              </motion.div>
-            ))}
-          </div>
+                  <Button size="icon" variant="ghost" onClick={next} disabled={carouselIdx >= totalPages - 1} data-testid="button-history-next">
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          </motion.div>
         )}
       </motion.div>
     </Layout>
