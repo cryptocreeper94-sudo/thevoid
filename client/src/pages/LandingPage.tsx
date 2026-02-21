@@ -4,13 +4,17 @@ import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion"
 import { Mic, Brain, Shield, Flame, Moon, PenLine, BarChart3, Sparkles, ChevronDown, ArrowRight, Zap, Lock, Volume2, Fingerprint, Palette, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/GlassCard";
-import landingPortal from "@/assets/images/landing-void-portal.png";
-import heroAsianFemale from "@/assets/images/hero-asian-female.png";
-import heroBlackMale from "@/assets/images/hero-black-male.png";
-import heroHispanicFemale from "@/assets/images/hero-hispanic-female.png";
-import heroWhiteMale from "@/assets/images/hero-white-male.png";
+import flyoverVideo1 from "@/assets/videos/flyover-1.mp4";
+import flyoverVideo2 from "@/assets/videos/flyover-2.mp4";
+import flyoverVideo3 from "@/assets/videos/flyover-3.mp4";
+import flyoverVideo4 from "@/assets/videos/flyover-4.mp4";
 
-const heroImages = [heroAsianFemale, heroBlackMale, heroHispanicFemale, heroWhiteMale];
+const HERO_VIDEOS = [
+  { src: flyoverVideo1, label: "Cosmic Void" },
+  { src: flyoverVideo2, label: "Neural AI" },
+  { src: flyoverVideo3, label: "Deep Ocean" },
+  { src: flyoverVideo4, label: "Glass World" },
+];
 
 const features = [
   { icon: Mic, title: "Voice Venting", desc: "The core. Scream, rant, or whisper — AI listens and responds.", color: "text-cyan-400", bg: "bg-cyan-500/10" },
@@ -36,22 +40,49 @@ const stats = [
 
 export default function LandingPage() {
   const [, navigate] = useLocation();
-  const [heroIdx, setHeroIdx] = useState(0);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [nextVideoIndex, setNextVideoIndex] = useState(1);
+  const [isVideoTransitioning, setIsVideoTransitioning] = useState(false);
+  const [videoMuted] = useState(true);
+  const currentVideoRef = useRef<HTMLVideoElement>(null);
+  const nextVideoRef = useRef<HTMLVideoElement>(null);
   const [visibleFeatures, setVisibleFeatures] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
 
   const { scrollYProgress } = useScroll({ target: containerRef });
-  const heroScale = useTransform(scrollYProgress, [0, 0.3], [1, 1.15]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.25], [1, 0]);
   const titleY = useTransform(scrollYProgress, [0, 0.2], [0, -60]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setHeroIdx((p) => (p + 1) % heroImages.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
+    const handleVideoEnd = () => {
+      setIsVideoTransitioning(true);
+      setTimeout(() => {
+        setCurrentVideoIndex(nextVideoIndex);
+        setNextVideoIndex((nextVideoIndex + 1) % HERO_VIDEOS.length);
+        setIsVideoTransitioning(false);
+      }, 400);
+    };
+    const video = currentVideoRef.current;
+    if (video) {
+      video.addEventListener('ended', handleVideoEnd);
+      return () => video.removeEventListener('ended', handleVideoEnd);
+    }
+  }, [nextVideoIndex, videoMuted]);
+
+  useEffect(() => {
+    if (nextVideoRef.current) {
+      nextVideoRef.current.load();
+    }
+  }, [nextVideoIndex]);
+
+  useEffect(() => {
+    if (currentVideoRef.current && !isVideoTransitioning) {
+      const video = currentVideoRef.current;
+      video.volume = 0;
+      video.play().catch(() => {});
+    }
+  }, [currentVideoIndex, isVideoTransitioning, videoMuted]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -77,58 +108,78 @@ export default function LandingPage() {
 
   return (
     <div ref={containerRef} className="relative bg-black text-white overflow-x-hidden">
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        <motion.div className="absolute inset-0" style={{ scale: heroScale }}>
-          <img
-            src={landingPortal}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black" />
-        </motion.div>
-
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={heroIdx}
-            initial={{ opacity: 0, scale: 1.1 }}
-            animate={{ opacity: 0.15, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 1.5 }}
-            className="absolute inset-0"
+      <section className="relative h-screen overflow-hidden">
+        <div className="absolute inset-0 bg-black">
+          <video
+            ref={currentVideoRef}
+            key={`current-${currentVideoIndex}`}
+            autoPlay
+            muted={videoMuted}
+            playsInline
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700
+              ${isVideoTransitioning ? 'opacity-0' : 'opacity-100'}`}
           >
-            <img
-              src={heroImages[heroIdx]}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover object-top"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/70 to-black" />
-          </motion.div>
-        </AnimatePresence>
+            <source src={HERO_VIDEOS[currentVideoIndex].src} type="video/mp4" />
+          </video>
+          <video
+            ref={nextVideoRef}
+            key={`next-${nextVideoIndex}`}
+            muted={videoMuted}
+            playsInline
+            preload="auto"
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700
+              ${isVideoTransitioning ? 'opacity-100' : 'opacity-0'}`}
+          >
+            <source src={HERO_VIDEOS[nextVideoIndex].src} type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black" />
+        </div>
 
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div
             animate={{
               scale: [1, 1.3, 1],
-              opacity: [0.15, 0.25, 0.15],
+              opacity: [0.1, 0.2, 0.1],
             }}
             transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
             className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full"
-            style={{ background: "radial-gradient(circle, rgba(6,182,212,0.3) 0%, transparent 70%)" }}
+            style={{ background: "radial-gradient(circle, rgba(6,182,212,0.2) 0%, transparent 70%)" }}
           />
           <motion.div
             animate={{
               scale: [1, 1.2, 1],
-              opacity: [0.1, 0.2, 0.1],
+              opacity: [0.08, 0.15, 0.08],
             }}
             transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
             className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full"
-            style={{ background: "radial-gradient(circle, rgba(147,51,234,0.3) 0%, transparent 70%)" }}
+            style={{ background: "radial-gradient(circle, rgba(147,51,234,0.2) 0%, transparent 70%)" }}
           />
+        </div>
+
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex gap-2">
+          {HERO_VIDEOS.map((v, idx) => (
+            <button key={idx} onClick={() => {
+              if (idx !== currentVideoIndex) {
+                setNextVideoIndex(idx);
+                setIsVideoTransitioning(true);
+                setTimeout(() => {
+                  setCurrentVideoIndex(idx);
+                  setNextVideoIndex((idx + 1) % HERO_VIDEOS.length);
+                  setIsVideoTransitioning(false);
+                }, 700);
+              }
+            }}
+              className={`rounded-full transition-all duration-300 ${currentVideoIndex === idx
+                ? 'w-8 h-2 bg-white'
+                : 'w-2 h-2 bg-white/40 hover:bg-white/60'}`}
+              data-testid={`button-video-dot-${idx}`}
+            />
+          ))}
         </div>
 
         <motion.div
           style={{ y: titleY, opacity: heroOpacity }}
-          className="relative z-10 flex flex-col items-center text-center px-6 max-w-4xl"
+          className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6 max-w-4xl mx-auto"
         >
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -221,20 +272,6 @@ export default function LandingPage() {
               Learn more
               <ChevronDown className="w-4 h-4" />
             </a>
-          </motion.div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2, duration: 1 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10"
-        >
-          <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <ChevronDown className="w-6 h-6 text-white/30" />
           </motion.div>
         </motion.div>
       </section>
