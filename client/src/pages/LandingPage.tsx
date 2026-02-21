@@ -48,6 +48,8 @@ export default function LandingPage() {
   const nextVideoRef = useRef<HTMLVideoElement>(null);
   const [featureIdx, setFeatureIdx] = useState(0);
   const featureTouchRef = useRef<{ startX: number; startY: number } | null>(null);
+  const [compareIdx, setCompareIdx] = useState(0);
+  const compareTouchRef = useRef<{ startX: number; startY: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { scrollYProgress } = useScroll({ target: containerRef });
@@ -403,38 +405,75 @@ export default function LandingPage() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { title: "Nothing like it", items: ["Voice Venting", "Voice Fingerprint", "Mood Portraits", "Void Echo"], icon: Mic, highlight: true },
-              { title: "Calm / Headspace", items: ["Guided Breathing", "Sleep Sounds", "Zen Zone", "Meditation Timer"], icon: Moon },
-              { title: "Woebot / Therapy", items: ["5 AI Personalities", "Voice Conversations", "Safety Plans", "Crisis Toolkit"], icon: Brain },
-              { title: "Daylio / Tracking", items: ["Mood Analytics", "Journal", "Streaks & Badges", "Daily Affirmations"], icon: BarChart3 },
-            ].map((col, i) => (
-              <motion.div
-                key={col.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15, duration: 0.5 }}
+          {(() => {
+            const comparisons = [
+              { title: "Nothing like it", items: ["Voice Venting", "Voice Fingerprint", "Mood Portraits", "Void Echo"], icon: Mic, highlight: true, gradient: "from-cyan-500/20 via-cyan-600/10 to-transparent" },
+              { title: "Calm / Headspace", items: ["Guided Breathing", "Sleep Sounds", "Zen Zone", "Meditation Timer"], icon: Moon, highlight: false, gradient: "from-purple-500/20 via-purple-600/10 to-transparent" },
+              { title: "Woebot / Therapy", items: ["5 AI Personalities", "Voice Conversations", "Safety Plans", "Crisis Toolkit"], icon: Brain, highlight: false, gradient: "from-indigo-500/20 via-indigo-600/10 to-transparent" },
+              { title: "Daylio / Tracking", items: ["Mood Analytics", "Journal", "Streaks & Badges", "Daily Affirmations"], icon: BarChart3, highlight: false, gradient: "from-teal-500/20 via-teal-600/10 to-transparent" },
+            ];
+            const col = comparisons[compareIdx];
+            return (
+              <div
+                className="relative overflow-hidden"
+                onTouchStart={(e) => {
+                  compareTouchRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY };
+                }}
+                onTouchEnd={(e) => {
+                  if (!compareTouchRef.current) return;
+                  const dx = e.changedTouches[0].clientX - compareTouchRef.current.startX;
+                  const dy = e.changedTouches[0].clientY - compareTouchRef.current.startY;
+                  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+                    if (dx < 0) setCompareIdx((p) => (p + 1) % comparisons.length);
+                    else setCompareIdx((p) => (p - 1 + comparisons.length) % comparisons.length);
+                  }
+                  compareTouchRef.current = null;
+                }}
               >
-                <GlassCard className={`p-6 h-full text-center ${(col as any).highlight ? "border-cyan-500/30" : ""}`}>
-                  <div className={`inline-flex p-3 rounded-xl mb-4 ${(col as any).highlight ? "bg-cyan-500/10" : "bg-white/5"}`}>
-                    <col.icon className={`w-6 h-6 ${(col as any).highlight ? "text-cyan-400" : "text-purple-400"}`} />
-                  </div>
-                  <p className="text-xs text-white/40 uppercase tracking-wider mb-1">{(col as any).highlight ? "Only in THE VOID" : "Replaces"}</p>
-                  <h3 className="text-base font-bold text-white mb-4 font-display" data-testid={`text-replaces-${i}`}>{col.title}</h3>
-                  <ul className="space-y-2">
-                    {col.items.map((item) => (
-                      <li key={item} className="flex items-center gap-2 text-xs text-white/60">
-                        <Zap className="w-3 h-3 text-cyan-400 flex-shrink-0" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </GlassCard>
-              </motion.div>
-            ))}
-          </div>
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={compareIdx}
+                    initial={{ opacity: 0, x: 80 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -80 }}
+                    transition={{ duration: 0.35, ease: "easeInOut" }}
+                  >
+                    <div className={`relative rounded-2xl border ${col.highlight ? "border-cyan-500/30" : "border-white/10"} bg-gradient-to-br ${col.gradient} backdrop-blur-xl p-8 sm:p-10 min-h-[240px] flex flex-col items-center justify-center text-center`}>
+                      <div className={`p-4 rounded-2xl mb-4 ${col.highlight ? "bg-cyan-500/10" : "bg-white/5"}`}>
+                        <col.icon className={`w-8 h-8 ${col.highlight ? "text-cyan-400" : "text-purple-400"}`} />
+                      </div>
+                      <p className="text-xs text-white/40 uppercase tracking-wider mb-1">{col.highlight ? "Only in THE VOID" : "Replaces"}</p>
+                      <h3 className="text-xl font-bold text-white mb-5 font-display" data-testid={`text-replaces-${compareIdx}`}>{col.title}</h3>
+                      <ul className="space-y-3">
+                        {col.items.map((item) => (
+                          <li key={item} className="flex items-center gap-2 text-sm text-white/70">
+                            <Zap className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="text-[10px] text-white/20 mt-5 tracking-wider uppercase">
+                        {compareIdx + 1} / {comparisons.length}
+                      </p>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+
+                <div className="flex justify-center gap-2 mt-6">
+                  {comparisons.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCompareIdx(idx)}
+                      className={`rounded-full transition-all duration-300 ${compareIdx === idx
+                        ? 'w-6 h-1.5 bg-purple-400'
+                        : 'w-1.5 h-1.5 bg-white/20 hover:bg-white/40'}`}
+                      data-testid={`button-compare-dot-${idx}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </section>
 
