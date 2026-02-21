@@ -32,6 +32,7 @@ import VoiceJournalPage from "@/pages/VoiceJournalPage";
 import VoiceFingerprintPage from "@/pages/VoiceFingerprintPage";
 import MoodPortraitPage from "@/pages/MoodPortraitPage";
 import VoidEchoPage from "@/pages/VoidEchoPage";
+import TrustVaultLibraryPage from "@/pages/TrustVaultLibraryPage";
 import OnboardingPage from "@/pages/OnboardingPage";
 
 function ProtectedRoutes() {
@@ -51,6 +52,7 @@ function ProtectedRoutes() {
         <Route path="/voice-fingerprint" component={VoiceFingerprintPage} />
         <Route path="/mood-portrait" component={MoodPortraitPage} />
         <Route path="/void-echo" component={VoidEchoPage} />
+        <Route path="/vault" component={TrustVaultLibraryPage} />
         <Route component={NotFound} />
       </Switch>
     </PinGate>

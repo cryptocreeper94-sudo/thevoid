@@ -74,6 +74,9 @@ export interface TrustVaultMediaItem {
   metadata?: Record<string, any>;
   sizeBytes?: number;
   createdAt?: string;
+  source?: string;
+  title?: string;
+  tags?: string[];
 }
 
 export async function uploadMedia(params: TrustVaultUploadParams): Promise<TrustVaultMediaResult> {
