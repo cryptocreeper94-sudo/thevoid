@@ -17,6 +17,7 @@ import { chatChannels, referrals, voidStamps, chatUsers, subscriptions, achievem
 import { db } from "./db";
 import { mintVoidStamp, verifyVoidStamp, getStampStats } from "./blockchain-hallmark";
 import { eq, and, count as dbCount } from "drizzle-orm";
+import { uploadMedia, getMedia, deleteMedia, getUserMedia, isTrustVaultMediaId, healthCheck as tvHealthCheck } from "./trustvault";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-04-30.basil" as any });
 
@@ -25,6 +26,20 @@ const VOID_STANDARD_PRICE_ID = "price_1T2JdkRq977vVehd3ZcYfDKB";
 const VOID_PRODUCT_ID = "prod_U03iMZln0CXr0m";
 const FREE_DAILY_VENT_LIMIT = 1;
 const FOUNDERS_LIMIT = 1000;
+
+async function getUserTrustLayerInfo(userId: number): Promise<{ trustLayerId: string | null; voidId: string | null }> {
+  try {
+    const [chatUser] = await db.select({
+      trustLayerId: chatUsers.trustLayerId,
+      voidId: chatUsers.voidId,
+    }).from(chatUsers).where(eq(chatUsers.id, String(userId)));
+    if (chatUser?.trustLayerId) return chatUser;
+    const [sub] = await db.select({ voidId: subscriptions.voidId }).from(subscriptions).where(eq(subscriptions.userId, userId));
+    return { trustLayerId: null, voidId: sub?.voidId || null };
+  } catch {
+    return { trustLayerId: null, voidId: null };
+  }
+}
 
 function getTodayDate(): string {
   return new Date().toISOString().split("T")[0];
@@ -705,11 +720,41 @@ ${blogEntries}
       }
       
       // 4. Save to DB & increment usage
+      let tvMediaId: string | null = null;
+      if (userId) {
+        const numericUserId = parseInt(userId);
+        if (numericUserId) {
+          const sub = await storage.getSubscription(numericUserId);
+          if (sub?.status === "active") {
+            const tlInfo = await getUserTrustLayerInfo(numericUserId);
+            if (tlInfo.trustLayerId) {
+              try {
+                const tvResult = await uploadMedia({
+                  trustLayerId: tlInfo.trustLayerId,
+                  voidId: tlInfo.voidId,
+                  mediaType: "audio",
+                  format: "webm",
+                  encoding: "base64",
+                  data: audio,
+                  source: "vent",
+                  metadata: { personality, duration: audio.length },
+                  tags: ["vent", personality, getTodayDate()],
+                  title: `Vent — ${personality}`,
+                });
+                tvMediaId = tvResult.mediaId;
+              } catch (e: any) {
+                console.error("[TrustVault] Vent upload failed (non-blocking):", e.message);
+              }
+            }
+          }
+        }
+      }
+
       const vent = await storage.createVent({
         transcript,
         response: responseText,
         personality,
-        audioUrl: null,
+        audioUrl: tvMediaId,
         userId: userId || null,
       });
 
@@ -724,6 +769,7 @@ ${blogEntries}
         transcript,
         response: responseText,
         audioResponse,
+        tvMediaId,
       });
 
     } catch (error) {
@@ -1654,11 +1700,35 @@ CRITICAL RULES:
         cleanedTranscript = cleanResponse.choices[0]?.message?.content || undefined;
       }
 
+      let audioRef: string | undefined = data.audio.substring(0, 500000);
+      const sub = await storage.getSubscription(data.userId);
+      if (sub?.status === "active") {
+        const tlInfo = await getUserTrustLayerInfo(data.userId);
+        if (tlInfo.trustLayerId) {
+          try {
+            const tvResult = await uploadMedia({
+              trustLayerId: tlInfo.trustLayerId,
+              voidId: tlInfo.voidId,
+              mediaType: "audio",
+              format: data.extension || "webm",
+              encoding: "base64",
+              data: data.audio,
+              source: "voice-journal",
+              metadata: { isPlayMode: data.isPlayMode },
+              title: `Voice Journal — ${new Date().toLocaleDateString()}`,
+            });
+            audioRef = tvResult.mediaId;
+          } catch (e: any) {
+            console.error("[TrustVault] Voice journal upload failed (non-blocking):", e.message);
+          }
+        }
+      }
+
       const entry = await storage.createVoiceJournalEntry({
         userId: data.userId,
         rawTranscript: transcript,
         cleanedTranscript,
-        audioData: data.audio.substring(0, 500000),
+        audioData: audioRef,
         isPlayMode: data.isPlayMode,
       });
       res.json(entry);
@@ -1671,6 +1741,11 @@ CRITICAL RULES:
   app.delete("/api/voice-journal/:id", async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id as string);
+      const entries = await storage.getVoiceJournalEntries(parseInt(req.query.userId as string) || 0);
+      const entry = entries.find(e => e.id === id);
+      if (entry?.audioData && isTrustVaultMediaId(entry.audioData)) {
+        deleteMedia(entry.audioData).catch(e => console.error("[TrustVault] Journal delete failed:", e));
+      }
       const deleted = await storage.deleteVoiceJournalEntry(id);
       if (!deleted) return res.status(404).json({ message: "Entry not found" });
       res.json({ success: true });
@@ -1788,9 +1863,34 @@ Blend emotions together like watercolors. Make it beautiful and unique. Return O
       if (svgMatch) svgData = svgMatch[0];
 
       const dominantEmotion = emotionData[0]?.emotion || "neutral";
+
+      let svgRef = svgData;
+      const sub = await storage.getSubscription(data.userId);
+      if (sub?.status === "active") {
+        const tlInfo = await getUserTrustLayerInfo(data.userId);
+        if (tlInfo.trustLayerId) {
+          try {
+            const tvResult = await uploadMedia({
+              trustLayerId: tlInfo.trustLayerId,
+              voidId: tlInfo.voidId,
+              mediaType: "image",
+              format: "svg",
+              encoding: "utf-8",
+              data: svgData,
+              source: "mood-portrait",
+              metadata: { dominantMood: dominantEmotion, dataPoints: fingerprints.length + recentMoods.length },
+              title: `Mood Portrait — ${dominantEmotion}`,
+            });
+            svgRef = tvResult.mediaId;
+          } catch (e: any) {
+            console.error("[TrustVault] Mood portrait upload failed (non-blocking):", e.message);
+          }
+        }
+      }
+
       const portrait = await storage.createMoodPortrait({
         userId: data.userId,
-        svgData,
+        svgData: svgRef,
         dominantMood: dominantEmotion,
         colorPalette: emotionData.slice(0, 5).map(e => e.emotion),
         dataPoints: fingerprints.length + recentMoods.length,
@@ -1848,9 +1948,35 @@ Blend emotions together like watercolors. Make it beautiful and unique. Return O
         max_tokens: 150,
       });
 
+      let echoAudioRef: string | undefined = data.audio?.substring(0, 500000);
+      if (data.audio) {
+        const sub = await storage.getSubscription(data.userId);
+        if (sub?.status === "active") {
+          const tlInfo = await getUserTrustLayerInfo(data.userId);
+          if (tlInfo.trustLayerId) {
+            try {
+              const tvResult = await uploadMedia({
+                trustLayerId: tlInfo.trustLayerId,
+                voidId: tlInfo.voidId,
+                mediaType: "audio",
+                format: "webm",
+                encoding: "base64",
+                data: data.audio,
+                source: "void-echo",
+                metadata: { deliverAt: data.deliverAt, deliverTrigger: data.deliverTrigger },
+                title: `Void Echo — ${data.deliverAt || "future"}`,
+              });
+              echoAudioRef = tvResult.mediaId;
+            } catch (e: any) {
+              console.error("[TrustVault] Void echo upload failed (non-blocking):", e.message);
+            }
+          }
+        }
+      }
+
       const echo = await storage.createVoidEcho({
         userId: data.userId,
-        audioData: data.audio?.substring(0, 500000),
+        audioData: echoAudioRef,
         transcript: data.transcript,
         deliverAt: data.deliverAt ? new Date(data.deliverAt) : null,
         deliverTrigger: data.deliverTrigger,
@@ -1860,6 +1986,65 @@ Blend emotions together like watercolors. Make it beautiful and unique. Return O
     } catch (e: any) {
       console.error("Void echo error:", e);
       res.status(500).json({ message: "Failed to create void echo" });
+    }
+  });
+
+  // === TRUSTVAULT INTEGRATION ROUTES ===
+  app.get("/api/trustvault/media/:mediaId", async (req: Request, res: Response) => {
+    try {
+      const mediaId = req.params.mediaId as string;
+      if (!isTrustVaultMediaId(mediaId)) {
+        return res.status(400).json({ message: "Invalid TrustVault media ID" });
+      }
+      const media = await getMedia(mediaId);
+      if (!media) return res.status(404).json({ message: "Media not found" });
+      res.json(media);
+    } catch (e: any) {
+      console.error("[TrustVault] Media retrieval error:", e.message);
+      res.status(500).json({ message: "Failed to retrieve media" });
+    }
+  });
+
+  app.get("/api/trustvault/library/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId as string);
+      if (!userId) return res.status(400).json({ message: "Invalid user ID" });
+      const sub = await storage.getSubscription(userId);
+      if (sub?.status !== "active") {
+        return res.status(403).json({ message: "Premium subscription required", requiresPremium: true });
+      }
+      const tlInfo = await getUserTrustLayerInfo(userId);
+      if (!tlInfo.trustLayerId) return res.json({ items: [], total: 0, hasMore: false });
+      const source = req.query.source as string | undefined;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const offset = parseInt(req.query.offset as string) || 0;
+      const sort = (req.query.sort as "newest" | "oldest") || "newest";
+      const result = await getUserMedia(tlInfo.trustLayerId, { source, limit, offset, sort });
+      res.json(result);
+    } catch (e: any) {
+      console.error("[TrustVault] Library error:", e.message);
+      res.status(500).json({ message: "Failed to fetch media library" });
+    }
+  });
+
+  app.get("/api/trustvault/health", async (_req: Request, res: Response) => {
+    const healthy = await tvHealthCheck();
+    res.json({ connected: healthy, service: "TrustVault V1 API" });
+  });
+
+  app.post("/api/trustvault/webhook", async (req: Request, res: Response) => {
+    try {
+      const { event, mediaId, userId, timestamp } = req.body;
+      console.log(`[TrustVault Webhook] ${event} — mediaId: ${mediaId}, user: ${userId}, at: ${timestamp}`);
+      if (event === "media.deleted") {
+        console.log(`[TrustVault] Media ${mediaId} was deleted externally for user ${userId}`);
+      }
+      if (event === "media.flagged") {
+        console.log(`[TrustVault] Media ${mediaId} was flagged for user ${userId}`);
+      }
+      res.json({ received: true });
+    } catch (e) {
+      res.status(200).json({ received: true });
     }
   });
 
