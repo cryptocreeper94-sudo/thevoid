@@ -10,7 +10,7 @@ import { openai, speechToText, textToSpeech, ensureCompatibleFormat, detectAudio
 import Stripe from "stripe";
 import { generateVoidId, sendSubscriptionConfirmationEmail } from "./email";
 import rateLimit from "express-rate-limit";
-import { registerUser, loginUser, getUserFromToken } from "./trustlayer-sso";
+import { registerUser, loginUser, getUserFromToken, ecosystemLogin } from "./trustlayer-sso";
 import { setupChatWebSocket } from "./chat-ws";
 import { seedChatChannels } from "./seedChat";
 import { chatChannels, referrals, voidStamps, chatUsers, subscriptions, achievements, userAchievements, ventStreaks, dailyPrompts, moodChecks, blogPosts, vents, voiceJournalEntries, voidEchoes, moodPortraits } from "@shared/schema";
@@ -176,6 +176,7 @@ ${blogEntries}
   app.use("/api/vents", ventLimiter);
   app.use("/api/auth/pin", authLimiter);
   app.use("/api/auth/change-pin", authLimiter);
+  app.use("/api/chat/auth/ecosystem-login", authLimiter);
 
   app.post("/api/stripe/webhook", async (req: Request, res: Response) => {
     try {
@@ -1226,6 +1227,24 @@ ${blogEntries}
     }
   });
 
+  app.post("/api/chat/auth/ecosystem-login", async (req, res) => {
+    try {
+      const { identifier, credential } = z.object({
+        identifier: z.string().min(1, "Trust Layer ID or email required"),
+        credential: z.string().min(1, "Password or PIN required"),
+      }).parse(req.body);
+      const result = await ecosystemLogin(identifier, credential);
+      if (!result.success) {
+        return res.status(401).json(result);
+      }
+      console.log(`[Ecosystem Login] ${result.user?.email} authenticated via Trust Layer (${result.user?.trustLayerId})`);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Ecosystem login error:", error);
+      res.status(500).json({ success: false, error: "Login failed. Please try again." });
+    }
+  });
+
   app.get("/api/chat/auth/me", async (req, res) => {
     try {
       const authHeader = req.headers.authorization;
@@ -1299,6 +1318,7 @@ CRITICAL RULES:
 
   // Seed channels and setup WebSocket
   seedChatChannels();
+  seedEcosystemMembers();
   setupChatWebSocket(httpServer);
 
   // === GAMIFICATION ROUTES ===
@@ -2473,5 +2493,39 @@ async function transcribeAudio(base64Audio: string, mimeType: string, extension:
       console.error("Transcription error details:", JSON.stringify(e.error));
     }
     return null;
+  }
+}
+
+async function seedEcosystemMembers() {
+  try {
+    const bcrypt = await import("bcryptjs");
+    const ecosystemMembers = [
+      { firstName: "Kathy", lastName: "Nguyen", email: "kathy@happyeats.io",
+        password: "HappyEats@2025", pin: "7724", trustLayerId: "tl-kathy-he01", ecosystemApp: "Happy Eats", username: "kathy.nguyen" },
+      { firstName: "Marcus", lastName: "Chen", email: "marcus@trusthome.io",
+        password: "TrustHome@2025", pin: "4419", trustLayerId: "tl-marc-th01", ecosystemApp: "TrustHome", username: "marcus.chen" },
+      { firstName: "Devon", lastName: "Park", email: "devon@signal.dw",
+        password: "Signal@2025", pin: "8832", trustLayerId: "tl-devn-sg01", ecosystemApp: "Signal", username: "devon.park" },
+    ];
+    for (const m of ecosystemMembers) {
+      const [existing] = await db.select().from(chatUsers).where(eq(chatUsers.email, m.email));
+      if (existing) continue;
+      const passwordHash = await bcrypt.hash(m.password, 12);
+      const pinHash = await bcrypt.hash(m.pin, 12);
+      await db.insert(chatUsers).values({
+        username: m.username,
+        email: m.email,
+        passwordHash,
+        displayName: `${m.firstName} ${m.lastName}`,
+        trustLayerId: m.trustLayerId,
+        ecosystemPinHash: pinHash,
+        ecosystemApp: m.ecosystemApp,
+      });
+      console.log(`[Ecosystem Seed] Created ${m.ecosystemApp} member: ${m.email} (${m.trustLayerId})`);
+    }
+  } catch (e: any) {
+    if (!e?.message?.includes("duplicate")) {
+      console.error("[Ecosystem Seed] Error:", e?.message || e);
+    }
   }
 }

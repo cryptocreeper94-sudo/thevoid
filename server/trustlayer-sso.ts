@@ -125,6 +125,64 @@ export async function loginUser(username: string, password: string) {
   };
 }
 
+export async function ecosystemLogin(identifier: string, credential: string) {
+  if (!identifier || !credential || typeof identifier !== "string" || typeof credential !== "string") {
+    return { success: false, error: "Trust Layer ID or email and credential are required." };
+  }
+  const trimmedId = identifier.trim();
+  const trimmedCred = credential.trim();
+  if (!trimmedId || !trimmedCred) {
+    return { success: false, error: "Trust Layer ID or email and credential are required." };
+  }
+
+  let user;
+  if (trimmedId.startsWith("tl-")) {
+    const [found] = await db.select().from(chatUsers).where(eq(chatUsers.trustLayerId, trimmedId));
+    user = found;
+  }
+  if (!user) {
+    const [found] = await db.select().from(chatUsers).where(eq(chatUsers.email, trimmedId.toLowerCase()));
+    user = found;
+  }
+  if (!user) {
+    return { success: false, error: "No ecosystem account found. Check your Trust Layer ID or email." };
+  }
+  if (!user.trustLayerId) {
+    return { success: false, error: "This account is not linked to the Trust Layer ecosystem. Please sign in with your username and password instead." };
+  }
+
+  let authenticated = false;
+  if (user.ecosystemPinHash && /^\d{4,8}$/.test(trimmedCred)) {
+    authenticated = await bcrypt.compare(trimmedCred, user.ecosystemPinHash);
+  }
+  if (!authenticated) {
+    authenticated = await bcrypt.compare(trimmedCred, user.passwordHash);
+  }
+  if (!authenticated) {
+    return { success: false, error: "Invalid credential. Please check your password or ecosystem PIN." };
+  }
+
+  await db.update(chatUsers).set({ isOnline: true, lastSeen: new Date() }).where(eq(chatUsers.id, user.id));
+
+  const token = signToken(user.id, user.trustLayerId, user.voidId);
+
+  return {
+    success: true,
+    user: {
+      id: user.id,
+      username: user.username,
+      displayName: user.displayName,
+      email: user.email,
+      avatarColor: user.avatarColor,
+      role: user.role,
+      trustLayerId: user.trustLayerId,
+      voidId: user.voidId || null,
+      ecosystemApp: user.ecosystemApp || null,
+    },
+    token,
+  };
+}
+
 export async function getUserFromToken(token: string) {
   const decoded = verifyToken(token);
   if (!decoded) return null;

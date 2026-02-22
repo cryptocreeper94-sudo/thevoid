@@ -29,7 +29,7 @@ The application is built with a React + Vite frontend utilizing Tailwind CSS, Fr
 - **Theming**: Supports a dark/light theme toggle with persistence, impacting glassmorphism component styling via CSS variables.
 - **Security**: Features robust rate limiting across various API endpoints and integrates TrustShield.tech.
 - **Email System**: Utilizes Resend (via Replit integration) for subscription confirmation emails, adhering to the premium design.
-- **Signal Chat**: A real-time global chat system with crisis hotline integration, powered by Trust Layer SSO, using JWT-based authentication and WebSockets.
+- **Signal Chat**: A real-time global chat system with crisis hotline integration, powered by Trust Layer SSO, using JWT-based authentication and WebSockets. Includes ecosystem login — members from any DarkWave app (Happy Eats, TrustHome, Signal, etc.) can sign in via Trust Layer ID or ecosystem email with either their full password or a short numeric PIN. Endpoint at `/api/chat/auth/ecosystem-login`. Schema columns: `ecosystemPinHash`, `ecosystemApp` on `chatUsers`.
 - **Mission Page**: "From the Void" page at `/mission` explaining DarkWave Studios' origin story, values, and promises.
 - **Gamification System**: Streak tracking (daily venting streaks), achievements (10 unlockable badges), daily prompts (rotated by day of week), and mood check-ins (before/after venting). Protected page at `/progress`. Backend routes under `/api/gamification/*`.
 - **AI Blog**: SEO-optimized blog at `/blog` with 4 seed articles on mental wellness. Markdown-like content rendering, category badges, read time estimates. Backend routes at `/api/blog` and `/api/blog/:slug`. Meta descriptions and Open Graph tags for SEO.
