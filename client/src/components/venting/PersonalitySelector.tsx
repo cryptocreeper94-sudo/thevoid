@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Sparkles, Brain, Zap, Heart, Flame } from "lucide-react";
-import smartassImg from "@/assets/images/personality-smartass.png";
-import calmingImg from "@/assets/images/personality-calming.png";
-import therapistImg from "@/assets/images/personality-therapist.png";
-import hypemanImg from "@/assets/images/personality-hypeman.png";
-import roastmasterImg from "@/assets/images/personality-roastmaster.png";
+import smartassImg from "@/assets/images/personality-smartass.webp";
+import calmingImg from "@/assets/images/personality-calming.webp";
+import therapistImg from "@/assets/images/personality-therapist.webp";
+import hypemanImg from "@/assets/images/personality-hypeman.webp";
+import roastmasterImg from "@/assets/images/personality-roastmaster.webp";
 
 interface PersonalitySelectorProps {
   selected: string;

@@ -12,9 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import contactFormImg from "@/assets/images/contact-form.png";
-import contactEmailImg from "@/assets/images/contact-email.png";
-import contactSupportImg from "@/assets/images/contact-support.png";
+import contactFormImg from "@/assets/images/contact-form.webp";
+import contactEmailImg from "@/assets/images/contact-email.webp";
+import contactSupportImg from "@/assets/images/contact-support.webp";
 
 const stagger = {
   hidden: { opacity: 0 },

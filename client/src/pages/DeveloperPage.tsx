@@ -14,11 +14,11 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import type { RoadmapItem, WhitelistedUser } from "@shared/schema";
-import statusImg from "@/assets/images/dev-status.png";
-import dangerImg from "@/assets/images/dev-danger.png";
-import settingsImg from "@/assets/images/dev-settings.png";
-import roadmapImg from "@/assets/images/dev-roadmap.png";
-import whitelistImg from "@/assets/images/dev-whitelist.png";
+import statusImg from "@/assets/images/dev-status.webp";
+import dangerImg from "@/assets/images/dev-danger.webp";
+import settingsImg from "@/assets/images/dev-settings.webp";
+import roadmapImg from "@/assets/images/dev-roadmap.webp";
+import whitelistImg from "@/assets/images/dev-whitelist.webp";
 
 const stagger = {
   hidden: { opacity: 0 },

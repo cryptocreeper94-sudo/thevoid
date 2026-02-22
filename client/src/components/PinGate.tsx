@@ -3,7 +3,7 @@ import { Layout } from "@/components/ui/Layout";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Lock, Check, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
-import voidPortalImg from "@/assets/images/void-portal.png";
+import voidPortalImg from "@/assets/images/void-portal.webp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { apiRequest } from "@/lib/queryClient";

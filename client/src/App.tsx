@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, lazy, Suspense } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -8,32 +8,41 @@ import { PinGate } from "@/components/PinGate";
 import { SplashScreen } from "@/components/SplashScreen";
 import { useAppModeProvider } from "@/hooks/use-app-mode";
 import NotFound from "@/pages/not-found";
-import RecordPage from "@/pages/RecordPage";
-import SettingsPage from "@/pages/SettingsPage";
-import PrivacyPage from "@/pages/PrivacyPage";
-import TermsPage from "@/pages/TermsPage";
-import DeveloperPage from "@/pages/DeveloperPage";
-import ContactPage from "@/pages/ContactPage";
-import ConversationsPage from "@/pages/ConversationsPage";
-import SignalChatPage from "@/pages/SignalChatPage";
-import MissionPage from "@/pages/MissionPage";
-import GamificationPage from "@/pages/GamificationPage";
-import BlogPage from "@/pages/BlogPage";
-import ZenZonePage from "@/pages/ZenZonePage";
-import CrisisToolkitPage from "@/pages/CrisisToolkitPage";
-import SleepSoundsPage from "@/pages/SleepSoundsPage";
-import JournalPage from "@/pages/JournalPage";
-import MoodAnalyticsPage from "@/pages/MoodAnalyticsPage";
-import VentLibraryPage from "@/pages/VentLibraryPage";
-import AffirmationsPage from "@/pages/AffirmationsPage";
-import RageRoomPage from "@/pages/RageRoomPage";
-import LandingPage from "@/pages/LandingPage";
-import VoiceJournalPage from "@/pages/VoiceJournalPage";
-import VoiceFingerprintPage from "@/pages/VoiceFingerprintPage";
-import MoodPortraitPage from "@/pages/MoodPortraitPage";
-import VoidEchoPage from "@/pages/VoidEchoPage";
-import TrustVaultLibraryPage from "@/pages/TrustVaultLibraryPage";
-import OnboardingPage from "@/pages/OnboardingPage";
+
+const RecordPage = lazy(() => import("@/pages/RecordPage"));
+const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
+const PrivacyPage = lazy(() => import("@/pages/PrivacyPage"));
+const TermsPage = lazy(() => import("@/pages/TermsPage"));
+const DeveloperPage = lazy(() => import("@/pages/DeveloperPage"));
+const ContactPage = lazy(() => import("@/pages/ContactPage"));
+const ConversationsPage = lazy(() => import("@/pages/ConversationsPage"));
+const SignalChatPage = lazy(() => import("@/pages/SignalChatPage"));
+const MissionPage = lazy(() => import("@/pages/MissionPage"));
+const GamificationPage = lazy(() => import("@/pages/GamificationPage"));
+const BlogPage = lazy(() => import("@/pages/BlogPage"));
+const ZenZonePage = lazy(() => import("@/pages/ZenZonePage"));
+const CrisisToolkitPage = lazy(() => import("@/pages/CrisisToolkitPage"));
+const SleepSoundsPage = lazy(() => import("@/pages/SleepSoundsPage"));
+const JournalPage = lazy(() => import("@/pages/JournalPage"));
+const MoodAnalyticsPage = lazy(() => import("@/pages/MoodAnalyticsPage"));
+const VentLibraryPage = lazy(() => import("@/pages/VentLibraryPage"));
+const AffirmationsPage = lazy(() => import("@/pages/AffirmationsPage"));
+const RageRoomPage = lazy(() => import("@/pages/RageRoomPage"));
+const LandingPage = lazy(() => import("@/pages/LandingPage"));
+const VoiceJournalPage = lazy(() => import("@/pages/VoiceJournalPage"));
+const VoiceFingerprintPage = lazy(() => import("@/pages/VoiceFingerprintPage"));
+const MoodPortraitPage = lazy(() => import("@/pages/MoodPortraitPage"));
+const VoidEchoPage = lazy(() => import("@/pages/VoidEchoPage"));
+const TrustVaultLibraryPage = lazy(() => import("@/pages/TrustVaultLibraryPage"));
+const OnboardingPage = lazy(() => import("@/pages/OnboardingPage"));
+
+function LazyFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
 
 function ProtectedRoutes() {
   return (
@@ -61,23 +70,25 @@ function ProtectedRoutes() {
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={LandingPage} />
-      <Route path="/onboarding" component={OnboardingPage} />
-      <Route path="/privacy" component={PrivacyPage} />
-      <Route path="/terms" component={TermsPage} />
-      <Route path="/developer" component={DeveloperPage} />
-      <Route path="/contact" component={ContactPage} />
-      <Route path="/signal" component={SignalChatPage} />
-      <Route path="/mission" component={MissionPage} />
-      <Route path="/blog" component={BlogPage} />
-      <Route path="/zen" component={ZenZonePage} />
-      <Route path="/crisis" component={CrisisToolkitPage} />
-      <Route path="/sleep-sounds" component={SleepSoundsPage} />
-      <Route>
-        <ProtectedRoutes />
-      </Route>
-    </Switch>
+    <Suspense fallback={<LazyFallback />}>
+      <Switch>
+        <Route path="/" component={LandingPage} />
+        <Route path="/onboarding" component={OnboardingPage} />
+        <Route path="/privacy" component={PrivacyPage} />
+        <Route path="/terms" component={TermsPage} />
+        <Route path="/developer" component={DeveloperPage} />
+        <Route path="/contact" component={ContactPage} />
+        <Route path="/signal" component={SignalChatPage} />
+        <Route path="/mission" component={MissionPage} />
+        <Route path="/blog" component={BlogPage} />
+        <Route path="/zen" component={ZenZonePage} />
+        <Route path="/crisis" component={CrisisToolkitPage} />
+        <Route path="/sleep-sounds" component={SleepSoundsPage} />
+        <Route>
+          <ProtectedRoutes />
+        </Route>
+      </Switch>
+    </Suspense>
   );
 }
 

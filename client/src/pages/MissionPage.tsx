@@ -6,8 +6,8 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, Shield, Heart, Users, Globe, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import originImg from "@/assets/images/mission-origin.png";
-import promiseImg from "@/assets/images/mission-promise.png";
+import originImg from "@/assets/images/mission-origin.webp";
+import promiseImg from "@/assets/images/mission-promise.webp";
 
 const stagger = {
   hidden: { opacity: 0 },

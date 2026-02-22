@@ -15,7 +15,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Library, Search, Play, Pause, X, MessageSquare, Mic, Calendar } from "lucide-react";
-import libraryImg from "@/assets/images/vent-library.png";
+import libraryImg from "@/assets/images/vent-library.webp";
 
 const stagger = {
   hidden: { opacity: 0 },
