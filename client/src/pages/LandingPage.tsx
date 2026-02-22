@@ -172,20 +172,6 @@ export default function LandingPage() {
           style={{ y: titleY, opacity: heroOpacity }}
           className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6 max-w-4xl mx-auto"
         >
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.2 }}
-            className="mb-6"
-          >
-            <img
-              src="/icon-192.webp"
-              alt="THE VOID"
-              className="w-20 h-20 rounded-2xl shadow-2xl shadow-cyan-500/30 mx-auto mb-6"
-              data-testid="img-landing-logo"
-            />
-          </motion.div>
-
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
