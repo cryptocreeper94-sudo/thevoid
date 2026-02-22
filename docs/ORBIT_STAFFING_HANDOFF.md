@@ -221,8 +221,8 @@ Use these demo accounts (seeded in THE VOID) to verify cross-app login:
 | Name | Email | PIN | Password | Trust Layer ID | From |
 |------|-------|-----|----------|---------------|------|
 | Kathy Nguyen | kathy@happyeats.io | 7724 | HappyEats@2025 | tl-kathy-he01 | Happy Eats |
-| Marcus Chen | marcus@trusthome.io | 4419 | TrustHome@2025 | tl-marc-th01 | TrustHome |
-| Devon Park | devon@signal.dw | 8832 | Signal@2025 | tl-devn-sg01 | Signal |
+| Marcus Chen | marcus@trusthome.io | 8832 | TrustHome@2025 | tl-marcus-th01 | TrustHome |
+| Devon Blackwell | devon@signal.dw | 6619 | Signal@2025 | tl-devon-sig01 | Signal |
 
 **Test these flows:**
 1. Login with email + PIN

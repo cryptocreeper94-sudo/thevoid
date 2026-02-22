@@ -2503,9 +2503,9 @@ async function seedEcosystemMembers() {
       { firstName: "Kathy", lastName: "Nguyen", email: "kathy@happyeats.io",
         password: "HappyEats@2025", pin: "7724", trustLayerId: "tl-kathy-he01", ecosystemApp: "Happy Eats", username: "kathy.nguyen" },
       { firstName: "Marcus", lastName: "Chen", email: "marcus@trusthome.io",
-        password: "TrustHome@2025", pin: "4419", trustLayerId: "tl-marc-th01", ecosystemApp: "TrustHome", username: "marcus.chen" },
-      { firstName: "Devon", lastName: "Park", email: "devon@signal.dw",
-        password: "Signal@2025", pin: "8832", trustLayerId: "tl-devn-sg01", ecosystemApp: "Signal", username: "devon.park" },
+        password: "TrustHome@2025", pin: "8832", trustLayerId: "tl-marcus-th01", ecosystemApp: "TrustHome", username: "marcus.chen" },
+      { firstName: "Devon", lastName: "Blackwell", email: "devon@signal.dw",
+        password: "Signal@2025", pin: "6619", trustLayerId: "tl-devon-sig01", ecosystemApp: "Signal", username: "devon.blackwell" },
     ];
     for (const m of ecosystemMembers) {
       const [existing] = await db.select().from(chatUsers).where(eq(chatUsers.email, m.email));
