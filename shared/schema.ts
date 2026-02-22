@@ -218,6 +218,8 @@ export const chatUsers = pgTable("chat_users", {
   role: text("role").notNull().default("member"),
   trustLayerId: text("trust_layer_id").unique(),
   voidId: varchar("void_id", { length: 12 }),
+  ecosystemPinHash: text("ecosystem_pin_hash"),
+  ecosystemApp: text("ecosystem_app"),
   isOnline: boolean("is_online").default(false),
   lastSeen: timestamp("last_seen").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),

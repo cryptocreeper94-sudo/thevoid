@@ -61,11 +61,13 @@ interface AiMsg {
 }
 
 function AuthScreen({ onAuth }: { onAuth: (user: ChatUser, token: string) => void }) {
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [mode, setMode] = useState<"login" | "register" | "ecosystem">("login");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [identifier, setIdentifier] = useState("");
+  const [credential, setCredential] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -102,6 +104,34 @@ function AuthScreen({ onAuth }: { onAuth: (user: ChatUser, token: string) => voi
     }
   };
 
+  const handleEcosystemLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const res = await apiRequest("POST", "/api/chat/auth/ecosystem-login", {
+        identifier: identifier.trim(),
+        credential: credential.trim(),
+      });
+      const data = await res.json();
+      if (data.success) {
+        localStorage.setItem("tl-sso-token", data.token);
+        onAuth(data.user, data.token);
+      } else {
+        setError(data.error || "Could not verify your ecosystem credentials.");
+      }
+    } catch (err: any) {
+      try {
+        const errData = await err?.json?.();
+        setError(errData?.error || "Could not verify your ecosystem credentials.");
+      } catch {
+        setError("Network error. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex items-center justify-center min-h-[60vh] px-4">
       <motion.div
@@ -112,108 +142,201 @@ function AuthScreen({ onAuth }: { onAuth: (user: ChatUser, token: string) => voi
         <GlassCard className="p-6" hoverEffect>
           <div className="text-center mb-5">
             <div className="inline-flex p-3 rounded-full bg-red-400/10 mb-3">
-              <Heart className="w-8 h-8 text-red-400" />
+              {mode === "ecosystem" ? <ShieldCheck className="w-8 h-8 text-emerald-400" /> : <Heart className="w-8 h-8 text-red-400" />}
             </div>
-            <h2 className="text-xl font-bold font-display text-foreground">Signal Chat</h2>
+            <h2 className="text-xl font-bold font-display text-foreground">
+              {mode === "ecosystem" ? "Trust Layer Login" : "Signal Chat"}
+            </h2>
             <p className="text-xs text-muted-foreground mt-1">
-              {mode === "login" ? "Sign in to join the conversation" : "Create your Trust Layer account"}
+              {mode === "ecosystem" ? "Sign in with your ecosystem credentials" : mode === "login" ? "Sign in to join the conversation" : "Create your Trust Layer account"}
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Username</label>
-              <Input
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter username"
-                className="bg-white/5 border-white/10"
-                autoFocus
-                data-testid="input-chat-username"
-              />
-            </div>
-
-            {mode === "register" && (
-              <>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Display Name</label>
-                  <Input
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Your display name"
-                    className="bg-white/5 border-white/10"
-                    data-testid="input-chat-display-name"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Email</label>
-                  <Input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    className="bg-white/5 border-white/10"
-                    data-testid="input-chat-email"
-                  />
-                </div>
-              </>
-            )}
-
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Password</label>
-              <div className="relative">
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={mode === "register" ? "Min 8 chars, 1 uppercase, 1 special" : "Enter password"}
-                  className="bg-white/5 border-white/10 pr-10"
-                  data-testid="input-chat-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
-                  data-testid="button-toggle-chat-password"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+          {mode === "ecosystem" ? (
+            <form onSubmit={handleEcosystemLogin} className="space-y-3">
+              <div className="p-2.5 rounded-lg border border-emerald-500/20 bg-emerald-500/5 mb-1">
+                <p className="text-[10px] text-muted-foreground text-center">
+                  Sign in with your Trust Layer ID or the email from any DarkWave ecosystem app
+                  (Happy Eats, TrustHome, Signal, etc.)
+                </p>
               </div>
-            </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Trust Layer ID or Email</label>
+                <Input
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  placeholder="tl-xxxx-xxxx or you@example.com"
+                  className="bg-white/5 border-white/10"
+                  autoFocus
+                  autoCapitalize="off"
+                  autoComplete="username"
+                  required
+                  data-testid="input-eco-identifier"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Password or Ecosystem PIN</label>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    value={credential}
+                    onChange={(e) => setCredential(e.target.value)}
+                    placeholder="Password or PIN"
+                    className="bg-white/5 border-white/10 pr-10"
+                    autoComplete="current-password"
+                    required
+                    data-testid="input-eco-credential"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                    data-testid="button-toggle-eco-password"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <p className="text-[10px] text-muted-foreground/60 mt-1">
+                  Use your full password or ecosystem PIN if you've been whitelisted
+                </p>
+              </div>
 
-            {error && (
-              <motion.p
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-xs text-red-400 text-center"
-                data-testid="text-chat-auth-error"
-              >
-                {error}
-              </motion.p>
-            )}
-
-            <Button type="submit" className="w-full" disabled={loading} data-testid="button-chat-auth-submit">
-              {loading ? "Please wait..." : mode === "login" ? (
-                <><LogIn className="w-4 h-4 mr-1.5" /> Sign In</>
-              ) : (
-                <><UserPlus className="w-4 h-4 mr-1.5" /> Create Account</>
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-xs text-red-400 text-center"
+                  data-testid="text-eco-auth-error"
+                >
+                  {error}
+                </motion.p>
               )}
-            </Button>
-          </form>
 
-          <div className="mt-4 pt-3 border-t border-white/5 text-center">
-            <button
-              onClick={() => { setMode(mode === "login" ? "register" : "login"); setError(""); }}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-              data-testid="button-toggle-auth-mode"
-            >
-              {mode === "login" ? "Don't have an account? Register" : "Already have an account? Sign in"}
-            </button>
+              <Button type="submit" className="w-full bg-emerald-600 text-white" disabled={loading} data-testid="button-eco-submit">
+                {loading ? <><Loader2 className="w-4 h-4 animate-spin mr-1.5" /> Verifying...</> : <><ShieldCheck className="w-4 h-4 mr-1.5" /> Sign In with Trust Layer</>}
+              </Button>
+            </form>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Username</label>
+                <Input
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Enter username"
+                  className="bg-white/5 border-white/10"
+                  autoFocus
+                  data-testid="input-chat-username"
+                />
+              </div>
+
+              {mode === "register" && (
+                <>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Display Name</label>
+                    <Input
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      placeholder="Your display name"
+                      className="bg-white/5 border-white/10"
+                      data-testid="input-chat-display-name"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Email</label>
+                    <Input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="your@email.com"
+                      className="bg-white/5 border-white/10"
+                      data-testid="input-chat-email"
+                    />
+                  </div>
+                </>
+              )}
+
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Password</label>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={mode === "register" ? "Min 8 chars, 1 uppercase, 1 special" : "Enter password"}
+                    className="bg-white/5 border-white/10 pr-10"
+                    data-testid="input-chat-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                    data-testid="button-toggle-chat-password"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-xs text-red-400 text-center"
+                  data-testid="text-chat-auth-error"
+                >
+                  {error}
+                </motion.p>
+              )}
+
+              <Button type="submit" className="w-full" disabled={loading} data-testid="button-chat-auth-submit">
+                {loading ? "Please wait..." : mode === "login" ? (
+                  <><LogIn className="w-4 h-4 mr-1.5" /> Sign In</>
+                ) : (
+                  <><UserPlus className="w-4 h-4 mr-1.5" /> Create Account</>
+                )}
+              </Button>
+            </form>
+          )}
+
+          <div className="mt-4 pt-3 border-t border-white/5 space-y-2">
+            {mode !== "ecosystem" ? (
+              <>
+                <button
+                  onClick={() => { setMode(mode === "login" ? "register" : "login"); setError(""); setShowPassword(false); }}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-center"
+                  data-testid="button-toggle-auth-mode"
+                >
+                  {mode === "login" ? "Don't have an account? Register" : "Already have an account? Sign in"}
+                </button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full border-emerald-500/30 text-xs"
+                  onClick={() => { setMode("ecosystem"); setError(""); setShowPassword(false); }}
+                  data-testid="button-switch-ecosystem"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 mr-1.5 text-emerald-400" />
+                  Sign in with Trust Layer
+                </Button>
+              </>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full text-xs"
+                onClick={() => { setMode("login"); setError(""); setShowPassword(false); }}
+                data-testid="button-switch-back-login"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
+                Sign in with username instead
+              </Button>
+            )}
           </div>
 
           <div className="mt-3 p-2.5 rounded-md bg-amber-400/5 border border-amber-400/10">
             <p className="text-[10px] text-amber-400/80 text-center">
-              Your Trust Layer account works across the DarkWave ecosystem — GarageBot, Guardian AI, and more.
+              Your Trust Layer account works across the DarkWave ecosystem — Happy Eats, TrustHome, Signal, and more.
             </p>
           </div>
         </GlassCard>
