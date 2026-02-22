@@ -16,13 +16,13 @@ import { usePinAuth } from "@/components/PinGate";
 import { useSubscription, createCheckoutSession, createPortalSession } from "@/hooks/use-subscription";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import smartassImg from "@/assets/images/personality-smartass.png";
-import calmingImg from "@/assets/images/personality-calming.png";
-import therapistImg from "@/assets/images/personality-therapist.png";
-import hypemanImg from "@/assets/images/personality-hypeman.png";
-import roastmasterImg from "@/assets/images/personality-roastmaster.png";
-import audioImg from "@/assets/images/settings-audio.png";
-import displayImg from "@/assets/images/settings-display.png";
+import smartassImg from "@/assets/images/personality-smartass.webp";
+import calmingImg from "@/assets/images/personality-calming.webp";
+import therapistImg from "@/assets/images/personality-therapist.webp";
+import hypemanImg from "@/assets/images/personality-hypeman.webp";
+import roastmasterImg from "@/assets/images/personality-roastmaster.webp";
+import audioImg from "@/assets/images/settings-audio.webp";
+import displayImg from "@/assets/images/settings-display.webp";
 
 const stagger = {
   hidden: { opacity: 0 },

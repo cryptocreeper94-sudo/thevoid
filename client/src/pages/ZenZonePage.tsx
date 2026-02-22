@@ -6,12 +6,12 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { Wind, Play, Pause, RotateCcw, Waves, TreePine, CloudRain, Flame as FlameIcon, Timer, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import breatheImg from "@/assets/images/zen-breathe.png";
-import rainImg from "@/assets/images/zen-rain.png";
-import oceanImg from "@/assets/images/zen-ocean.png";
-import forestImg from "@/assets/images/zen-forest.png";
-import fireImg from "@/assets/images/zen-fire.png";
-import timerImg from "@/assets/images/zen-timer.png";
+import breatheImg from "@/assets/images/zen-breathe.webp";
+import rainImg from "@/assets/images/zen-rain.webp";
+import oceanImg from "@/assets/images/zen-ocean.webp";
+import forestImg from "@/assets/images/zen-forest.webp";
+import fireImg from "@/assets/images/zen-fire.webp";
+import timerImg from "@/assets/images/zen-timer.webp";
 
 const stagger = {
   hidden: { opacity: 0 },

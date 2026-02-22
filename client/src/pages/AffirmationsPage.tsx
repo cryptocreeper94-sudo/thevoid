@@ -15,7 +15,7 @@ import {
   CarouselPrevious,
   CarouselNext,
 } from "@/components/ui/carousel";
-import affirmImg from "@/assets/images/affirmations-sunrise.png";
+import affirmImg from "@/assets/images/affirmations-sunrise.webp";
 
 interface Affirmation {
   id: number;

@@ -6,12 +6,12 @@ import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useMeta } from "@/hooks/use-meta";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import disclaimerImg from "@/assets/images/terms-disclaimer.png";
-import liabilityImg from "@/assets/images/terms-liability.png";
-import prohibitedImg from "@/assets/images/terms-prohibited.png";
-import dataImg from "@/assets/images/terms-data.png";
-import ipImg from "@/assets/images/terms-ip.png";
-import lawImg from "@/assets/images/terms-law.png";
+import disclaimerImg from "@/assets/images/terms-disclaimer.webp";
+import liabilityImg from "@/assets/images/terms-liability.webp";
+import prohibitedImg from "@/assets/images/terms-prohibited.webp";
+import dataImg from "@/assets/images/terms-data.webp";
+import ipImg from "@/assets/images/terms-ip.webp";
+import lawImg from "@/assets/images/terms-law.webp";
 
 const stagger = {
   hidden: { opacity: 0 },

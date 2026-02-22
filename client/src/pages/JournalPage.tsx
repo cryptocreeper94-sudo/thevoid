@@ -16,7 +16,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { BookOpen, Send, Trash2, Sparkles, Brain } from "lucide-react";
-import journalImg from "@/assets/images/journal-write.png";
+import journalImg from "@/assets/images/journal-write.webp";
 
 const stagger = {
   hidden: { opacity: 0 },

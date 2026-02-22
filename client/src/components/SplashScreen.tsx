@@ -67,7 +67,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
             className="mb-6"
           >
             <img
-              src="/icon-192.png"
+              src="/icon-192.webp"
               alt="THE VOID"
               className="w-24 h-24 rounded-3xl shadow-2xl shadow-cyan-500/20"
             />

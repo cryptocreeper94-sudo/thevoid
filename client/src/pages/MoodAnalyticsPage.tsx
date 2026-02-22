@@ -13,7 +13,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import analyticsImg from "@/assets/images/mood-analytics.png";
+import analyticsImg from "@/assets/images/mood-analytics.webp";
 
 const stagger = {
   hidden: { opacity: 0 },

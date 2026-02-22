@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { Button } from "@/components/ui/button";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
-import archiveImg from "@/assets/images/history-archive.png";
+import archiveImg from "@/assets/images/history-archive.webp";
 
 interface Vent {
   id: number;

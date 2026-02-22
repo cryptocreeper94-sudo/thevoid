@@ -20,7 +20,7 @@ import {
   Play,
   Pause,
 } from "lucide-react";
-import sleepImg from "@/assets/images/sleep-moonlight.png";
+import sleepImg from "@/assets/images/sleep-moonlight.webp";
 
 const stagger = {
   hidden: { opacity: 0 },

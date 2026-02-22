@@ -8,9 +8,9 @@ import { Flame, Trophy, Target, BarChart3, ChevronLeft, ChevronRight, Lock, Star
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { usePinAuth } from "@/components/PinGate";
-import streakImg from "@/assets/images/gamification-streak.png";
-import moodImg from "@/assets/images/gamification-mood.png";
-import promptImg from "@/assets/images/gamification-prompt.png";
+import streakImg from "@/assets/images/gamification-streak.webp";
+import moodImg from "@/assets/images/gamification-mood.webp";
+import promptImg from "@/assets/images/gamification-prompt.webp";
 
 const stagger = {
   hidden: { opacity: 0 },

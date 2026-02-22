@@ -1,11 +1,11 @@
-import heroBlackFemale from "@/assets/images/hero-black-female.png";
-import heroBlackMale from "@/assets/images/hero-black-male.png";
-import heroWhiteFemale from "@/assets/images/hero-white-female.png";
-import heroWhiteMale from "@/assets/images/hero-white-male.png";
-import heroHispanicFemale from "@/assets/images/hero-hispanic-female.png";
-import heroHispanicMale from "@/assets/images/hero-hispanic-male.png";
-import heroAsianFemale from "@/assets/images/hero-asian-female.png";
-import heroAsianMale from "@/assets/images/hero-asian-male.png";
+import heroBlackFemale from "@/assets/images/hero-black-female.webp";
+import heroBlackMale from "@/assets/images/hero-black-male.webp";
+import heroWhiteFemale from "@/assets/images/hero-white-female.webp";
+import heroWhiteMale from "@/assets/images/hero-white-male.webp";
+import heroHispanicFemale from "@/assets/images/hero-hispanic-female.webp";
+import heroHispanicMale from "@/assets/images/hero-hispanic-male.webp";
+import heroAsianFemale from "@/assets/images/hero-asian-female.webp";
+import heroAsianMale from "@/assets/images/hero-asian-male.webp";
 
 const heroImages = [
   heroBlackFemale,

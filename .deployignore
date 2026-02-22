@@ -1,0 +1,9 @@
+android/
+ios/
+docs/
+attached_assets/
+.agents/
+.local/
+references/
+*.md
+!README.md

@@ -6,11 +6,11 @@ import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useMeta } from "@/hooks/use-meta";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import collectionImg from "@/assets/images/privacy-collection.png";
-import usageImg from "@/assets/images/privacy-usage.png";
-import securityImg from "@/assets/images/privacy-security.png";
-import retentionImg from "@/assets/images/privacy-retention.png";
-import childrenImg from "@/assets/images/privacy-children.png";
+import collectionImg from "@/assets/images/privacy-collection.webp";
+import usageImg from "@/assets/images/privacy-usage.webp";
+import securityImg from "@/assets/images/privacy-security.webp";
+import retentionImg from "@/assets/images/privacy-retention.webp";
+import childrenImg from "@/assets/images/privacy-children.webp";
 
 const stagger = {
   hidden: { opacity: 0 },

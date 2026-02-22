@@ -32,7 +32,7 @@ import {
   Save,
   ChevronRight,
 } from "lucide-react";
-import crisisImg from "@/assets/images/crisis-lighthouse.png";
+import crisisImg from "@/assets/images/crisis-lighthouse.webp";
 
 const stagger = {
   hidden: { opacity: 0 },

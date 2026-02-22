@@ -179,7 +179,7 @@ export default function LandingPage() {
             className="mb-6"
           >
             <img
-              src="/icon-192.png"
+              src="/icon-192.webp"
               alt="THE VOID"
               className="w-20 h-20 rounded-2xl shadow-2xl shadow-cyan-500/30 mx-auto mb-6"
               data-testid="img-landing-logo"

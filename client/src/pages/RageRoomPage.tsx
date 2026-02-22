@@ -6,7 +6,7 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Plus, RotateCcw, Zap, Target, Flame, Trophy } from "lucide-react";
-import rageImg from "@/assets/images/rage-smash.png";
+import rageImg from "@/assets/images/rage-smash.webp";
 
 const stagger = {
   hidden: { opacity: 0 },

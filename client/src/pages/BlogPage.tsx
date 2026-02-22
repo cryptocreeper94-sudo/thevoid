@@ -8,10 +8,10 @@ import { BookOpen, ArrowLeft, ChevronLeft, ChevronRight, Tag, Calendar as Calend
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
-import wellnessImg from "@/assets/images/blog-wellness.png";
-import stressImg from "@/assets/images/blog-stress.png";
-import breathingImg from "@/assets/images/blog-breathing.png";
-import emotionsImg from "@/assets/images/blog-emotions.png";
+import wellnessImg from "@/assets/images/blog-wellness.webp";
+import stressImg from "@/assets/images/blog-stress.webp";
+import breathingImg from "@/assets/images/blog-breathing.webp";
+import emotionsImg from "@/assets/images/blog-emotions.webp";
 
 const stagger = {
   hidden: { opacity: 0 },
