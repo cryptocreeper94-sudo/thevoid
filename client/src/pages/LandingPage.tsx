@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { Mic, Brain, Shield, Flame, Moon, PenLine, BarChart3, Sparkles, ChevronDown, ArrowRight, Zap, Lock, Volume2, Fingerprint, Palette, Timer } from "lucide-react";
+import { Mic, Brain, Shield, Flame, Moon, PenLine, BarChart3, Sparkles, ChevronDown, ArrowRight, Zap, Lock, Volume2, Fingerprint, Palette, Timer, Code } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/GlassCard";
 import flyoverVideo1 from "@/assets/videos/flyover-1.mp4";
@@ -571,6 +571,14 @@ export default function LandingPage() {
             <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
           <p className="text-[10px] text-white/20 mt-6 tracking-[0.3em] uppercase">DarkWave Studios</p>
+          <button
+            onClick={() => navigate("/developer")}
+            className="mt-4 flex items-center gap-1.5 mx-auto text-[10px] text-white/15 hover:text-white/40 transition-colors tracking-[0.2em] uppercase"
+            data-testid="link-developer-landing"
+          >
+            <Code className="w-3 h-3" />
+            Developer
+          </button>
         </motion.div>
       </section>
     </div>
