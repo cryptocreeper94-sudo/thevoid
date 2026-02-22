@@ -395,11 +395,12 @@ ${blogEntries}
       if (!userId) return res.json({ tier: "free", ventsUsedToday: 0, ventsRemaining: FREE_DAILY_VENT_LIMIT });
 
       const sub = await storage.getSubscription(userId);
+      const isWhitelisted = await storage.isWhitelistedUser(userId);
       const today = getTodayDate();
       const usage = await storage.getDailyVentUsage(userId, today);
       const ventsUsedToday = usage?.ventCount || 0;
 
-      const isPremium = sub?.status === "active";
+      const isPremium = sub?.status === "active" || isWhitelisted;
       const tier = isPremium ? "premium" : "free";
       const freeRemaining = Math.max(0, FREE_DAILY_VENT_LIMIT - ventsUsedToday);
       const userCredits = await storage.getUserCredits(userId);
@@ -413,10 +414,11 @@ ${blogEntries}
         ventsRemaining,
         creditsAvailable,
         creditBalance,
-        status: sub?.status || "free",
+        status: sub?.status || (isWhitelisted ? "active" : "free"),
         currentPeriodEnd: sub?.currentPeriodEnd,
         voidId: sub?.voidId || null,
         isFounder: sub?.isFounder || false,
+        isWhitelisted,
       });
     } catch (err: any) {
       res.status(500).json({ message: "Failed to get subscription status" });
@@ -651,7 +653,8 @@ ${blogEntries}
         const numericUserId = parseInt(userId);
         if (numericUserId) {
           const sub = await storage.getSubscription(numericUserId);
-          const isPremium = sub?.status === "active";
+          const isWhitelisted = await storage.isWhitelistedUser(numericUserId);
+          const isPremium = sub?.status === "active" || isWhitelisted;
           if (!isPremium) {
             const today = getTodayDate();
             const usage = await storage.getDailyVentUsage(numericUserId, today);
@@ -2031,7 +2034,8 @@ Blend emotions together like watercolors. Make it beautiful and unique. Return O
       const userId = parseInt(req.params.userId as string);
       if (!userId) return res.status(400).json({ message: "Invalid user ID" });
       const sub = await storage.getSubscription(userId);
-      if (sub?.status !== "active") {
+      const isWhitelisted = await storage.isWhitelistedUser(userId);
+      if (sub?.status !== "active" && !isWhitelisted) {
         return res.status(403).json({ message: "Premium subscription required", requiresPremium: true });
       }
       const tlInfo = await getUserTrustLayerInfo(userId);
