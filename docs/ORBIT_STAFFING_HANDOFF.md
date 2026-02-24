@@ -1,11 +1,15 @@
 
 # THE VOID — Integration Handoff for Orbit Staffing
 
+> **IMPORTANT — PROJECT MIGRATION NOTICE (February 2025)**
+> THE VOID has been migrated to a **new Replit project** to resolve prior connection issues. All previous API endpoints, secrets, and deployment URLs from the old project are no longer valid. This handoff document reflects the current, active project. If you had any saved references to the old project, please replace them with the details below.
+
 ## What is THE VOID?
 
 THE VOID is a voice-first mental wellness platform by DarkWave Studios. Users record their frustrations (venting) and receive AI-generated responses from one of 5 personality modes (Smart-ass, Calming, Therapist, Hype Man, Roast Master). It's a subscription-based app with a premium glassmorphism design, built on React + Vite + Express + PostgreSQL.
 
 **Live URL:** Published on Replit (`.replit.app` domain)
+**Dev Domain:** `9558e4e6-8018-44f4-896d-d017366f8623-00-e3pv2virc2vr.janeway.replit.dev`
 
 ---
 
@@ -235,6 +239,62 @@ Use these demo accounts (seeded in THE VOID) to verify cross-app login:
 
 ---
 
+## Reconnection Steps (New Project)
+
+THE VOID moved to a new Replit project. To reconnect Orbit Staffing:
+
+### 1. Update Your Stored API Base URL
+
+Replace any saved base URL for THE VOID's API with the new deployment domain. Once published, the production URL will be on the `.replit.app` domain. During development, use:
+
+```
+https://9558e4e6-8018-44f4-896d-d017366f8623-00-e3pv2virc2vr.janeway.replit.dev
+```
+
+### 2. Verify Secrets Are In Place
+
+THE VOID's new project already has these secrets configured:
+- `ORBIT_STAFFING_API_KEY` — API key for authenticating requests from/to Orbit Staffing
+- `ORBIT_STAFFING_API_SECRET` — API secret for signed requests
+- `ORBIT_STAFFING_BASE_URL` — **This needs to be updated** to point to Orbit Staffing's current URL if it changed
+
+On the Orbit Staffing side, update your stored secrets:
+- `VOID_API_KEY` (or equivalent) — must match the `ORBIT_STAFFING_API_KEY` value stored in THE VOID
+- `VOID_BASE_URL` — update to THE VOID's new deployment URL
+
+### 3. Test the Connection
+
+Once URLs and secrets are updated on both sides, verify connectivity:
+
+**From Orbit Staffing → THE VOID:**
+```bash
+curl -X POST https://<VOID_DEPLOYMENT_URL>/api/chat/auth/ecosystem-login \
+  -H "Content-Type: application/json" \
+  -d '{"identifier": "tl-kathy-he01", "credential": "7724"}'
+```
+Expected: `200 OK` with `{ "success": true, "user": { ... }, "token": "..." }`
+
+**From THE VOID → Orbit Staffing:**
+```bash
+curl -X GET https://<ORBIT_STAFFING_URL>/api/health \
+  -H "Authorization: Bearer <ORBIT_STAFFING_API_KEY>"
+```
+Expected: `200 OK` with health/status response
+
+### 4. Confirm Ecosystem Login Works Both Ways
+
+- A VOID user should be able to log into Orbit Staffing via Trust Layer SSO
+- An Orbit Staffing user should be able to log into THE VOID's Signal Chat via ecosystem login
+- Use the test accounts in the Testing Checklist section above to verify
+
+### 5. Update Webhook URLs (If Applicable)
+
+If Orbit Staffing sends webhooks to THE VOID (subscription events, staffing updates, etc.), update all webhook endpoint URLs to use THE VOID's new deployment domain.
+
+---
+
 ## Contact
 
 This handoff was generated from THE VOID's codebase. For questions about the Trust Layer SSO protocol or ecosystem integration, coordinate through the DarkWave Studios team.
+
+*Last updated: February 24, 2025 — Project migration to new Replit environment*
