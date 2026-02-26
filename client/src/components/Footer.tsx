@@ -104,6 +104,12 @@ export function Footer() {
                 Signal Chat
               </span>
             </Link>
+            <Link href="/ecosystem" data-testid="link-trust-layer">
+              <span className="hover:text-foreground transition-colors cursor-pointer inline-flex items-center gap-1">
+                <Shield className="w-3 h-3" />
+                Trust Layer
+              </span>
+            </Link>
           </nav>
         </div>
 
