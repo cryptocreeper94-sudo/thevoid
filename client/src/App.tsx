@@ -35,6 +35,7 @@ const MoodPortraitPage = lazy(() => import("@/pages/MoodPortraitPage"));
 const VoidEchoPage = lazy(() => import("@/pages/VoidEchoPage"));
 const TrustVaultLibraryPage = lazy(() => import("@/pages/TrustVaultLibraryPage"));
 const OnboardingPage = lazy(() => import("@/pages/OnboardingPage"));
+const EcosystemPage = lazy(() => import("@/pages/EcosystemPage"));
 
 function LazyFallback() {
   return (
@@ -84,6 +85,7 @@ function Router() {
         <Route path="/zen" component={ZenZonePage} />
         <Route path="/crisis" component={CrisisToolkitPage} />
         <Route path="/sleep-sounds" component={SleepSoundsPage} />
+        <Route path="/ecosystem" component={EcosystemPage} />
         <Route>
           <ProtectedRoutes />
         </Route>
