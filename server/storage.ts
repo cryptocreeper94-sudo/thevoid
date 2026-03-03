@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { db } from "./db";
 import { vents, roadmapItems, whitelistedUsers, subscriptions, dailyVentUsage, contactMessages, userSettings, userCredits, conversationThreads, threadMessages, journalEntries, affirmations, weeklyInsights, safetyPlans, moodChecks, voiceJournalEntries, voiceFingerprints, moodPortraits, voidEchoes, type InsertVent, type Vent, type InsertRoadmapItem, type RoadmapItem, type InsertWhitelistedUser, type WhitelistedUser, type Subscription, type DailyVentUsage, type ContactMessage, type UserSettings, type UserCredit, type ConversationThread, type ThreadMessage, type InsertConversationThread, type InsertThreadMessage, type JournalEntry, type InsertJournalEntry, type Affirmation, type WeeklyInsight, type SafetyPlan, type InsertSafetyPlan, type MoodCheck, type VoiceJournalEntry, type InsertVoiceJournalEntry, type VoiceFingerprint, type MoodPortrait, type VoidEcho, type InsertVoidEcho } from "@shared/schema";
 import { eq, desc, and, gte, lte, sql } from "drizzle-orm";
@@ -83,7 +84,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createWhitelistedUser(user: InsertWhitelistedUser): Promise<WhitelistedUser> {
-    const [created] = await db.insert(whitelistedUsers).values(user).returning();
+    const uniqueHash = crypto.randomBytes(12).toString("hex");
+    const [created] = await db.insert(whitelistedUsers).values({ ...user, uniqueHash }).returning();
     return created;
   }
 

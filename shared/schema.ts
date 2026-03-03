@@ -64,6 +64,7 @@ export const whitelistedUsers = pgTable("whitelisted_users", {
   name: text("name").notNull(),
   pin: varchar("pin", { length: 4 }).notNull(),
   pinChanged: boolean("pin_changed").default(false).notNull(),
+  uniqueHash: text("unique_hash").unique(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -501,6 +502,78 @@ export const insertVoidEchoSchema = createInsertSchema(voidEchoes).omit({
 
 export type VoidEcho = typeof voidEchoes.$inferSelect;
 export type InsertVoidEcho = z.infer<typeof insertVoidEchoSchema>;
+
+// === TRUST LAYER HALLMARKS (TIER 1) ===
+export const hallmarks = pgTable("hallmarks", {
+  id: serial("id").primaryKey(),
+  thId: text("th_id").notNull().unique(),
+  userId: integer("user_id"),
+  appId: text("app_id").notNull(),
+  appName: text("app_name").notNull(),
+  productName: text("product_name").notNull(),
+  releaseType: text("release_type").notNull(),
+  metadata: jsonb("metadata"),
+  dataHash: text("data_hash").notNull(),
+  txHash: text("tx_hash"),
+  blockHeight: text("block_height"),
+  qrCodeSvg: text("qr_code_svg"),
+  verificationUrl: text("verification_url"),
+  hallmarkId: integer("hallmark_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type Hallmark = typeof hallmarks.$inferSelect;
+
+// === TRUST STAMPS (TIER 2) ===
+export const trustStamps = pgTable("trust_stamps", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id"),
+  category: text("category").notNull(),
+  data: jsonb("data"),
+  dataHash: text("data_hash").notNull(),
+  txHash: text("tx_hash"),
+  blockHeight: text("block_height"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type TrustStamp = typeof trustStamps.$inferSelect;
+
+// === HALLMARK COUNTER ===
+export const hallmarkCounter = pgTable("hallmark_counter", {
+  id: text("id").primaryKey(),
+  currentSequence: text("current_sequence").notNull().default("0"),
+});
+
+export type HallmarkCounter = typeof hallmarkCounter.$inferSelect;
+
+// === AFFILIATE REFERRALS (ECOSYSTEM) ===
+export const affiliateReferrals = pgTable("affiliate_referrals", {
+  id: serial("id").primaryKey(),
+  referrerId: integer("referrer_id").notNull(),
+  referredUserId: integer("referred_user_id"),
+  referralHash: text("referral_hash").notNull(),
+  platform: text("platform").notNull().default("thevoid"),
+  status: text("status").notNull().default("pending"),
+  convertedAt: timestamp("converted_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type AffiliateReferral = typeof affiliateReferrals.$inferSelect;
+
+// === AFFILIATE COMMISSIONS ===
+export const affiliateCommissions = pgTable("affiliate_commissions", {
+  id: serial("id").primaryKey(),
+  referrerId: integer("referrer_id").notNull(),
+  referralId: integer("referral_id"),
+  amount: text("amount").notNull(),
+  currency: text("currency").default("SIG"),
+  tier: text("tier").default("base"),
+  status: text("status").default("pending"),
+  paidAt: timestamp("paid_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type AffiliateCommission = typeof affiliateCommissions.$inferSelect;
 
 // === API REQUEST/RESPONSE TYPES ===
 export const createVentRequestSchema = z.object({

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, Home, Settings, Code, Download, Share, Smartphone, Mail, MessageSquare, Sun, Moon, Heart, Sparkles, Trophy, BookOpen, Wind, PenLine, BarChart3, Library, Quote, ShieldAlert, Flame, CloudMoon, Mic, Fingerprint, Palette, Timer, Crosshair, Gamepad2, Shield } from "lucide-react";
+import { Menu, Home, Settings, Code, Download, Share, Smartphone, Mail, MessageSquare, Sun, Moon, Heart, Sparkles, Trophy, BookOpen, Wind, PenLine, BarChart3, Library, Quote, ShieldAlert, Flame, CloudMoon, Mic, Fingerprint, Palette, Timer, Crosshair, Gamepad2, Shield, Gift } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { useAppMode } from "@/hooks/use-app-mode";
 import {
@@ -64,6 +64,7 @@ const navCategories: NavCategory[] = [
   {
     label: "More",
     items: [
+      { href: "/affiliate", icon: Gift, label: "Share & Earn" },
       { href: "/vault", icon: Shield, label: "TrustVault" },
       { href: "/blog", icon: BookOpen, label: "Blog" },
       { href: "/mission", icon: Sparkles, label: "From the Void" },

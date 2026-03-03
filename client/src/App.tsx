@@ -36,6 +36,8 @@ const VoidEchoPage = lazy(() => import("@/pages/VoidEchoPage"));
 const TrustVaultLibraryPage = lazy(() => import("@/pages/TrustVaultLibraryPage"));
 const OnboardingPage = lazy(() => import("@/pages/OnboardingPage"));
 const EcosystemPage = lazy(() => import("@/pages/EcosystemPage"));
+const AffiliateDashboardPage = lazy(() => import("@/pages/AffiliateDashboardPage"));
+const ReferralLandingPage = lazy(() => import("@/pages/ReferralLandingPage"));
 
 function LazyFallback() {
   return (
@@ -63,6 +65,7 @@ function ProtectedRoutes() {
         <Route path="/mood-portrait" component={MoodPortraitPage} />
         <Route path="/void-echo" component={VoidEchoPage} />
         <Route path="/vault" component={TrustVaultLibraryPage} />
+        <Route path="/affiliate" component={AffiliateDashboardPage} />
         <Route component={NotFound} />
       </Switch>
     </PinGate>
@@ -86,6 +89,7 @@ function Router() {
         <Route path="/crisis" component={CrisisToolkitPage} />
         <Route path="/sleep-sounds" component={SleepSoundsPage} />
         <Route path="/ecosystem" component={EcosystemPage} />
+        <Route path="/ref/:hash" component={ReferralLandingPage} />
         <Route>
           <ProtectedRoutes />
         </Route>
