@@ -16,6 +16,8 @@ import { seedChatChannels } from "./seedChat";
 import { chatChannels, referrals, voidStamps, chatUsers, subscriptions, achievements, userAchievements, ventStreaks, dailyPrompts, moodChecks, blogPosts, vents, voiceJournalEntries, voidEchoes, moodPortraits } from "@shared/schema";
 import { db } from "./db";
 import { mintVoidStamp, verifyVoidStamp, getStampStats } from "./blockchain-hallmark";
+import { seedGenesisHallmark, generateHallmark, verifyHallmark, getGenesisHallmark, createTrustStamp } from "./hallmark";
+import affiliateRouter from "./affiliate";
 import { eq, and, count as dbCount } from "drizzle-orm";
 import { uploadMedia, getMedia, deleteMedia, getUserMedia, isTrustVaultMediaId, healthCheck as tvHealthCheck } from "./trustvault";
 import crypto from "crypto";
@@ -96,6 +98,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   await setupAuth(app);
   registerAuthRoutes(app);
   registerChatRoutes(app);
+  app.use(affiliateRouter);
+
+  seedGenesisHallmark().catch(err => console.error("Genesis hallmark seeding error:", err));
 
   ensureWebhookEndpoint();
 
@@ -252,6 +257,20 @@ ${blogEntries}
               console.error("[Blockchain] Stamp minting failed (non-critical):", stampErr?.message);
             }
 
+            createTrustStamp({
+              userId,
+              category: "subscription-start",
+              data: { planId: session.subscription, amount: "9.99", interval: "month" },
+            }).catch(() => {});
+
+            generateHallmark({
+              userId,
+              appId: "thevoid-subscription",
+              productName: `Premium Subscription${isFounder ? " (Founder)" : ""}`,
+              releaseType: "purchase",
+              metadata: { voidId: finalVoidId, isFounder, stripeSubscriptionId: session.subscription },
+            }).catch(() => {});
+
             const pendingReferrals = await db.select().from(referrals)
               .where(and(
                 eq(referrals.referredUserId, userId),
@@ -263,6 +282,50 @@ ${blogEntries}
                 .where(eq(referrals.id, pendingReferrals[0].id));
               await storage.addCredits(pendingReferrals[0].referrerUserId, 5);
               console.log(`[Affiliate] Referral converted! Rewarded user ${pendingReferrals[0].referrerUserId} with 5 credits`);
+            }
+
+            try {
+              const { affiliateReferrals: affRefTable, affiliateCommissions: affCommTable } = await import("@shared/schema");
+              const pendingAffRefs = await db.select().from(affRefTable)
+                .where(and(
+                  eq(affRefTable.referredUserId, userId),
+                  eq(affRefTable.status, "pending")
+                ));
+              for (const ref of pendingAffRefs) {
+                await db.update(affRefTable)
+                  .set({ status: "converted", convertedAt: new Date() })
+                  .where(eq(affRefTable.id, ref.id));
+
+                const allConverted = await db.select().from(affRefTable)
+                  .where(and(eq(affRefTable.referrerId, ref.referrerId), eq(affRefTable.status, "converted")));
+                const convCount = allConverted.length;
+                let tierName = "base";
+                let rate = 0.10;
+                if (convCount >= 50) { tierName = "diamond"; rate = 0.20; }
+                else if (convCount >= 30) { tierName = "platinum"; rate = 0.175; }
+                else if (convCount >= 15) { tierName = "gold"; rate = 0.15; }
+                else if (convCount >= 5) { tierName = "silver"; rate = 0.125; }
+
+                const commAmount = (9.99 * rate).toFixed(2);
+                await db.insert(affCommTable).values({
+                  referrerId: ref.referrerId,
+                  referralId: ref.id,
+                  amount: commAmount,
+                  currency: "SIG",
+                  tier: tierName,
+                  status: "pending",
+                });
+
+                createTrustStamp({
+                  userId: ref.referrerId,
+                  category: "affiliate-referral-converted",
+                  data: { referralId: ref.id, referredUserId: userId, platform: ref.platform },
+                }).catch(() => {});
+
+                console.log(`[Affiliate] Ecosystem referral converted! User ${ref.referrerId} earns ${commAmount} SIG (${tierName})`);
+              }
+            } catch (affErr: any) {
+              console.error("[Affiliate] Ecosystem referral processing error (non-critical):", affErr?.message);
             }
 
             try {
@@ -480,7 +543,49 @@ ${blogEntries}
     }
   });
 
-  // === AFFILIATE REFERRAL ROUTES ===
+  // === TRUST LAYER HALLMARK ROUTES ===
+
+  app.get("/api/hallmark/genesis", async (_req, res) => {
+    try {
+      const genesis = await getGenesisHallmark();
+      if (!genesis) {
+        return res.status(404).json({ error: "Genesis hallmark not found" });
+      }
+      res.json({ verified: true, hallmark: genesis });
+    } catch (err: any) {
+      res.status(500).json({ error: "Failed to retrieve genesis hallmark" });
+    }
+  });
+
+  app.get("/api/hallmark/:id/verify", async (req, res) => {
+    try {
+      const { id } = req.params;
+      if (!id || !id.startsWith("VO-")) {
+        return res.status(400).json({ verified: false, error: "Invalid hallmark ID format. Expected VO-XXXXXXXX" });
+      }
+      const result = await verifyHallmark(id);
+      if (!result.verified) {
+        return res.status(404).json(result);
+      }
+      res.json({
+        verified: true,
+        hallmark: {
+          thId: result.hallmark!.thId,
+          appName: result.hallmark!.appName,
+          productName: result.hallmark!.productName,
+          releaseType: result.hallmark!.releaseType,
+          dataHash: result.hallmark!.dataHash,
+          txHash: result.hallmark!.txHash,
+          blockHeight: result.hallmark!.blockHeight,
+          createdAt: result.hallmark!.createdAt,
+        },
+      });
+    } catch (err: any) {
+      res.status(500).json({ verified: false, error: "Verification failed" });
+    }
+  });
+
+  // === AFFILIATE REFERRAL ROUTES (LEGACY) ===
 
   app.post("/api/referral/apply", async (req, res) => {
     try {
@@ -788,6 +893,13 @@ ${blogEntries}
       const { pin } = z.object({ pin: z.string().length(4) }).parse(req.body);
       const result = await storage.validatePin(pin);
       if (result.valid) {
+        if (result.userId) {
+          createTrustStamp({
+            userId: result.userId,
+            category: "auth-login",
+            data: { device: "web", method: "pin" },
+          }).catch(() => {});
+        }
         res.json({ success: true, name: result.name, userId: result.userId, pinChanged: result.pinChanged });
       } else {
         res.status(401).json({ success: false, message: "Invalid PIN" });

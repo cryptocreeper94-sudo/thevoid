@@ -703,8 +703,102 @@ export default function SettingsPage() {
             </Button>
           </motion.div>
 
+          <GenesisHallmarkBadge />
+
         </motion.div>
       </div>
     </Layout>
+  );
+}
+
+function GenesisHallmarkBadge() {
+  const [expanded, setExpanded] = useState(false);
+  const { data: genesis } = useQuery<{ verified: boolean; hallmark: any }>({
+    queryKey: ["/api/hallmark/genesis"],
+  });
+
+  if (!genesis?.hallmark) return null;
+
+  const h = genesis.hallmark;
+  const meta = h.metadata || {};
+
+  return (
+    <motion.div variants={fadeUp} className="mt-8 flex justify-center">
+      <div className="w-full max-w-md">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-white/[0.03] border border-cyan-500/20 backdrop-blur-md transition-all"
+          data-testid="button-genesis-hallmark"
+        >
+          <Shield className="w-4 h-4 text-cyan-400" />
+          <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Genesis Hallmark</span>
+          <span className="text-xs text-muted-foreground font-mono">{h.thId}</span>
+        </button>
+
+        {expanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="mt-2 rounded-xl bg-white/[0.03] border border-white/10 backdrop-blur-md p-4 space-y-4"
+          >
+            <div>
+              <h4 className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-2">Application Info</h4>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="text-muted-foreground">App Name</div>
+                <div className="text-foreground font-mono">{h.appName}</div>
+                <div className="text-muted-foreground">Product</div>
+                <div className="text-foreground font-mono">{h.productName}</div>
+                <div className="text-muted-foreground">Release Type</div>
+                <div className="text-foreground font-mono">{h.releaseType}</div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-2">Blockchain Record</h4>
+              <div className="grid grid-cols-1 gap-2 text-xs">
+                <div>
+                  <span className="text-muted-foreground">Data Hash: </span>
+                  <span className="text-foreground font-mono break-all">{h.dataHash?.substring(0, 32)}...</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Tx Hash: </span>
+                  <span className="text-foreground font-mono break-all">{h.txHash?.substring(0, 32)}...</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Block Height: </span>
+                  <span className="text-foreground font-mono">{h.blockHeight}</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2">Ecosystem Details</h4>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="text-muted-foreground">Ecosystem</div>
+                <div className="text-foreground font-mono">{meta.ecosystem}</div>
+                <div className="text-muted-foreground">Chain</div>
+                <div className="text-foreground font-mono">{meta.chain}</div>
+                <div className="text-muted-foreground">Consensus</div>
+                <div className="text-foreground font-mono">{meta.consensus}</div>
+                <div className="text-muted-foreground">Native Asset</div>
+                <div className="text-foreground font-mono">{meta.nativeAsset}</div>
+                <div className="text-muted-foreground">Operator</div>
+                <div className="text-foreground font-mono">{meta.operator}</div>
+                <div className="text-muted-foreground">Domain</div>
+                <div className="text-foreground font-mono">{meta.domain}</div>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-white/5">
+              <div className="flex items-center gap-2 text-xs">
+                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-emerald-400 font-semibold">Verified</span>
+                <span className="text-muted-foreground">- Parent Genesis: {meta.parentGenesis}</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </div>
+    </motion.div>
   );
 }
