@@ -6,6 +6,50 @@ import { createTrustStamp } from "./hallmark";
 
 const router = Router();
 
+const ECOSYSTEM_APPS = [
+  { slug: "trusthub", name: "Trust Layer Hub", domain: "trusthub.tlid.io" },
+  { slug: "trustlayer", name: "Trust Layer (L1)", domain: "dwtl.io" },
+  { slug: "trusthome", name: "TrustHome", domain: "trusthome.tlid.io" },
+  { slug: "trustvault", name: "TrustVault", domain: "trustvault.tlid.io" },
+  { slug: "tlid", name: "TLID.io", domain: "tlid.io" },
+  { slug: "thevoid", name: "THE VOID", domain: "thevoid.tlid.io" },
+  { slug: "signalchat", name: "Signal Chat", domain: "signalchat.tlid.io" },
+  { slug: "darkwavestudio", name: "DarkWave Studio", domain: "darkwavestudio.tlid.io" },
+  { slug: "guardianshield", name: "Guardian Shield", domain: "guardianshield.tlid.io" },
+  { slug: "guardianscanner", name: "Guardian Scanner", domain: "guardianscanner.tlid.io" },
+  { slug: "guardianscreener", name: "Guardian Screener", domain: "guardianscreener.tlid.io" },
+  { slug: "tradeworks", name: "TradeWorks AI", domain: "tradeworks.tlid.io" },
+  { slug: "strikeagent", name: "StrikeAgent", domain: "strikeagent.tlid.io" },
+  { slug: "pulse", name: "Pulse", domain: "pulse.tlid.io" },
+  { slug: "chronicles", name: "Chronicles", domain: "chronicles.tlid.io" },
+  { slug: "thearcade", name: "The Arcade", domain: "thearcade.tlid.io" },
+  { slug: "bomber", name: "Bomber", domain: "bomber.tlid.io" },
+  { slug: "trustgolf", name: "Trust Golf", domain: "trustgolf.tlid.io" },
+  { slug: "orbit", name: "ORBIT Staffing OS", domain: "orbit.tlid.io" },
+  { slug: "orby", name: "Orby Commander", domain: "orby.tlid.io" },
+  { slug: "garagebot", name: "GarageBot", domain: "garagebot.tlid.io" },
+  { slug: "lotops", name: "Lot Ops Pro", domain: "lotops.tlid.io" },
+  { slug: "torque", name: "TORQUE", domain: "torque.tlid.io" },
+  { slug: "driverconnect", name: "TL Driver Connect", domain: "driverconnect.tlid.io" },
+  { slug: "vedasolus", name: "VedaSolus", domain: "vedasolus.tlid.io" },
+  { slug: "verdara", name: "Verdara", domain: "verdara.tlid.io" },
+  { slug: "arbora", name: "Arbora", domain: "arbora.tlid.io" },
+  { slug: "paintpros", name: "PaintPros", domain: "paintpros.tlid.io" },
+  { slug: "nashvillepainting", name: "Nashville Painting Professionals", domain: "nashvillepainting.tlid.io" },
+  { slug: "trustbook", name: "Trust Book", domain: "trustbook.tlid.io" },
+  { slug: "darkwaveacademy", name: "DarkWave Academy", domain: "darkwaveacademy.tlid.io" },
+  { slug: "happyeats", name: "Happy Eats", domain: "happyeats.tlid.io" },
+  { slug: "brewandboard", name: "Brew & Board Coffee", domain: "brewandboard.tlid.io" },
+];
+
+function buildCrossPlatformLinks(uniqueHash: string): Record<string, string> {
+  const links: Record<string, string> = {};
+  for (const app of ECOSYSTEM_APPS) {
+    links[app.slug] = `https://${app.domain}/ref/${uniqueHash}`;
+  }
+  return links;
+}
+
 const COMMISSION_TIERS = [
   { name: "diamond", minReferrals: 50, rate: 0.20 },
   { name: "platinum", minReferrals: 30, rate: 0.175 },
@@ -67,12 +111,8 @@ router.get("/api/affiliate/dashboard", async (req: Request, res: Response) => {
   res.json({
     uniqueHash: user.uniqueHash,
     referralLink: `https://thevoid.tlid.io/ref/${user.uniqueHash}`,
-    crossPlatformLinks: {
-      thevoid: `https://thevoid.tlid.io/ref/${user.uniqueHash}`,
-      trusthub: `https://trusthub.tlid.io/ref/${user.uniqueHash}`,
-      trustvault: `https://trustvault.tlid.io/ref/${user.uniqueHash}`,
-      signal: `https://signalchat.tlid.io/ref/${user.uniqueHash}`,
-    },
+    crossPlatformLinks: buildCrossPlatformLinks(user.uniqueHash),
+    ecosystemApps: ECOSYSTEM_APPS,
     tier: tier.name,
     commissionRate: tier.rate,
     nextTier: nextTier ? {
@@ -114,12 +154,8 @@ router.get("/api/affiliate/link", async (req: Request, res: Response) => {
   res.json({
     uniqueHash: user.uniqueHash,
     referralLink: `https://thevoid.tlid.io/ref/${user.uniqueHash}`,
-    crossPlatformLinks: {
-      thevoid: `https://thevoid.tlid.io/ref/${user.uniqueHash}`,
-      trusthub: `https://trusthub.tlid.io/ref/${user.uniqueHash}`,
-      trustvault: `https://trustvault.tlid.io/ref/${user.uniqueHash}`,
-      signal: `https://signalchat.tlid.io/ref/${user.uniqueHash}`,
-    },
+    crossPlatformLinks: buildCrossPlatformLinks(user.uniqueHash),
+    ecosystemApps: ECOSYSTEM_APPS,
     shareText: `Join me on THE VOID — part of the Trust Layer ecosystem!\nhttps://thevoid.tlid.io/ref/${user.uniqueHash}`,
   });
 });
