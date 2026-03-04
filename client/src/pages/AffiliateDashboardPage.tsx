@@ -7,7 +7,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { Copy, Check, Share2, TrendingUp, Users, DollarSign, Award, ChevronRight, Shield, Zap } from "lucide-react";
+import { Copy, Check, Share2, TrendingUp, Users, DollarSign, Award, ChevronRight, Shield, Zap, ExternalLink, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const fadeUp = {
@@ -41,6 +41,8 @@ export default function AffiliateDashboardPage() {
   const { visitorId } = usePinAuth();
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
+  const [copiedApp, setCopiedApp] = useState<string | null>(null);
+  const [appSearch, setAppSearch] = useState("");
 
   const { data, isLoading } = useQuery<any>({
     queryKey: ["/api/affiliate/dashboard", visitorId],
@@ -110,7 +112,7 @@ export default function AffiliateDashboardPage() {
                 Affiliate Program
               </h1>
               <p className="text-sm text-muted-foreground mt-2">
-                Earn up to 20% commission on referrals across all 32 Trust Layer apps
+                Earn up to 20% commission on referrals across all 33 Trust Layer apps
               </p>
             </motion.div>
 
@@ -222,14 +224,62 @@ export default function AffiliateDashboardPage() {
 
             <motion.div variants={fadeUp}>
               <GlassCard className="p-5">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground mb-3">Cross-Platform Links</h3>
-                <div className="space-y-2">
-                  {data?.crossPlatformLinks && Object.entries(data.crossPlatformLinks).map(([app, link]) => (
-                    <div key={app} className="flex items-center justify-between text-xs">
-                      <span className="capitalize text-muted-foreground">{app}</span>
-                      <span className="font-mono text-foreground/60 truncate ml-4 max-w-[200px]">{link as string}</span>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">Ecosystem Links</h3>
+                  <span className="text-xs text-muted-foreground">33 apps</span>
+                </div>
+                <div className="relative mb-3">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search apps..."
+                    value={appSearch}
+                    onChange={(e) => setAppSearch(e.target.value)}
+                    className="w-full pl-8 pr-3 py-2 bg-white/[0.03] border border-white/10 rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-cyan-500/30"
+                    data-testid="input-ecosystem-search"
+                  />
+                </div>
+                <div className="max-h-[280px] overflow-y-auto scrollbar-thin space-y-1 pr-1">
+                  {data?.ecosystemApps && (data.ecosystemApps as Array<{slug: string; name: string; domain: string}>)
+                    .filter((app) => app.name.toLowerCase().includes(appSearch.toLowerCase()) || app.slug.toLowerCase().includes(appSearch.toLowerCase()))
+                    .map((app) => {
+                      const link = data.crossPlatformLinks?.[app.slug] || `https://${app.domain}/ref/${data.uniqueHash}`;
+                      return (
+                    <div
+                      key={app.slug}
+                      className="flex items-center justify-between px-2.5 py-2 rounded-lg hover:bg-white/[0.04] transition-colors group"
+                      data-testid={`ecosystem-link-${app.slug}`}
+                    >
+                      <span className="text-xs font-medium text-foreground/80 truncate mr-2">{app.name}</span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(link as string);
+                            setCopiedApp(app.slug);
+                            setTimeout(() => setCopiedApp(null), 1500);
+                          }}
+                          className="p-1 rounded hover:bg-white/10 transition-colors opacity-0 group-hover:opacity-100"
+                          data-testid={`button-copy-${app.slug}`}
+                        >
+                          {copiedApp === app.slug ? (
+                            <Check className="w-3 h-3 text-emerald-400" />
+                          ) : (
+                            <Copy className="w-3 h-3 text-muted-foreground" />
+                          )}
+                        </button>
+                        <a
+                          href={link as string}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1 rounded hover:bg-white/10 transition-colors opacity-0 group-hover:opacity-100"
+                          data-testid={`link-open-${app.slug}`}
+                        >
+                          <ExternalLink className="w-3 h-3 text-muted-foreground" />
+                        </a>
+                      </div>
                     </div>
-                  ))}
+                      );
+                    })}
                 </div>
               </GlassCard>
             </motion.div>
