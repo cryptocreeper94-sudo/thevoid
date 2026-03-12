@@ -62,7 +62,7 @@ let webhookSigningSecret: string | null = process.env.STRIPE_WEBHOOK_SECRET || n
 
 async function ensureWebhookEndpoint() {
   try {
-    const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || process.env.REPLIT_DEV_DOMAIN;
+    const domain = process.env.APP_DOMAIN || "intothevoid.app";
     if (!domain) {
       console.log("[Stripe] No domain found, skipping webhook setup");
       return;
@@ -266,9 +266,9 @@ ${blogEntries}
             generateHallmark({
               userId,
               appId: "thevoid-subscription",
-              productName: `Premium Subscription${isFounder ? " (Founder)" : ""}`,
+              productName: `Premium Subscription${session.metadata?.isFounder === "true" ? " (Founder)" : ""}`,
               releaseType: "purchase",
-              metadata: { voidId: finalVoidId, isFounder, stripeSubscriptionId: session.subscription },
+              metadata: { voidId: finalVoidId, isFounder: session.metadata?.isFounder === "true", stripeSubscriptionId: session.subscription },
             }).catch(() => {});
 
             const pendingReferrals = await db.select().from(referrals)
@@ -333,7 +333,7 @@ ${blogEntries}
               const customerEmail = session.customer_email || customer.email;
               const customerName = customer.name || `User ${userId}`;
               if (customerEmail) {
-                const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || process.env.REPLIT_DEV_DOMAIN;
+                const domain = process.env.APP_DOMAIN || "intothevoid.app";
                 const appUrl = `https://${domain}`;
                 await sendSubscriptionConfirmationEmail({
                   toEmail: customerEmail,
@@ -409,7 +409,7 @@ ${blogEntries}
         await storage.upsertSubscription(userId, { stripeCustomerId: customerId });
       }
 
-      const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || process.env.REPLIT_DEV_DOMAIN;
+      const domain = process.env.APP_DOMAIN || "intothevoid.app";
       const baseUrl = `https://${domain}`;
 
       const activePriceId = await getActivePriceId();
@@ -439,7 +439,7 @@ ${blogEntries}
         return res.status(400).json({ message: "No subscription found" });
       }
 
-      const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || process.env.REPLIT_DEV_DOMAIN;
+      const domain = process.env.APP_DOMAIN || "intothevoid.app";
       const session = await stripe.billingPortal.sessions.create({
         customer: sub.stripeCustomerId,
         return_url: `https://${domain}/settings`,
@@ -1083,7 +1083,7 @@ ${blogEntries}
       };
       const pack = packPrices[packSize];
 
-      const domain = process.env.REPLIT_DOMAINS?.split(",")[0] || process.env.REPLIT_DEV_DOMAIN;
+      const domain = process.env.APP_DOMAIN || "intothevoid.app";
       const baseUrl = `https://${domain}`;
 
       const session = await stripe.checkout.sessions.create({
