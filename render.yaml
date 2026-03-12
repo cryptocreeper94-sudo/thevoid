@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: thevoid
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "5000"
+      - key: APP_DOMAIN
+        value: intothevoid.app
+      - key: DATABASE_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        value: "THE VOID <noreply@dwsc.io>"
+      - key: JWT_SECRET
+        sync: false
+      - key: TRUSTVAULT_API_KEY
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
