@@ -109,6 +109,10 @@ export default function LandingPage() {
             playsInline
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700
               ${isVideoTransitioning ? 'opacity-0' : 'opacity-100'}`}
+            style={{
+              filter: 'blur(0.7px) contrast(1.15) brightness(1.05) saturate(1.2)',
+              transform: 'scale(1.02)',
+            }}
           >
             <source src={HERO_VIDEOS[currentVideoIndex].src} type="video/mp4" />
           </video>
@@ -120,10 +124,22 @@ export default function LandingPage() {
             preload="auto"
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700
               ${isVideoTransitioning ? 'opacity-100' : 'opacity-0'}`}
+            style={{
+              filter: 'blur(0.7px) contrast(1.15) brightness(1.05) saturate(1.2)',
+              transform: 'scale(1.02)',
+            }}
           >
             <source src={HERO_VIDEOS[nextVideoIndex].src} type="video/mp4" />
           </video>
-          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black" />
+          {/* Noise reduction overlay - film grain mask */}
+          <div className="absolute inset-0" style={{
+            background: 'linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.25) 30%, rgba(0,0,0,0.3) 70%, rgba(0,0,0,0.85) 100%)',
+            mixBlendMode: 'multiply',
+          }} />
+          {/* Soft vignette for cinematic feel */}
+          <div className="absolute inset-0" style={{
+            background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 100%)',
+          }} />
         </div>
 
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
