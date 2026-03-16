@@ -1,4 +1,4 @@
-const TRUSTVAULT_BASE = "https://trustvault.replit.app/api/v1";
+const TRUSTVAULT_BASE = "https://trustvault.tlid.io/api/v1";
 const SERVICE_ID = "the-void";
 const API_KEY = process.env.TRUSTVAULT_API_KEY || "";
 
