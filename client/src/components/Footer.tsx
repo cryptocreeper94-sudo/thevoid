@@ -1,8 +1,21 @@
 import { Link } from "wouter";
+import { useRef } from "react";
 import { Shield, ExternalLink, Smartphone } from "lucide-react";
 import { SiGoogleplay, SiApple } from "react-icons/si";
 
 export function Footer() {
+  const dwscClickRef = useRef({ count: 0, timer: null as any });
+  const handleDWSCClick = () => {
+    dwscClickRef.current.count++;
+    if (dwscClickRef.current.count === 3) {
+      dwscClickRef.current.count = 0;
+      clearTimeout(dwscClickRef.current.timer);
+      window.open('https://dwsc.io/#portal', '_blank');
+    } else {
+      clearTimeout(dwscClickRef.current.timer);
+      dwscClickRef.current.timer = setTimeout(() => { dwscClickRef.current.count = 0; }, 800);
+    }
+  };
   return (
     <footer className="w-full border-t border-white/5 bg-background/80 backdrop-blur-xl py-6 px-4">
       <div className="max-w-5xl mx-auto">
@@ -117,6 +130,9 @@ export function Footer() {
           <p className="text-[10px] text-muted-foreground/60">
             THE VOID is a safe space to blow off steam without hurting anyone or anything. It is not a substitute for professional mental health care.
             Our AI will never encourage harm to yourself, others, or any living being. If you need support, visit <a href="/signal" className="text-red-400 underline underline-offset-2">Signal Chat</a> or call 988 (Suicide &amp; Crisis Lifeline).
+          </p>
+          <p className="text-[10px] text-muted-foreground/30 mt-2">
+            <span onClick={handleDWSCClick} className="cursor-default select-none hover:text-muted-foreground/50 transition-colors" title="◈ DWSC">◈</span>
           </p>
         </div>
       </div>
