@@ -4,7 +4,14 @@ import { db } from "./db";
 import { chatUsers } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev-jwt-secret-change-me";
+const JWT_SECRET = process.env.JWT_SECRET || "";
+if (!JWT_SECRET && process.env.NODE_ENV === "production") {
+  console.error("FATAL: JWT_SECRET must be set in production");
+  process.exit(1);
+}
+if (!JWT_SECRET) {
+  console.warn("[TheVoid] ⚠️ JWT_SECRET not set — using generated dev secret (tokens will not survive restarts)");
+}
 const SALT_ROUNDS = 12;
 const TOKEN_EXPIRY = "7d";
 
