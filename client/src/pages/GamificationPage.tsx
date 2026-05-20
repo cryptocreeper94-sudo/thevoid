@@ -35,7 +35,7 @@ const ACHIEVEMENT_ICONS: Record<string, typeof Star> = {
 };
 
 const MOOD_LABELS = ["Awful", "Bad", "Meh", "Okay", "Good", "Great", "Amazing"];
-const MOOD_COLORS = ["#ef4444", "#f97316", "#eab308", "#a3a3a3", "#22c55e", "#06b6d4", "#8b5cf6"];
+const MOOD_COLORS = ["#ef4444", "#f97316", "#eab308", "#a3a3a3", "#22c55e", "#06b6d4", "#0ea5e9"];
 
 type Tab = "streak" | "achievements" | "mood" | "prompt";
 
@@ -159,7 +159,7 @@ export default function GamificationPage() {
                   <ul className="space-y-2 text-xs text-muted-foreground">
                     <li className="flex items-start gap-2"><Flame className="w-3.5 h-3.5 text-orange-400 mt-0.5 shrink-0" /> Vent at least once per day to maintain your streak</li>
                     <li className="flex items-start gap-2"><Trophy className="w-3.5 h-3.5 text-yellow-400 mt-0.5 shrink-0" /> Reach 7-day streaks to unlock achievements</li>
-                    <li className="flex items-start gap-2"><Star className="w-3.5 h-3.5 text-purple-400 mt-0.5 shrink-0" /> Longer streaks unlock rarer badges and bragging rights</li>
+                    <li className="flex items-start gap-2"><Star className="w-3.5 h-3.5 text-sky-400 mt-0.5 shrink-0" /> Longer streaks unlock rarer badges and bragging rights</li>
                   </ul>
                 </div>
               </GlassCard>
@@ -262,8 +262,8 @@ export default function GamificationPage() {
                   <img src={promptImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
                   <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-purple-500/20 backdrop-blur-sm">
-                      <Target className="w-5 h-5 text-purple-400" />
+                    <div className="p-2 rounded-lg bg-sky-500/20 backdrop-blur-sm">
+                      <Target className="w-5 h-5 text-sky-400" />
                     </div>
                     <h3 className="text-sm font-semibold text-white">Today's Prompt</h3>
                   </div>

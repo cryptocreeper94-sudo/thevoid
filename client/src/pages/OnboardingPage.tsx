@@ -25,7 +25,7 @@ const slides: Slide[] = [
     description: "This is a venting app at its core. Scream, rant, whisper, unload — the void listens, AI responds, and you feel lighter. Everything else we built? It wraps around that release.",
     icon: Sparkles,
     color: "text-cyan-400",
-    gradient: "from-cyan-500/20 via-purple-500/10 to-transparent",
+    gradient: "from-cyan-500/20 via-sky-500/10 to-transparent",
     features: ["Voice-first venting", "5 AI personalities", "20+ wellness tools", "One subscription"],
   },
   {
@@ -46,8 +46,8 @@ const slides: Slide[] = [
     subtitle: "Your vent reveals more than you think.",
     description: "Every time you vent, AI reads the emotional biomarkers in your voice — energy, tension, pace, warmth, and stability. Your venting becomes data that helps you understand yourself.",
     icon: Fingerprint,
-    color: "text-purple-400",
-    gradient: "from-purple-500/20 via-purple-500/5 to-transparent",
+    color: "text-sky-400",
+    gradient: "from-sky-500/20 via-sky-500/5 to-transparent",
     features: ["5 vocal biomarkers", "Emotion detection", "Personal baseline", "Trend tracking"],
   },
   {
@@ -355,7 +355,7 @@ export default function OnboardingPage() {
 
         <Button
           onClick={next}
-          className="bg-gradient-to-r from-cyan-500 to-purple-600 border-0 text-white px-6 shadow-lg shadow-cyan-500/20"
+          className="bg-gradient-to-r from-cyan-500 to-sky-600 border-0 text-white px-6 shadow-lg shadow-cyan-500/20"
           data-testid="button-next"
         >
           {isLast ? "Into the Void" : "Next"}

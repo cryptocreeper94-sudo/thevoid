@@ -160,8 +160,8 @@ function HallmarkCard({ voidId, userId }: { voidId: string; userId: number | nul
     <GlassCard className="overflow-hidden" hoverEffect>
       <div className="p-5">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-lg bg-purple-500/10">
-            <Shield className="w-5 h-5 text-purple-400" />
+          <div className="p-2 rounded-lg bg-sky-500/10">
+            <Shield className="w-5 h-5 text-sky-400" />
           </div>
           <div>
             <h2 className="text-base font-semibold text-foreground">Blockchain Hallmark</h2>
@@ -176,14 +176,14 @@ function HallmarkCard({ voidId, userId }: { voidId: string; userId: number | nul
         {stamp ? (
           <div className="space-y-3">
             <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-              <p className="text-[10px] uppercase tracking-widest text-purple-400/60 mb-1">Stamp Hash</p>
-              <p className="font-mono text-[11px] text-purple-300 break-all leading-relaxed" data-testid="text-stamp-hash">
+              <p className="text-[10px] uppercase tracking-widest text-sky-400/60 mb-1">Stamp Hash</p>
+              <p className="font-mono text-[11px] text-sky-300 break-all leading-relaxed" data-testid="text-stamp-hash">
                 {stamp.stampHash}
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="p-2 rounded-lg bg-white/5 text-center">
-                <Hash className="w-4 h-4 text-purple-400 mx-auto mb-1" />
+                <Hash className="w-4 h-4 text-sky-400 mx-auto mb-1" />
                 <p className="text-sm font-bold text-foreground">#{stamp.blockNumber}</p>
                 <p className="text-[10px] text-muted-foreground">Block</p>
               </div>
@@ -196,15 +196,15 @@ function HallmarkCard({ voidId, userId }: { voidId: string; userId: number | nul
             <div className="p-2 rounded-lg bg-white/5">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] text-muted-foreground">Network</span>
-                <span className="text-[10px] text-purple-400">Trust Layer v1</span>
+                <span className="text-[10px] text-sky-400">Trust Layer v1</span>
               </div>
               <div className="flex items-center justify-between mt-1">
                 <span className="text-[10px] text-muted-foreground">Standard</span>
-                <span className="text-[10px] text-purple-400">DW-STAMP-1.0</span>
+                <span className="text-[10px] text-sky-400">DW-STAMP-1.0</span>
               </div>
               <div className="flex items-center justify-between mt-1">
                 <span className="text-[10px] text-muted-foreground">Issuer</span>
-                <span className="text-[10px] text-purple-400">DarkWave Studios</span>
+                <span className="text-[10px] text-sky-400">DarkWave Studios</span>
               </div>
             </div>
           </div>
@@ -367,7 +367,7 @@ export default function SettingsPage() {
                       </div>
                       <div className="text-right">
                         <p className="text-[10px] text-muted-foreground">Verified by Trust Layer</p>
-                        <a href="https://dwtl.io" target="_blank" rel="noopener noreferrer" className="text-[10px] text-purple-400/70 hover:text-purple-400" data-testid="link-trust-layer">dwtl.io</a>
+                        <a href="https://dwtl.io" target="_blank" rel="noopener noreferrer" className="text-[10px] text-sky-400/70 hover:text-sky-400" data-testid="link-trust-layer">dwtl.io</a>
                       </div>
                     </div>
                   </div>
@@ -380,7 +380,7 @@ export default function SettingsPage() {
                         <p className="text-[10px] text-muted-foreground">Free vent/day</p>
                       </div>
                       <div>
-                        <p className="text-lg font-bold text-purple-400">{creditData?.balance || 0}</p>
+                        <p className="text-lg font-bold text-sky-400">{creditData?.balance || 0}</p>
                         <p className="text-[10px] text-muted-foreground">Credits</p>
                       </div>
                       <div>
@@ -594,8 +594,8 @@ export default function SettingsPage() {
                 <GlassCard className="overflow-hidden" hoverEffect>
                   <div className="p-5">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 rounded-lg bg-purple-500/10">
-                        <Sliders className="w-5 h-5 text-purple-400" />
+                      <div className="p-2 rounded-lg bg-sky-500/10">
+                        <Sliders className="w-5 h-5 text-sky-400" />
                       </div>
                       <div>
                         <h2 className="text-lg font-semibold text-foreground">Personality Tuning</h2>
@@ -754,7 +754,7 @@ function GenesisHallmarkBadge() {
             </div>
 
             <div>
-              <h4 className="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-2">Blockchain Record</h4>
+              <h4 className="text-xs font-semibold text-sky-400 uppercase tracking-wider mb-2">Blockchain Record</h4>
               <div className="grid grid-cols-1 gap-2 text-xs">
                 <div>
                   <span className="text-muted-foreground">Data Hash: </span>

@@ -18,10 +18,10 @@ const HERO_VIDEOS = [
 
 const features = [
   { icon: Mic, title: "Voice Venting", desc: "The core. Scream, rant, or whisper — AI listens and responds.", color: "text-cyan-400", bg: "bg-cyan-500/10" },
-  { icon: Brain, title: "5 AI Personalities", desc: "Smart-Ass, Calming, Therapist, Hype Man, Roast Master.", color: "text-purple-400", bg: "bg-purple-500/10" },
-  { icon: Fingerprint, title: "Voice Fingerprint", desc: "AI reads emotional biomarkers from your vent sessions.", color: "text-violet-400", bg: "bg-violet-500/10" },
+  { icon: Brain, title: "5 AI Personalities", desc: "Smart-Ass, Calming, Therapist, Hype Man, Roast Master.", color: "text-sky-400", bg: "bg-sky-500/10" },
+  { icon: Fingerprint, title: "Voice Fingerprint", desc: "AI reads emotional biomarkers from your vent sessions.", color: "text-cyan-400", bg: "bg-cyan-500/10" },
   { icon: Volume2, title: "Voice Responses", desc: "Hear your AI talk back with personality-matched voices.", color: "text-blue-400", bg: "bg-blue-500/10" },
-  { icon: Palette, title: "Mood Portrait", desc: "Your vents become evolving abstract artwork.", color: "text-fuchsia-400", bg: "bg-fuchsia-500/10" },
+  { icon: Palette, title: "Mood Portrait", desc: "Your vents become evolving abstract artwork.", color: "text-teal-400", bg: "bg-teal-500/10" },
   { icon: PenLine, title: "Voice & Written Journal", desc: "Speak or type. Tag moods. Get AI insights.", color: "text-indigo-400", bg: "bg-indigo-500/10" },
   { icon: BarChart3, title: "Mood Analytics", desc: "Track emotional trends with visual charts over time.", color: "text-teal-400", bg: "bg-teal-500/10" },
   { icon: Timer, title: "Void Echo", desc: "Time capsule messages to your future self.", color: "text-amber-400", bg: "bg-amber-500/10" },
@@ -159,7 +159,7 @@ export default function LandingPage() {
             }}
             transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
             className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full"
-            style={{ background: "radial-gradient(circle, rgba(147,51,234,0.2) 0%, transparent 70%)" }}
+            style={{ background: "radial-gradient(circle, rgba(2,132,199,0.2) 0%, transparent 70%)" }}
           />
         </div>
 
@@ -242,7 +242,7 @@ export default function LandingPage() {
           >
             <Button
               onClick={handleEnter}
-              className="bg-gradient-to-r from-cyan-500 to-purple-600 border-0 text-white px-8 min-h-12 text-base font-semibold shadow-lg shadow-cyan-500/20"
+              className="bg-gradient-to-r from-cyan-500 to-sky-600 border-0 text-white px-8 min-h-12 text-base font-semibold shadow-lg shadow-cyan-500/20"
               data-testid="button-enter-void"
             >
               Into the Void
@@ -339,10 +339,10 @@ export default function LandingPage() {
                   const f = features[featureIdx];
                   const gradients = [
                     "from-cyan-500/20 via-cyan-600/10 to-transparent",
-                    "from-purple-500/20 via-purple-600/10 to-transparent",
-                    "from-violet-500/20 via-violet-600/10 to-transparent",
+                    "from-sky-500/20 via-sky-600/10 to-transparent",
+                    "from-cyan-500/20 via-cyan-600/10 to-transparent",
                     "from-blue-500/20 via-blue-600/10 to-transparent",
-                    "from-fuchsia-500/20 via-fuchsia-600/10 to-transparent",
+                    "from-teal-500/20 via-teal-600/10 to-transparent",
                     "from-indigo-500/20 via-indigo-600/10 to-transparent",
                     "from-teal-500/20 via-teal-600/10 to-transparent",
                     "from-amber-500/20 via-amber-600/10 to-transparent",
@@ -397,7 +397,7 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <p className="text-xs text-purple-400 tracking-[0.3em] uppercase mb-3">Why THE VOID</p>
+            <p className="text-xs text-sky-400 tracking-[0.3em] uppercase mb-3">Why THE VOID</p>
             <h2 className="text-3xl sm:text-4xl font-bold text-white font-display mb-4">
               Vent first. Everything else follows.
             </h2>
@@ -410,7 +410,7 @@ export default function LandingPage() {
           {(() => {
             const comparisons = [
               { title: "Nothing like it", items: ["Voice Venting", "Voice Fingerprint", "Mood Portraits", "Void Echo"], icon: Mic, highlight: true, gradient: "from-cyan-500/20 via-cyan-600/10 to-transparent" },
-              { title: "Calm / Headspace", items: ["Guided Breathing", "Sleep Sounds", "Zen Zone", "Meditation Timer"], icon: Moon, highlight: false, gradient: "from-purple-500/20 via-purple-600/10 to-transparent" },
+              { title: "Calm / Headspace", items: ["Guided Breathing", "Sleep Sounds", "Zen Zone", "Meditation Timer"], icon: Moon, highlight: false, gradient: "from-sky-500/20 via-sky-600/10 to-transparent" },
               { title: "Woebot / Therapy", items: ["5 AI Personalities", "Voice Conversations", "Safety Plans", "Crisis Toolkit"], icon: Brain, highlight: false, gradient: "from-indigo-500/20 via-indigo-600/10 to-transparent" },
               { title: "Daylio / Tracking", items: ["Mood Analytics", "Journal", "Streaks & Badges", "Daily Affirmations"], icon: BarChart3, highlight: false, gradient: "from-teal-500/20 via-teal-600/10 to-transparent" },
             ];
@@ -442,7 +442,7 @@ export default function LandingPage() {
                   >
                     <div className={`relative rounded-2xl border ${col.highlight ? "border-cyan-500/30" : "border-white/10"} bg-gradient-to-br ${col.gradient} backdrop-blur-xl p-8 sm:p-10 min-h-[240px] flex flex-col items-center justify-center text-center`}>
                       <div className={`p-4 rounded-2xl mb-4 ${col.highlight ? "bg-cyan-500/10" : "bg-white/5"}`}>
-                        <col.icon className={`w-8 h-8 ${col.highlight ? "text-cyan-400" : "text-purple-400"}`} />
+                        <col.icon className={`w-8 h-8 ${col.highlight ? "text-cyan-400" : "text-sky-400"}`} />
                       </div>
                       <p className="text-xs text-white/40 uppercase tracking-wider mb-1">{col.highlight ? "Only in THE VOID" : "Replaces"}</p>
                       <h3 className="text-xl font-bold text-white mb-5 font-display" data-testid={`text-replaces-${compareIdx}`}>{col.title}</h3>
@@ -467,7 +467,7 @@ export default function LandingPage() {
                       key={idx}
                       onClick={() => setCompareIdx(idx)}
                       className={`rounded-full transition-all duration-300 ${compareIdx === idx
-                        ? 'w-6 h-1.5 bg-purple-400'
+                        ? 'w-6 h-1.5 bg-sky-400'
                         : 'w-1.5 h-1.5 bg-white/20 hover:bg-white/40'}`}
                       data-testid={`button-compare-dot-${idx}`}
                     />
@@ -505,7 +505,7 @@ export default function LandingPage() {
           >
             <GlassCard className="p-8 sm:p-10 text-center relative overflow-visible">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="px-4 py-1 rounded-full bg-gradient-to-r from-cyan-500 to-purple-600 text-xs font-bold text-white tracking-wider uppercase">
+                <span className="px-4 py-1 rounded-full bg-gradient-to-r from-cyan-500 to-sky-600 text-xs font-bold text-white tracking-wider uppercase">
                   Founders Only
                 </span>
               </div>
@@ -532,7 +532,7 @@ export default function LandingPage() {
               </div>
               <Button
                 onClick={handleEnter}
-                className="bg-gradient-to-r from-cyan-500 to-purple-600 border-0 text-white px-10 min-h-12 text-base font-semibold shadow-lg shadow-purple-500/20"
+                className="bg-gradient-to-r from-cyan-500 to-sky-600 border-0 text-white px-10 min-h-12 text-base font-semibold shadow-lg shadow-sky-500/20"
                 data-testid="button-claim-spot"
               >
                 <Lock className="w-4 h-4 mr-2" />
@@ -547,7 +547,7 @@ export default function LandingPage() {
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-20"
-            style={{ background: "radial-gradient(circle, rgba(6,182,212,0.4) 0%, rgba(147,51,234,0.2) 40%, transparent 70%)" }}
+            style={{ background: "radial-gradient(circle, rgba(6,182,212,0.4) 0%, rgba(2,132,199,0.2) 40%, transparent 70%)" }}
           />
         </div>
 
@@ -566,7 +566,7 @@ export default function LandingPage() {
           </p>
           <Button
             onClick={handleEnter}
-            className="bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 border-0 text-white px-10 min-h-14 text-lg font-bold shadow-2xl shadow-purple-500/30"
+            className="bg-gradient-to-r from-cyan-500 via-sky-500 to-pink-500 border-0 text-white px-10 min-h-14 text-lg font-bold shadow-2xl shadow-sky-500/30"
             data-testid="button-enter-final"
           >
             Into the Void

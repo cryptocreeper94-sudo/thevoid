@@ -16,12 +16,12 @@ export default function NotFound() {
             transition={{ duration: 0.5, type: "spring" }}
             className="flex flex-col items-center gap-6"
           >
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500/20 to-cyan-500/20 border border-white/10 flex items-center justify-center">
-              <AlertCircle className="w-10 h-10 text-purple-400" />
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-sky-500/20 to-cyan-500/20 border border-white/10 flex items-center justify-center">
+              <AlertCircle className="w-10 h-10 text-sky-400" />
             </div>
 
             <div className="space-y-2">
-              <h1 className="text-5xl font-display font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent" data-testid="text-404-title">
+              <h1 className="text-5xl font-display font-bold bg-gradient-to-r from-sky-400 to-cyan-400 bg-clip-text text-transparent" data-testid="text-404-title">
                 404
               </h1>
               <p className="text-base text-muted-foreground">

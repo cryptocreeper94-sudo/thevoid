@@ -20,7 +20,7 @@ const fadeUp = {
 const OBJECT_COLORS = [
   "bg-red-500/10 border-red-500/20",
   "bg-blue-500/10 border-blue-500/20",
-  "bg-purple-500/10 border-purple-500/20",
+  "bg-sky-500/10 border-sky-500/20",
   "bg-amber-500/10 border-amber-500/20",
   "bg-cyan-500/10 border-cyan-500/20",
   "bg-pink-500/10 border-pink-500/20",
@@ -357,8 +357,8 @@ export default function RageRoomPage() {
             </GlassCard>
 
             <GlassCard className="text-center">
-              <div className="p-2 rounded-lg bg-purple-500/20 w-fit mx-auto mb-2">
-                <Flame className="w-4 h-4 text-purple-400" />
+              <div className="p-2 rounded-lg bg-sky-500/20 w-fit mx-auto mb-2">
+                <Flame className="w-4 h-4 text-sky-400" />
               </div>
               <p className={`text-2xl font-bold font-display ${streak >= 5 ? "text-red-400" : streak >= 3 ? "text-amber-400" : "text-foreground"}`} data-testid="text-streak">
                 {streak}

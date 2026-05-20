@@ -48,7 +48,7 @@ export function RecordButton({ isRecording, isProcessing, onToggleRecording }: R
               ? "bg-red-500/30 shadow-[inset_0_0_40px_rgba(239,68,68,0.4)]"
               : isProcessing
                 ? "bg-black/60"
-                : "bg-gradient-to-br from-primary/40 to-purple-900/60"
+                : "bg-gradient-to-br from-primary/40 to-sky-900/60"
           }`} />
           <div className="absolute inset-0 rounded-full border-2 border-white/10" />
 

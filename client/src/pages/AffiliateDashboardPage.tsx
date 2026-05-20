@@ -25,7 +25,7 @@ const tierColors: Record<string, string> = {
   silver: "text-zinc-300",
   gold: "text-yellow-400",
   platinum: "text-cyan-300",
-  diamond: "text-purple-400",
+  diamond: "text-sky-400",
 };
 
 const tierBg: Record<string, string> = {
@@ -33,7 +33,7 @@ const tierBg: Record<string, string> = {
   silver: "from-zinc-400/20 to-zinc-300/10",
   gold: "from-yellow-500/20 to-amber-400/10",
   platinum: "from-cyan-400/20 to-cyan-300/10",
-  diamond: "from-purple-500/20 to-violet-400/10",
+  diamond: "from-sky-500/20 to-cyan-400/10",
 };
 
 export default function AffiliateDashboardPage() {
@@ -104,7 +104,7 @@ export default function AffiliateDashboardPage() {
           <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-6">
 
             <motion.div variants={fadeUp} className="text-center mb-8">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/20 mb-4">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-cyan-500/10 to-sky-500/10 border border-cyan-500/20 mb-4">
                 <Award className="w-4 h-4 text-cyan-400" />
                 <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Share & Earn</span>
               </div>
@@ -171,7 +171,7 @@ export default function AffiliateDashboardPage() {
                   <div className="text-xs text-muted-foreground">Pending (SIG)</div>
                 </GlassCard>
                 <GlassCard className="p-4 text-center">
-                  <Zap className="w-5 h-5 text-purple-400 mx-auto mb-2" />
+                  <Zap className="w-5 h-5 text-sky-400 mx-auto mb-2" />
                   <div className="text-2xl font-black font-display" data-testid="stat-paid-earnings">{stats.paidEarnings || "0.00"}</div>
                   <div className="text-xs text-muted-foreground">Paid (SIG)</div>
                 </GlassCard>
@@ -187,7 +187,7 @@ export default function AffiliateDashboardPage() {
                   </div>
                   <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full transition-all"
+                      className="h-full bg-gradient-to-r from-cyan-500 to-sky-500 rounded-full transition-all"
                       style={{
                         width: `${Math.max(5, ((stats.converted || 0) / ((stats.converted || 0) + nextTier.referralsNeeded)) * 100)}%`,
                       }}

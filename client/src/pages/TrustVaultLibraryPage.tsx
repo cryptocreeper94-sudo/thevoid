@@ -50,7 +50,7 @@ const SOURCES: { key: SourceFilter; label: string; icon: typeof Mic }[] = [
 
 const SOURCE_COLORS: Record<string, { text: string; bg: string; border: string; gradient: string }> = {
   vent: { text: "text-cyan-400", bg: "bg-cyan-500/15", border: "border-cyan-500/25", gradient: "from-cyan-500/20 via-cyan-600/10" },
-  "voice-journal": { text: "text-purple-400", bg: "bg-purple-500/15", border: "border-purple-500/25", gradient: "from-purple-500/20 via-purple-600/10" },
+  "voice-journal": { text: "text-sky-400", bg: "bg-sky-500/15", border: "border-sky-500/25", gradient: "from-sky-500/20 via-sky-600/10" },
   "void-echo": { text: "text-amber-400", bg: "bg-amber-500/15", border: "border-amber-500/25", gradient: "from-amber-500/20 via-amber-600/10" },
   "mood-portrait": { text: "text-pink-400", bg: "bg-pink-500/15", border: "border-pink-500/25", gradient: "from-pink-500/20 via-pink-600/10" },
 };
@@ -202,7 +202,7 @@ export default function TrustVaultLibraryPage() {
 
   const statCards = [
     { label: "Encrypted Items", value: library?.total || 0, icon: Lock, color: "text-cyan-400" },
-    { label: "Vent Recordings", value: items.filter(i => i.source === "vent").length, icon: Mic, color: "text-purple-400" },
+    { label: "Vent Recordings", value: items.filter(i => i.source === "vent").length, icon: Mic, color: "text-sky-400" },
     { label: "Voice Journals", value: items.filter(i => i.source === "voice-journal").length, icon: FileAudio, color: "text-amber-400" },
     { label: "Mood Portraits", value: items.filter(i => i.source === "mood-portrait").length, icon: Palette, color: "text-pink-400" },
   ];
@@ -228,7 +228,7 @@ export default function TrustVaultLibraryPage() {
         <motion.div variants={fadeUp}>
           <GlassCard className="relative overflow-hidden p-0">
             <div className="relative h-28 sm:h-48">
-              <div className="absolute inset-0 bg-gradient-to-br from-cyan-600/30 via-purple-600/20 to-pink-600/10" />
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-600/30 via-sky-600/20 to-pink-600/10" />
               <motion.div
                 animate={{ scale: [1, 1.3, 1], opacity: [0.15, 0.25, 0.15] }}
                 transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
@@ -239,7 +239,7 @@ export default function TrustVaultLibraryPage() {
                 animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
                 transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
                 className="absolute bottom-0 left-0 w-[150px] sm:w-[250px] h-[150px] sm:h-[250px] rounded-full"
-                style={{ background: "radial-gradient(circle, rgba(168,85,247,0.3) 0%, transparent 70%)" }}
+                style={{ background: "radial-gradient(circle, rgba(14,165,233,0.3) 0%, transparent 70%)" }}
               />
               <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-8">
                 <div className="flex items-center gap-3 sm:gap-4">
@@ -271,8 +271,8 @@ export default function TrustVaultLibraryPage() {
         {isPremiumRequired && (
           <motion.div variants={fadeUp}>
             <GlassCard className="p-6 sm:p-8 text-center">
-              <div className="p-3 sm:p-4 rounded-2xl bg-purple-500/10 inline-block mb-3 sm:mb-4">
-                <Lock className="w-8 h-8 sm:w-10 sm:h-10 text-purple-400" />
+              <div className="p-3 sm:p-4 rounded-2xl bg-sky-500/10 inline-block mb-3 sm:mb-4">
+                <Lock className="w-8 h-8 sm:w-10 sm:h-10 text-sky-400" />
               </div>
               <h2 className="text-lg sm:text-xl font-bold text-white font-display mb-2" data-testid="text-premium-gate">
                 Premium Feature
@@ -283,7 +283,7 @@ export default function TrustVaultLibraryPage() {
               </p>
               <Button
                 onClick={() => window.location.href = "/settings"}
-                className="bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-semibold px-6 sm:px-8 min-h-[44px]"
+                className="bg-gradient-to-r from-cyan-500 to-sky-600 text-white font-semibold px-6 sm:px-8 min-h-[44px]"
                 data-testid="button-upgrade-premium"
               >
                 Upgrade to Premium

@@ -83,7 +83,7 @@ export default function AffirmationsPage() {
               <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/50 to-black/90" />
               <div className="absolute bottom-0 left-0 right-0 p-6">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-3">
-                  <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                  <Sparkles className="w-3.5 h-3.5 text-sky-400" />
                   <span className="text-xs font-medium text-white/70 tracking-wide uppercase">Daily Practice</span>
                 </div>
                 <h1
@@ -104,7 +104,7 @@ export default function AffirmationsPage() {
           <Button
             onClick={() => generateMutation.mutate()}
             disabled={generateMutation.isPending || userId === 0}
-            className="bg-gradient-to-r from-purple-500 to-pink-500 border-purple-500/30 text-white"
+            className="bg-gradient-to-r from-sky-500 to-pink-500 border-sky-500/30 text-white"
             data-testid="button-generate-affirmations"
           >
             {generateMutation.isPending ? (
@@ -158,14 +158,14 @@ export default function AffirmationsPage() {
                         hoverEffect
                         data-testid={`card-affirmation-${affirmation.id}`}
                       >
-                        <Quote className="w-6 h-6 text-purple-400/40 mb-4 rotate-180" />
+                        <Quote className="w-6 h-6 text-sky-400/40 mb-4 rotate-180" />
                         <p
                           className="text-lg sm:text-xl text-white italic leading-relaxed max-w-lg"
                           data-testid={`text-affirmation-content-${affirmation.id}`}
                         >
                           {affirmation.content}
                         </p>
-                        <Quote className="w-6 h-6 text-purple-400/40 mt-4" />
+                        <Quote className="w-6 h-6 text-sky-400/40 mt-4" />
                         {affirmation.context && (
                           <p className="text-xs text-white/40 mt-4">{affirmation.context}</p>
                         )}
@@ -195,7 +195,7 @@ export default function AffirmationsPage() {
         {!isLoading && affirmations.length === 0 && !generateMutation.isPending && (
           <motion.div variants={fadeUp}>
             <GlassCard className="p-8 sm:p-10 text-center">
-              <Sparkles className="w-8 h-8 text-purple-400/30 mx-auto mb-4" />
+              <Sparkles className="w-8 h-8 text-sky-400/30 mx-auto mb-4" />
               <p className="text-sm text-white/50" data-testid="text-affirmations-empty">
                 No affirmations yet. Generate your first set of personalized affirmations above.
               </p>

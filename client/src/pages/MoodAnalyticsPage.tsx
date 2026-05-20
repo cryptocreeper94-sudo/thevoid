@@ -157,8 +157,8 @@ function MoodLineChart({ data }: { data: ChartPoint[] }) {
             <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="afterGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#a855f7" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
+            <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
           </linearGradient>
         </defs>
 
@@ -173,7 +173,7 @@ function MoodLineChart({ data }: { data: ChartPoint[] }) {
         <polyline
           points={points.after}
           fill="none"
-          stroke="#a855f7"
+          stroke="#38bdf8"
           strokeWidth="2.5"
           strokeLinejoin="round"
           strokeLinecap="round"
@@ -194,7 +194,7 @@ function MoodLineChart({ data }: { data: ChartPoint[] }) {
           return (
             <g key={i}>
               <circle cx={x} cy={yBefore} r="3" fill="#06b6d4" />
-              <circle cx={x} cy={yAfter} r="3" fill="#a855f7" />
+              <circle cx={x} cy={yAfter} r="3" fill="#38bdf8" />
             </g>
           );
         })}
@@ -208,7 +208,7 @@ function MoodLineChart({ data }: { data: ChartPoint[] }) {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-0.5 bg-purple-400 rounded-full" />
+          <div className="w-3 h-0.5 bg-sky-400 rounded-full" />
           <span className="text-[10px] text-white/40 uppercase tracking-wider">
             After
           </span>
@@ -357,8 +357,8 @@ export default function MoodAnalyticsPage() {
 
               <GlassCard className="p-4 sm:p-6" data-testid="stat-avg-after">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-purple-500/20">
-                    <TrendingUp className="w-5 h-5 text-purple-400" />
+                  <div className="p-2 rounded-lg bg-sky-500/20">
+                    <TrendingUp className="w-5 h-5 text-sky-400" />
                   </div>
                   <div>
                     <p className="text-[10px] uppercase tracking-wider text-white/40">
@@ -419,8 +419,8 @@ export default function MoodAnalyticsPage() {
               <div className="lg:col-span-4">
                 <GlassCard className="p-4 sm:p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 rounded-lg bg-purple-500/20">
-                      <Clock className="w-5 h-5 text-purple-400" />
+                    <div className="p-2 rounded-lg bg-sky-500/20">
+                      <Clock className="w-5 h-5 text-sky-400" />
                     </div>
                     <div>
                       <h2 className="text-sm font-semibold text-white">
@@ -483,7 +483,7 @@ export default function MoodAnalyticsPage() {
                                   <span className="text-cyan-400">
                                     Before: {mood.moodBefore}
                                   </span>
-                                  <span className="text-purple-400">
+                                  <span className="text-sky-400">
                                     After: {mood.moodAfter}
                                   </span>
                                 </div>

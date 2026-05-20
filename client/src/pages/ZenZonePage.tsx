@@ -57,7 +57,7 @@ const BREATH_PATTERNS: BreathPattern[] = [
 
 const PHASE_COLORS: Record<BreathPhase, string> = {
   inhale: "#06b6d4",
-  hold: "#8b5cf6",
+  hold: "#0ea5e9",
   exhale: "#f97316",
   rest: "#a3a3a3",
 };
@@ -348,8 +348,8 @@ export default function ZenZonePage() {
                   <img src={timerImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
                   <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-purple-500/20 backdrop-blur-sm">
-                      <Timer className="w-5 h-5 text-purple-400" />
+                    <div className="p-2 rounded-lg bg-sky-500/20 backdrop-blur-sm">
+                      <Timer className="w-5 h-5 text-sky-400" />
                     </div>
                     <h3 className="text-sm font-semibold text-white">Meditation Timer</h3>
                   </div>

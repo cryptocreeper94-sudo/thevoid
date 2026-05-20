@@ -43,7 +43,7 @@ interface VoiceFingerprint {
 const BIOMARKER_CONFIG = [
   { key: "energy" as const, label: "Energy", color: "#06b6d4", icon: Zap, bgClass: "bg-cyan-500/20", textClass: "text-cyan-400" },
   { key: "tension" as const, label: "Tension", color: "#ef4444", icon: Activity, bgClass: "bg-red-500/20", textClass: "text-red-400" },
-  { key: "pace" as const, label: "Pace", color: "#a855f7", icon: Gauge, bgClass: "bg-purple-500/20", textClass: "text-purple-400" },
+  { key: "pace" as const, label: "Pace", color: "#38bdf8", icon: Gauge, bgClass: "bg-sky-500/20", textClass: "text-sky-400" },
   { key: "warmth" as const, label: "Warmth", color: "#f59e0b", icon: Heart, bgClass: "bg-amber-500/20", textClass: "text-amber-400" },
   { key: "stability" as const, label: "Stability", color: "#10b981", icon: Shield, bgClass: "bg-emerald-500/20", textClass: "text-emerald-400" },
 ];
@@ -227,8 +227,8 @@ export default function VoiceFingerprintPage() {
             <motion.div variants={fadeUp}>
               <GlassCard className="p-6 sm:p-8" data-testid="card-latest-fingerprint">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 rounded-lg bg-purple-500/20">
-                    <Gauge className="w-5 h-5 text-purple-400" />
+                  <div className="p-2 rounded-lg bg-sky-500/20">
+                    <Gauge className="w-5 h-5 text-sky-400" />
                   </div>
                   <div>
                     <h2 className="text-sm font-semibold text-white">

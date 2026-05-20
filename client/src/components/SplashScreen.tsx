@@ -40,7 +40,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
             transition={{ duration: 2.5, ease: "easeOut" }}
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full"
             style={{
-              background: "radial-gradient(circle, rgba(6,182,212,0.4) 0%, rgba(147,51,234,0.2) 40%, transparent 70%)",
+              background: "radial-gradient(circle, rgba(6,182,212,0.4) 0%, rgba(2,132,199,0.2) 40%, transparent 70%)",
             }}
           />
           <motion.div
@@ -49,7 +49,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
             transition={{ duration: 2.5, delay: 0.3, ease: "easeOut" }}
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full"
             style={{
-              background: "radial-gradient(circle, rgba(147,51,234,0.5) 0%, rgba(6,182,212,0.2) 50%, transparent 70%)",
+              background: "radial-gradient(circle, rgba(2,132,199,0.5) 0%, rgba(6,182,212,0.2) 50%, transparent 70%)",
             }}
           />
         </div>
@@ -108,7 +108,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
           <p className="text-[10px] text-white/20 tracking-[0.3em] uppercase">DarkWave Studios</p>
           <div className="flex items-center gap-1.5">
             <div className="w-1 h-1 rounded-full bg-cyan-400/40 animate-pulse" />
-            <div className="w-1 h-1 rounded-full bg-purple-400/40 animate-pulse" style={{ animationDelay: "0.2s" }} />
+            <div className="w-1 h-1 rounded-full bg-sky-400/40 animate-pulse" style={{ animationDelay: "0.2s" }} />
             <div className="w-1 h-1 rounded-full bg-cyan-400/40 animate-pulse" style={{ animationDelay: "0.4s" }} />
           </div>
         </motion.div>

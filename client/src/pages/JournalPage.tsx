@@ -35,7 +35,7 @@ const MOOD_TAGS = [
   { key: "Frustrated", color: "bg-orange-500/20 text-orange-400 border-orange-500/30" },
   { key: "Hopeful", color: "bg-teal-500/20 text-teal-400 border-teal-500/30" },
   { key: "Exhausted", color: "bg-slate-500/20 text-slate-400 border-slate-500/30" },
-  { key: "Grateful", color: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
+  { key: "Grateful", color: "bg-sky-500/20 text-sky-400 border-sky-500/30" },
 ] as const;
 
 const MOOD_COLOR_MAP: Record<string, string> = {
@@ -46,7 +46,7 @@ const MOOD_COLOR_MAP: Record<string, string> = {
   Frustrated: "bg-orange-500/20 text-orange-400 border-orange-500/30",
   Hopeful: "bg-teal-500/20 text-teal-400 border-teal-500/30",
   Exhausted: "bg-slate-500/20 text-slate-400 border-slate-500/30",
-  Grateful: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+  Grateful: "bg-sky-500/20 text-sky-400 border-sky-500/30",
 };
 
 const PERSONALITIES = [
@@ -129,7 +129,7 @@ export default function JournalPage() {
       >
         <motion.div variants={fadeUp} className="text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-4">
-            <BookOpen className="w-3.5 h-3.5 text-purple-400" />
+            <BookOpen className="w-3.5 h-3.5 text-sky-400" />
             <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">Journal</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-foreground font-display mb-2" data-testid="text-journal-title">
@@ -148,8 +148,8 @@ export default function JournalPage() {
                   <img src={journalImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
                   <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-purple-500/20 backdrop-blur-sm">
-                      <BookOpen className="w-5 h-5 text-purple-400" />
+                    <div className="p-2 rounded-lg bg-sky-500/20 backdrop-blur-sm">
+                      <BookOpen className="w-5 h-5 text-sky-400" />
                     </div>
                     <h3 className="text-sm font-semibold text-white">New Entry</h3>
                   </div>
@@ -164,7 +164,7 @@ export default function JournalPage() {
                       value={content}
                       onChange={(e) => setContent(e.target.value)}
                       placeholder="Let it all out..."
-                      className="resize-none border-white/10 bg-white/5 text-foreground min-h-[120px] focus-visible:ring-purple-500/50"
+                      className="resize-none border-white/10 bg-white/5 text-foreground min-h-[120px] focus-visible:ring-sky-500/50"
                       data-testid="input-journal-content"
                     />
                   </div>
@@ -217,7 +217,7 @@ export default function JournalPage() {
                   <Button
                     onClick={() => createMutation.mutate()}
                     disabled={!canSubmit || createMutation.isPending}
-                    className="w-full bg-gradient-to-r from-purple-600 to-indigo-600"
+                    className="w-full bg-gradient-to-r from-sky-600 to-indigo-600"
                     data-testid="button-journal-submit"
                   >
                     {createMutation.isPending ? (
@@ -240,7 +240,7 @@ export default function JournalPage() {
               <GlassCard className="overflow-hidden">
                 <div className="p-4 sm:p-6">
                   <div className="flex items-center gap-2 mb-4">
-                    <Sparkles className="w-4 h-4 text-purple-400" />
+                    <Sparkles className="w-4 h-4 text-sky-400" />
                     <h3 className="text-sm font-semibold text-foreground">Past Entries</h3>
                   </div>
 
@@ -302,8 +302,8 @@ export default function JournalPage() {
                               )}
 
                               {entry.aiResponse && (
-                                <div className="mt-2 p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                                  <p className="text-[10px] text-purple-400 uppercase tracking-wider font-semibold mb-1">AI Response</p>
+                                <div className="mt-2 p-3 rounded-lg bg-sky-500/10 border border-sky-500/20">
+                                  <p className="text-[10px] text-sky-400 uppercase tracking-wider font-semibold mb-1">AI Response</p>
                                   <p className="text-xs text-foreground/70 leading-relaxed" data-testid={`text-ai-response-${entry.id}`}>
                                     {entry.aiResponse}
                                   </p>

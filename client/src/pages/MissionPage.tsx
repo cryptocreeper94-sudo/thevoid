@@ -27,8 +27,8 @@ const values = [
   { icon: Sparkles, title: "Evolving", desc: "We ship fast, listen harder, and iterate relentlessly. THE VOID grows with its community." },
 ];
 
-const COLORS = ["from-cyan-500/20 to-blue-500/20", "from-pink-500/20 to-rose-500/20", "from-amber-500/20 to-orange-500/20", "from-emerald-500/20 to-green-500/20", "from-purple-500/20 to-violet-500/20", "from-cyan-500/20 to-teal-500/20"];
-const ICON_COLORS = ["text-cyan-400", "text-pink-400", "text-amber-400", "text-emerald-400", "text-purple-400", "text-cyan-400"];
+const COLORS = ["from-cyan-500/20 to-blue-500/20", "from-pink-500/20 to-rose-500/20", "from-amber-500/20 to-orange-500/20", "from-emerald-500/20 to-green-500/20", "from-sky-500/20 to-cyan-500/20", "from-cyan-500/20 to-teal-500/20"];
+const ICON_COLORS = ["text-cyan-400", "text-pink-400", "text-amber-400", "text-emerald-400", "text-sky-400", "text-cyan-400"];
 
 function ValuesCarousel() {
   const [idx, setIdx] = useState(0);
@@ -123,8 +123,8 @@ export default function MissionPage() {
               <img src={originImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
               <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-purple-500/20 backdrop-blur-sm">
-                  <Zap className="w-5 h-5 text-purple-400" />
+                <div className="p-2 rounded-lg bg-sky-500/20 backdrop-blur-sm">
+                  <Zap className="w-5 h-5 text-sky-400" />
                 </div>
                 <h3 className="text-sm font-semibold text-white">The Origin Story</h3>
               </div>

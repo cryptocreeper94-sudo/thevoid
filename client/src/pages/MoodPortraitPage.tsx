@@ -72,7 +72,7 @@ export default function MoodPortraitPage() {
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-3">
-                  <Palette className="w-3.5 h-3.5 text-purple-400" />
+                  <Palette className="w-3.5 h-3.5 text-sky-400" />
                   <span className="text-xs font-medium text-white/70 tracking-wide uppercase">Generative Art</span>
                 </div>
                 <h1
@@ -88,7 +88,7 @@ export default function MoodPortraitPage() {
               <Button
                 onClick={() => generateMutation.mutate()}
                 disabled={generateMutation.isPending}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 border-purple-500/30 text-white"
+                className="bg-gradient-to-r from-sky-500 to-pink-500 border-sky-500/30 text-white"
                 data-testid="button-generate-portrait"
               >
                 {generateMutation.isPending ? (
@@ -133,7 +133,7 @@ export default function MoodPortraitPage() {
           <motion.div variants={fadeUp}>
             <GlassCard className="p-6 sm:p-8" data-testid={`card-portrait-featured-${featured.id}`}>
               <div className="flex items-center gap-2 mb-4">
-                <Layers className="w-4 h-4 text-purple-400/60" />
+                <Layers className="w-4 h-4 text-sky-400/60" />
                 <span className="text-xs font-medium text-white/50 tracking-wide uppercase">Latest Portrait</span>
               </div>
               <div
@@ -143,7 +143,7 @@ export default function MoodPortraitPage() {
               />
               <div className="flex flex-wrap items-center gap-4 mt-4">
                 <span
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-sm text-purple-300"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sm text-sky-300"
                   data-testid={`text-portrait-mood-${featured.id}`}
                 >
                   {featured.dominantMood}
@@ -210,7 +210,7 @@ export default function MoodPortraitPage() {
         {!isLoading && portraits.length === 0 && !generateMutation.isPending && (
           <motion.div variants={fadeUp}>
             <GlassCard className="p-8 sm:p-10 text-center">
-              <Palette className="w-8 h-8 text-purple-400/30 mx-auto mb-4" />
+              <Palette className="w-8 h-8 text-sky-400/30 mx-auto mb-4" />
               <p className="text-sm text-white/50" data-testid="text-portraits-empty">
                 Your portrait evolves with each vent and mood check. Start interacting to build your emotional landscape.
               </p>

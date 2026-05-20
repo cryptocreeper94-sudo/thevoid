@@ -123,8 +123,8 @@ function RoadmapCarousel() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/90" />
         <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-purple-500/20 backdrop-blur-sm">
-              <Map className="w-5 h-5 text-purple-400" />
+            <div className="p-2 rounded-lg bg-sky-500/20 backdrop-blur-sm">
+              <Map className="w-5 h-5 text-sky-400" />
             </div>
             <div>
               <h2 className="text-lg font-semibold text-white font-display">Master Roadmap</h2>
@@ -362,7 +362,7 @@ interface AnalyticsData {
 }
 
 const PERSONALITY_COLORS: Record<string, string> = {
-  "smart-ass": "bg-purple-500",
+  "smart-ass": "bg-sky-500",
   calming: "bg-cyan-500",
   therapist: "bg-emerald-500",
   "hype-man": "bg-amber-500",
@@ -423,10 +423,10 @@ function AnalyticsDashboard() {
   return (
     <GlassCard className="overflow-hidden" hoverEffect>
       <div className="relative h-32 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/40 via-purple-900/30 to-pink-900/20" />
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/40 via-sky-900/30 to-pink-900/20" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80" />
         <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-purple-500/20 backdrop-blur-sm">
+          <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-sky-500/20 backdrop-blur-sm">
             <BarChart3 className="w-5 h-5 text-cyan-400" />
           </div>
           <div>
@@ -445,7 +445,7 @@ function AnalyticsDashboard() {
       <div className="p-4 sm:p-6 space-y-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: "Total Vents", value: Number(analytics?.totalVents || 0), icon: Mic, color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20" },
+            { label: "Total Vents", value: Number(analytics?.totalVents || 0), icon: Mic, color: "text-sky-400", bg: "bg-sky-500/10 border-sky-500/20" },
             { label: "Today", value: Number(analytics?.ventsToday || 0), icon: TrendingUp, color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/20" },
             { label: "This Week", value: Number(analytics?.ventsThisWeek || 0), icon: BarChart3, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
             { label: "Active Users", value: Number(analytics?.uniqueUsers || 0), icon: Users, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
@@ -492,7 +492,7 @@ function AnalyticsDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5 backdrop-blur-xl">
             <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-              <MessageCircle className="w-4 h-4 text-purple-400" />
+              <MessageCircle className="w-4 h-4 text-sky-400" />
               Personality Usage
             </h3>
             {analytics?.personalityBreakdown && analytics.personalityBreakdown.length > 0 ? (

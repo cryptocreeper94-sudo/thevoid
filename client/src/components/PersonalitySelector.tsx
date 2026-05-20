@@ -35,8 +35,8 @@ const personalities: PersonalityOption[] = [
     label: "Therapist",
     description: "Professional analysis of your chaotic life.",
     icon: Brain,
-    color: "from-purple-400 to-indigo-600",
-    textColor: "text-purple-400"
+    color: "from-sky-400 to-indigo-600",
+    textColor: "text-sky-400"
   },
   {
     id: 'hype-man',

@@ -46,7 +46,7 @@ const SOUND_CHANNELS: SoundChannel[] = [
   { key: "rain", label: "Rain", icon: CloudRain, color: "#22d3ee", filterType: "highpass", filterFreq: 4000, defaultGain: 0.3 },
   { key: "ocean", label: "Ocean Waves", icon: Waves, color: "#3b82f6", filterType: "lowpass", filterFreq: 400, defaultGain: 0.4, modulation: "slow" },
   { key: "crickets", label: "Crickets", icon: Bug, color: "#a3e635", filterType: "bandpass", filterFreq: 6000, defaultGain: 0.08 },
-  { key: "thunder", label: "Thunder", icon: CloudLightning, color: "#a78bfa", filterType: "lowpass", filterFreq: 100, defaultGain: 0.5, modulation: "thunder" },
+  { key: "thunder", label: "Thunder", icon: CloudLightning, color: "#38bdf8", filterType: "lowpass", filterFreq: 100, defaultGain: 0.5, modulation: "thunder" },
   { key: "wind", label: "Wind", icon: Wind, color: "#94a3b8", filterType: "bandpass", filterFreq: 800, defaultGain: 0.25, modulation: "slow" },
   { key: "fire", label: "Fireplace", icon: Flame, color: "#f97316", filterType: "bandpass", filterFreq: 1500, defaultGain: 0.2, modulation: "rapid" },
 ];
@@ -69,7 +69,7 @@ const SLEEP_BREATH: { phase: BreathPhase; duration: number }[] = [
 
 const PHASE_COLORS: Record<BreathPhase, string> = {
   inhale: "#06b6d4",
-  hold: "#8b5cf6",
+  hold: "#0ea5e9",
   exhale: "#f97316",
 };
 
@@ -452,8 +452,8 @@ export default function SleepSoundsPage() {
           <motion.div variants={fadeUp} className="lg:col-span-4">
             <GlassCard className="p-4 sm:p-6 h-full">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-lg bg-purple-500/20 backdrop-blur-sm">
-                  <Timer className="w-5 h-5 text-purple-400" />
+                <div className="p-2 rounded-lg bg-sky-500/20 backdrop-blur-sm">
+                  <Timer className="w-5 h-5 text-sky-400" />
                 </div>
                 <h2 className="text-lg font-semibold text-white font-display">Sleep Timer</h2>
               </div>
@@ -528,10 +528,10 @@ export default function SleepSoundsPage() {
                       height: 160,
                       background: breathActive
                         ? `radial-gradient(circle, ${PHASE_COLORS[currentBreathPhase.phase]}30, transparent)`
-                        : "radial-gradient(circle, rgba(139,92,246,0.1), transparent)",
+                        : "radial-gradient(circle, rgba(14,165,233,0.1), transparent)",
                       border: breathActive
                         ? `2px solid ${PHASE_COLORS[currentBreathPhase.phase]}40`
-                        : "2px solid rgba(139,92,246,0.15)",
+                        : "2px solid rgba(14,165,233,0.15)",
                     }}
                     animate={{
                       scale: breathActive ? PHASE_SCALES[currentBreathPhase.phase] : 1,

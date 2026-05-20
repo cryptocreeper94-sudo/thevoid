@@ -211,7 +211,7 @@ export default function VoiceJournalPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         <div className="text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-4">
-            <BookOpen className="w-3.5 h-3.5 text-purple-400" />
+            <BookOpen className="w-3.5 h-3.5 text-sky-400" />
             <span className="text-xs font-medium text-white/60 tracking-wide uppercase">
               Voice Journal
             </span>
@@ -254,7 +254,7 @@ export default function VoiceJournalPage() {
                 className={`relative z-10 w-28 h-28 rounded-full flex items-center justify-center transition-all duration-300 ${
                   recordingState === "recording"
                     ? "bg-red-500/30 shadow-[0_0_40px_rgba(239,68,68,0.3)]"
-                    : "bg-gradient-to-br from-purple-600/40 to-indigo-600/40"
+                    : "bg-gradient-to-br from-sky-600/40 to-indigo-600/40"
                 } border-2 border-white/10`}
                 data-testid="button-record"
               >
@@ -304,7 +304,7 @@ export default function VoiceJournalPage() {
                 htmlFor="cleanup-toggle"
                 className="text-xs text-white/60 flex items-center gap-1.5 cursor-pointer"
               >
-                <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                <Sparkles className="w-3.5 h-3.5 text-sky-400" />
                 AI Clean Up
               </label>
               <Switch
@@ -369,7 +369,7 @@ export default function VoiceJournalPage() {
 
         <div>
           <div className="flex items-center gap-2 mb-4">
-            <Clock className="w-4 h-4 text-purple-400" />
+            <Clock className="w-4 h-4 text-sky-400" />
             <h2 className="text-sm font-semibold text-white">Past Entries</h2>
           </div>
 
@@ -457,7 +457,7 @@ export default function VoiceJournalPage() {
                           </p>
 
                           {entry.cleanedTranscript && (
-                            <span className="inline-block px-2 py-0.5 text-[10px] font-medium text-purple-400 bg-purple-500/10 border border-purple-500/20 rounded-full">
+                            <span className="inline-block px-2 py-0.5 text-[10px] font-medium text-sky-400 bg-sky-500/10 border border-sky-500/20 rounded-full">
                               {showRaw ? "Raw" : "Cleaned"}
                             </span>
                           )}

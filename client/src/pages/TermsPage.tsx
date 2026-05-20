@@ -72,7 +72,7 @@ const termsSections = [
   {
     icon: Globe,
     title: "Intellectual Property",
-    color: "text-purple-400",
+    color: "text-sky-400",
     img: ipImg,
     content: [
       "THE VOID, its design, branding, and all associated content are the intellectual property of DarkWave Studios (DarkwaveStudios.io).",

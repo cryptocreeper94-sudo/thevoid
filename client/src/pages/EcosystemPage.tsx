@@ -60,7 +60,7 @@ export default function EcosystemPage() {
             <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 16 }}>
               <div style={{
                 width: 56, height: 56, borderRadius: 12,
-                background: "linear-gradient(135deg, rgba(6,182,212,0.2), rgba(139,92,246,0.2))",
+                background: "linear-gradient(135deg, rgba(6,182,212,0.2), rgba(14,165,233,0.2))",
                 border: "1px solid rgba(6,182,212,0.3)",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 flexShrink: 0,
@@ -134,10 +134,10 @@ export default function EcosystemPage() {
             }} data-testid="card-feature-blockchain">
               <div style={{
                 width: 36, height: 36, borderRadius: 8,
-                background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.2)",
+                background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)",
                 display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12,
               }}>
-                <Zap style={{ width: 16, height: 16, color: "#a78bfa" }} />
+                <Zap style={{ width: 16, height: 16, color: "#38bdf8" }} />
               </div>
               <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Blockchain Verified</h3>
               <p style={{ fontSize: 12, color: "#888", lineHeight: 1.5 }}>

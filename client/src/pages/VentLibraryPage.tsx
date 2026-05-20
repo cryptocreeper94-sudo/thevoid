@@ -132,8 +132,8 @@ export default function VentLibraryPage() {
               <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/50 to-black/90" />
               <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-purple-500/20 backdrop-blur-sm">
-                    <Library className="w-6 h-6 text-purple-400" />
+                  <div className="p-2.5 rounded-xl bg-sky-500/20 backdrop-blur-sm">
+                    <Library className="w-6 h-6 text-sky-400" />
                   </div>
                   <div>
                     <h1 className="text-2xl sm:text-3xl font-bold text-white font-display" data-testid="text-library-title">

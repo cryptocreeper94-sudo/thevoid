@@ -45,7 +45,7 @@ const fadeUp = {
 
 const GROUNDING_STEPS = [
   { count: 5, label: "things you can SEE", icon: Eye, color: "#06b6d4" },
-  { count: 4, label: "things you can TOUCH", icon: Hand, color: "#8b5cf6" },
+  { count: 4, label: "things you can TOUCH", icon: Hand, color: "#0ea5e9" },
   { count: 3, label: "things you can HEAR", icon: Ear, color: "#f97316" },
   { count: 2, label: "things you can SMELL", icon: Wind, color: "#ec4899" },
   { count: 1, label: "thing you can TASTE", icon: Droplet, color: "#22c55e" },
@@ -53,7 +53,7 @@ const GROUNDING_STEPS = [
 
 const HOTLINES = [
   { name: "988 Suicide & Crisis Lifeline", number: "988", desc: "Call or text 24/7", icon: Phone, color: "#06b6d4" },
-  { name: "Crisis Text Line", number: "741741", desc: "Text HOME to 741741", icon: MessageSquare, color: "#8b5cf6", isText: true },
+  { name: "Crisis Text Line", number: "741741", desc: "Text HOME to 741741", icon: MessageSquare, color: "#0ea5e9", isText: true },
   { name: "SAMHSA Helpline", number: "1-800-662-4357", desc: "Free referral & support", icon: Shield, color: "#22c55e" },
   { name: "Emergency", number: "911", desc: "Immediate danger", icon: AlertTriangle, color: "#ef4444" },
 ];
@@ -100,7 +100,7 @@ function BreathingCircle() {
 
   const phaseLabel = phase === "in" ? "Breathe In" : phase === "hold" ? "Hold" : phase === "out" ? "Breathe Out" : "Rest";
   const scale = phase === "in" || phase === "hold" ? 1.3 : 0.8;
-  const glowColor = phase === "in" ? "#06b6d4" : phase === "hold" ? "#8b5cf6" : phase === "out" ? "#f97316" : "#a3a3a3";
+  const glowColor = phase === "in" ? "#06b6d4" : phase === "hold" ? "#0ea5e9" : phase === "out" ? "#f97316" : "#a3a3a3";
 
   return (
     <div className="flex flex-col items-center space-y-4">
@@ -432,7 +432,7 @@ function SafetyPlanCard() {
         <AccordionItem value="reasons" className="border border-white/10 rounded-xl overflow-visible bg-white/[0.03] backdrop-blur-xl">
           <AccordionTrigger className="px-4 sm:px-6 py-4 text-white font-semibold" data-testid="accordion-reasons">
             <span className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-purple-400" />
+              <Sparkles className="w-4 h-4 text-sky-400" />
               Reasons to Keep Going
             </span>
           </AccordionTrigger>
@@ -548,8 +548,8 @@ export default function CrisisToolkitPage() {
           <motion.div variants={fadeUp} className="lg:col-span-4">
             <GlassCard className="h-full" hoverEffect>
               <div className="flex items-center gap-2 mb-4">
-                <div className="p-2 rounded-lg bg-purple-500/20">
-                  <Eye className="w-4 h-4 text-purple-400" />
+                <div className="p-2 rounded-lg bg-sky-500/20">
+                  <Eye className="w-4 h-4 text-sky-400" />
                 </div>
                 <h3 className="text-sm font-semibold text-white">5-4-3-2-1 Grounding</h3>
               </div>
