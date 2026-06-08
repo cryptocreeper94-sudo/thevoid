@@ -2,11 +2,14 @@
   "name": "the-void",
   "version": "1.0.0",
   "type": "module",
+  "main": "electron/main.cjs",
   "license": "MIT",
   "scripts": {
     "dev": "set NODE_ENV=development&& tsx server/index.ts",
     "build": "tsx script/build.ts",
+    "build:electron": "electron-builder --win",
     "start": "NODE_ENV=production node dist/index.cjs",
+    "electron:dev": "set NODE_ENV=development&& concurrently \"npm run dev\" \"wait-on http://localhost:5000 && electron .\"",
     "check": "tsc",
     "db:push": "drizzle-kit push"
   },
@@ -110,13 +113,17 @@
     "@types/ws": "^8.5.13",
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.20",
+    "concurrently": "^10.0.3",
     "drizzle-kit": "^0.31.8",
+    "electron": "^42.3.3",
+    "electron-builder": "^26.15.0",
     "esbuild": "^0.25.0",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.20.5",
     "typescript": "5.6.3",
-    "vite": "^7.3.0"
+    "vite": "^7.3.0",
+    "wait-on": "^9.0.10"
   },
   "overrides": {
     "drizzle-kit": {
@@ -125,5 +132,20 @@
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
+  },
+  "build": {
+    "appId": "app.intothevoid.void",
+    "productName": "THE VOID",
+    "directories": {
+      "output": "dist_electron"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "files": [
+      "dist/public/**/*",
+      "electron/**/*",
+      "package.json"
+    ]
   }
 }

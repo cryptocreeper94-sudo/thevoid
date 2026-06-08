@@ -238,28 +238,41 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 1.5 }}
-            className="flex flex-col sm:flex-row items-center gap-4"
+            className="flex flex-col items-center gap-4 w-full max-w-[400px] mx-auto"
           >
+            <div className="w-full flex items-center bg-white/10 border border-white/20 rounded-[14px] overflow-hidden focus-within:border-cyan-500/50 transition-colors">
+              <input 
+                type="email" 
+                placeholder="Enter email for 6/23 Release" 
+                className="w-full bg-transparent border-none px-4 py-3.5 text-[15px] text-white outline-none placeholder:text-white/40"
+              />
+              <button 
+                className="px-6 py-3.5 font-bold text-[14px] bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 transition-colors cursor-pointer border-l border-white/20"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                  if (input.value) {
+                    input.value = '';
+                    alert('Thanks for joining The Void waitlist! We will notify you on June 23rd.');
+                  }
+                }}
+              >
+                Join
+              </button>
+            </div>
+            
             <Button
               onClick={handleEnter}
-              className="bg-gradient-to-r from-cyan-500 to-sky-600 border-0 text-white px-8 min-h-12 text-base font-semibold shadow-lg shadow-cyan-500/20"
+              className="bg-gradient-to-r from-cyan-500 to-sky-600 border-0 text-white px-8 min-h-12 text-base font-semibold shadow-lg shadow-cyan-500/20 w-full"
               data-testid="button-enter-void"
             >
-              Into the Void
+              Launch Open Demo
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
-            <Button
-              variant="ghost"
-              onClick={() => navigate("/onboarding")}
-              className="text-sm text-white/80 font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]"
-              data-testid="button-how-it-works"
-            >
-              How it Works
-              <ArrowRight className="w-4 h-4 ml-1" />
-            </Button>
+            
             <a
               href="#features"
-              className="text-sm text-white/80 font-medium flex items-center gap-1.5 transition-colors drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]"
+              className="text-sm text-white/80 font-medium flex items-center gap-1.5 transition-colors drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)] mt-2"
               data-testid="link-learn-more"
             >
               Learn more
@@ -267,6 +280,22 @@ export default function LandingPage() {
             </a>
           </motion.div>
         </motion.div>
+      </section>
+
+      {/* Promotional Video Section */}
+      <section className="relative py-20 px-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-2xl font-bold text-white mb-6 tracking-wide">Platform Overview</h2>
+          <div className="w-full aspect-[16/9] bg-black rounded-2xl overflow-hidden border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
+            <video 
+              controls 
+              preload="metadata" 
+              className="w-full h-full object-cover"
+            >
+              <source src="/assets/thevoid_marketing_female.mp4" type="video/mp4" />
+            </video>
+          </div>
+        </div>
       </section>
 
       <section className="relative py-20 px-6">
